@@ -73,10 +73,11 @@ for iter = 1:totalIters
         % The osAddNoise needs to know the sensor sample time because it
         % computes the cone photon rate, not just the number of photons.
         params.sampTime       = sensorGet(sensor,'time interval');  % Sec
-        coneCurrentRSnoisy    = osAddNoise(coneCurrentRS,params);   % Current is in pA
+        coneCurrentRSnoisyRS    = osAddNoise(coneCurrentRS,params);   % Current is in pA
+        coneCurrentRSnoisy    = reshape(coneCurrentRSnoisyRS,size(coneCurrentRS));
         coneCurrentSingleType = (coneCurrentRSnoisy(cone_locations,:));
         
-        if (ndims(coneCurrent) == 3)
+        % if (ndims(coneCurrent) == 3)
             
             % pre-allocate memory
             adaptedDataSingleType = zeros(size(coneCurrentSingleType));
@@ -111,7 +112,7 @@ for iter = 1:totalIters
             adaptedDataRS(cone_locations,:) = adaptedDataSingleType;
             pooledData(iter, cone_type-1) = mean(adaptedDataSingleType(:));
             
-        end
+        % end
         
         
     end
