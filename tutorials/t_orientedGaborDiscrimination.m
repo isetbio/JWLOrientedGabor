@@ -84,6 +84,8 @@ for contrastInd = 2%1:nContrast   % varying contrasts
     params.nSteps     = 60; % 666; % 160+346+160
     params.contrast = maxContrast(contrastInd);
     
+    eyePos = randn(params.nSteps, 2)*3; % eye position in units of number of cones
+    
     % We build a dummy scene here just so we can subsequently calculate
     % the sensor size.  But this scene itself is not used.  Rather we
     % build the scene below.
@@ -144,7 +146,8 @@ for contrastInd = 2%1:nContrast   % varying contrasts
     oi = oiCompute(oi, scene);
     
     % Compute absorptions
-    sensor = sensorCompute(sensor, oi);
+    sensor = sensorSet(sensor, 'positions', eyePos(t, :));
+    sensor = coneAbsorptions(sensor, oi);
     
     % end % t
     fprintf('\n');
