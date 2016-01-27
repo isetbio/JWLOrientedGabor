@@ -81,12 +81,12 @@ for angleInd = 1:nAngles              %  +/- 20 degs
             % params.color = colorInd;              % 1 = s_iso, 2 = L-M, 3 = LMS, 4 = L-M
             params.image_size = 64;               % scene is (image_size X image_size) pixels
             params.fov        = 0.6;            
-            params.GaborFlag = .4;%(128/params.image_size)*0.1/3.6; % standard deviation of the Gaussian window FIX
-            params.nSteps     = 20; % 666; % 160+346+160
+            params.GaborFlag = .5;%(128/params.image_size)*0.1/3.6; % standard deviation of the Gaussian window FIX
+            params.nSteps     = 100; % 666; % 160+346+160
             params.contrast = maxContrast(contrastInd);
             
-            eyePos = randn(params.nSteps, 10)*3; % eye position in units of number of cones
-            
+            eyePosI = randn(params.nSteps, 10)*3; % eye position in units of number of cones
+            eyePos = zeros(size(eyePosI));
             % We build a dummy scene here just so we can subsequently calculate
             % the sensor size.  But this scene itself is not used.  Rather we
             % build the scene below.
@@ -150,8 +150,15 @@ for angleInd = 1:nAngles              %  +/- 20 degs
                 sensor = sensorSet(sensor, 'positions', eyePos(t, :));
                 sensor = coneAbsorptions(sensor, oi);
                 
+                if t == 1
+                    volts = zeros([sensorGet(sensor, 'size') params.nSteps]);                   
+                end
+                volts(:,:,t) = sensorGet(sensor, 'volts');
             end % t
-            fprintf('\n');
+            fprintf('\n');            
+            
+            % Set the stimuls into the sensor object
+            sensor = sensorSet(sensor, 'volts', volts);
             
             if wFlag, delete(wbar); end
             
@@ -189,15 +196,15 @@ for angleInd = 1:nAngles              %  +/- 20 degs
                     cv = crossval(m1,'kfold',5);
                     rocArea(contrastInd) = 1-kfoldLoss(cv)'
                 else
-                % Use the ISETBIO libsvm
-                nFoldCrossVal = 5;
-                % NEEDS TO BE CHECKED.   ASK HJ.
-                pd1 = pooledData{1}; pd2 = pooledData{contrastInd};
-                [acc,w] = svmClassifyAcc([pd1; pd2], ...
-                    [ones(noiseIterations,1); -1*ones(noiseIterations,1)], ...
-                    nFoldCrossVal,'linear');
-                % perfcurve for roc plot
-                rocArea(contrastInd) = acc(1)
+                    % Use the ISETBIO libsvm
+                    nFoldCrossVal = 5;
+                    % NEEDS TO BE CHECKED.   ASK HJ.
+                    pd1 = pooledData{1}; pd2 = pooledData{contrastInd};
+                    [acc,w] = svmClassifyAcc([pd1; pd2], ...
+                        [ones(noiseIterations,1); -1*ones(noiseIterations,1)], ...
+                        nFoldCrossVal,'linear');
+                    % perfcurve for roc plot
+                    rocArea(contrastInd) = acc(1)
                 end
                 
                 title(sprintf('Pooled responses in LMS space, p(Correct) = %2.0f', 100*rocArea(contrastInd)));
