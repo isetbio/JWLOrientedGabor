@@ -45,11 +45,11 @@ wFlag = ieSessionGet('wait bar');
 
 %% Specify parameters for contrast values and noise repititions
 
-nContrast   = 2;
-maxContrast = [0.01 1];%linspace(0,1,nContrast);
+nContrast   = 4;
+maxContrast = linspace(0,1,nContrast);
 
 % Specify angles of Gabor stimulus orientation
-angleArr = (pi/180)*[-45 45]; nAngles = length(angleArr);
+angleArr = (pi/180)*[-20 20]; nAngles = length(angleArr);
 
 % Specify retinal location where stimulus is presented
 locationRadius = [6 6 6 6]; % degrees
@@ -68,9 +68,10 @@ oi  = oiCreate('wvf human');
 
 %% Loop over color and contrast to build the response level
 
-for angleInd = 1:nAngles              %  +/- 20 degs
-    for locationInd = 1%:4         % stimulus projected at four locations on the retina
-        for contrastInd = 2%1:nContrast   % varying contrasts
+for locationInd = 1%:4              % stimulus projected at four locations on the retina
+    for contrastInd = 1:nContrast   % varying contrasts
+        for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
+
             
             % Set parameters for building the scene/oi/sensor The
             % stimulus consists of an achromatic Gabor patch at +/- 20 deg.
@@ -82,11 +83,12 @@ for angleInd = 1:nAngles              %  +/- 20 degs
             params.image_size = 64;               % scene is (image_size X image_size) pixels
             params.fov        = 0.6;            
             params.GaborFlag = .5;%(128/params.image_size)*0.1/3.6; % standard deviation of the Gaussian window FIX
-            params.nSteps     = 100; % 666; % 160+346+160
+            params.nSteps     = 22; % 666; % 160+346+160
             params.contrast = maxContrast(contrastInd);
             
-            eyePosI = randn(params.nSteps, 10)*3; % eye position in units of number of cones
-            eyePos = zeros(size(eyePosI));
+            eyePos = randn(params.nSteps, 10)*3; % eye position in units of number of cones
+            % eyePos = zeros(size(eyePosI));
+            
             % We build a dummy scene here just so we can subsequently calculate
             % the sensor size.  But this scene itself is not used.  Rather we
             % build the scene below.
@@ -132,8 +134,8 @@ for angleInd = 1:nAngles              %  +/- 20 degs
                 
                 
                 % Update the phase of the Gabor
-                params.ph = 2*pi*(t-1)/params.nSteps; % one period over nSteps
-                params.contrast = params.contrast;
+                % params.ph = 2*pi*(t-1)/params.nSteps; % one period over nSteps
+                % params.contrast = params.contrast;
                 
                 scene = sceneCreate('harmonic', params);
                 scene = sceneSet(scene, 'h fov', params.fov);
@@ -154,6 +156,7 @@ for angleInd = 1:nAngles              %  +/- 20 degs
                     volts = zeros([sensorGet(sensor, 'size') params.nSteps]);                   
                 end
                 volts(:,:,t) = sensorGet(sensor, 'volts');
+                % vcAddObject(sensor); sensorWindow;
             end % t
             fprintf('\n');            
             
@@ -175,15 +178,15 @@ for angleInd = 1:nAngles              %  +/- 20 degs
             % Pool all of the noisy responses across each cone type
             % nNoiseIterations by nConeTypes
             tic
-            pooledData{angleInd} = pooledConeResponse(os, sensor, noiseIterations);
+            pooledData{angleInd,locationInd,contrastInd} = pooledConeResponse(os, sensor, noiseIterations);
             toc
             if angleInd > 1
                 
                 % Visualize pooled responses in LMS space
                 vcNewGraphWin;
-                scatter3(pooledData{1}(:,1),pooledData{1}(:,2),pooledData{1}(:,3))
+                scatter3(pooledData{1,locationInd,contrastInd}(:,1),pooledData{1,locationInd,contrastInd}(:,2),pooledData{1,locationInd,contrastInd}(:,3))
                 hold on;
-                scatter3(pooledData{contrastInd}(:,1),pooledData{contrastInd}(:,2),pooledData{contrastInd}(:,3))
+                scatter3(pooledData{angleInd,locationInd,contrastInd}(:,1),pooledData{angleInd,locationInd,contrastInd}(:,2),pooledData{angleInd,locationInd,contrastInd}(:,3))
                 xlabel('pooled S cone response'); ylabel('pooled M cone response'); zlabel('pooled L cone response');
                 
                 % Fit a linear svm classifier between pooled responses at contrast = 0
@@ -191,61 +194,64 @@ for angleInd = 1:nAngles              %  +/- 20 degs
                 
                 % If you have the statistics toolbox
                 if exist('fitcsvm','file');
-                    m1 = fitcsvm([pooledData{1}; pooledData{contrastInd}], [ones(noiseIterations,1); -1*ones(noiseIterations,1)], 'KernelFunction', 'linear');
+                    m1 = fitcsvm([pooledData{1,locationInd,contrastInd}; pooledData{angleInd,locationInd,contrastInd}], [ones(noiseIterations,1); -1*ones(noiseIterations,1)], 'KernelFunction', 'linear');
                     % Calculate cross-validated accuracy based on model:
                     cv = crossval(m1,'kfold',5);
-                    rocArea(contrastInd) = 1-kfoldLoss(cv)'
+                    rocArea(angleInd,locationInd,contrastInd) = 1-kfoldLoss(cv)'
                 else
                     % Use the ISETBIO libsvm
                     nFoldCrossVal = 5;
                     % NEEDS TO BE CHECKED.   ASK HJ.
-                    pd1 = pooledData{1}; pd2 = pooledData{contrastInd};
+                    pd1 = pooledData{1,locationInd,contrastInd}; pd2 = pooledData{angleInd,locationInd,contrastInd};
                     [acc,w] = svmClassifyAcc([pd1; pd2], ...
                         [ones(noiseIterations,1); -1*ones(noiseIterations,1)], ...
                         nFoldCrossVal,'linear');
                     % perfcurve for roc plot
-                    rocArea(contrastInd) = acc(1)
+                    rocArea(angleInd,locationInd,contrastInd) = acc(1)
                 end
                 
-                title(sprintf('Pooled responses in LMS space, p(Correct) = %2.0f', 100*rocArea(contrastInd)));
+                title(sprintf('Pooled responses in LMS space, p(Correct) = %2.0f', 100*rocArea(angleInd,locationInd,contrastInd)));
                 set(gca,'fontsize',14);
             end
             
             % clear sensor scene oi display params os
-        end %colorInd
-    end%locationInd
-end%angleInd
+        end %angleInd
+    end%contrastInd
 
-%% Fit psychometric curve to thresholds as a function of contrast
-% [xData, yData] = prepareCurveData( maxContrast, rocArea);
-%
-% % Set up fittype and options.
-% ft = fittype( '1 - 0.5*exp(-(x/a)^b)', 'independent', 'x', 'dependent', 'y' );
-% opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
-% opts.Display = 'Off';
-% opts.StartPoint = [0.323369521886293 0.976303691832645];
-%
-% % Fit a curve between contrast level (x) and probability of correction
-% % detection.
-% % bootWeibullFit(stimLevels, nCorrect, nTrials, varargin)
-% % in computationaleyebrain/simulations/Pixel Visibility/ ...
-% [fitresult, gof] = fit( xData, yData, ft, opts );
-%
-% % Plot fit with data.
-% figure( 'Name', 'untitled fit 1' );
-% h = plot( fitresult, xData, yData );
-% hold on; scatter(maxContrast,rocArea,40,'filled');
-% % set(gca,'xscale','log')
-% legend( h, 'data', 'fitted curve', 'Location', 'NorthWest' );
-% % Label axes
-% xlabel Contrast
-% ylabel p(Correct)
-% grid on
-% thresh1 = fitresult.a;
-% title(sprintf('Detection, \\alpha = %1.2f',(thresh1)));
-% set(gca,'fontsize',16)
-% axis([0 1 0.5 1]);
+        %% Fit psychometric curve to thresholds as a function of contrast
+        [xData, yData] = prepareCurveData( maxContrast, squeeze(rocArea(angleInd,locationInd,:)));
+        
+        % Set up fittype and options.
+        ft = fittype( '1 - 0.5*exp(-(x/a)^b)', 'independent', 'x', 'dependent', 'y' );
+        opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
+        opts.Display = 'Off';
+        opts.StartPoint = [0.323369521886293 0.976303691832645];
+        
+        % Fit a curve between contrast level (x) and probability of correction
+        % detection.
+        % bootWeibullFit(stimLevels, nCorrect, nTrials, varargin)
+        % in computationaleyebrain/simulations/Pixel Visibility/ ...
+        [fitresult, gof] = fit( xData, yData, ft, opts );
+        
+        % Plot fit with data.
+        figure( 'Name', 'untitled fit 1' );
+        
+        h = plot( fitresult, xData, yData );
+        hold on; scatter(maxContrast,squeeze(rocArea(angleInd,locationInd,:)),40,'filled');
+        % set(gca,'xscale','log')
+        legend( h, 'data', 'fitted curve', 'Location', 'NorthWest' );
+        % Label axes
+        xlabel Contrast
+        ylabel p(Correct)
+        grid on
+        thresh1 = fitresult.a;
+        title(sprintf('Detection, \\alpha = %1.2f',(thresh1)));
+        set(gca,'fontsize',16)
+        axis([0 1 0.5 1]);
 
+%%
+
+end%locationInd
 
 
 %% Show the movie of volts
