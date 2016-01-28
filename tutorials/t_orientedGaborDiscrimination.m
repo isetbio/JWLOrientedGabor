@@ -219,13 +219,13 @@ for locationInd = 1%:4              % stimulus projected at four locations on th
     end%contrastInd
 
         %% Fit psychometric curve to thresholds as a function of contrast
-        [xData, yData] = prepareCurveData( maxContrast, squeeze(rocArea(angleInd,locationInd,:)));
+        [xData, yData] = prepareCurveData( maxContrast', squeeze(rocArea(angleInd,locationInd,:)));
         
         % Set up fittype and options.
         ft = fittype( '1 - 0.5*exp(-(x/a)^b)', 'independent', 'x', 'dependent', 'y' );
         opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
         opts.Display = 'Off';
-        opts.StartPoint = [0.323369521886293 0.976303691832645];
+        opts.StartPoint = [0.3 0.95];
         
         % Fit a curve between contrast level (x) and probability of correction
         % detection.
@@ -245,7 +245,7 @@ for locationInd = 1%:4              % stimulus projected at four locations on th
         ylabel p(Correct)
         grid on
         thresh1 = fitresult.a;
-        title(sprintf('Detection, \\alpha = %1.2f',(thresh1)));
+        title(sprintf('Discrimination for Angle = %2.2f Location %d\nContrast \\alpha = %1.2f',(180/pi)*angleArr(angleInd),locationInd,(thresh1)));
         set(gca,'fontsize',16)
         axis([0 1 0.5 1]);
 
