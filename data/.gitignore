@@ -1,0 +1,3 @@
+# gitignore: do not add data files to git repository
+
+*.mat
