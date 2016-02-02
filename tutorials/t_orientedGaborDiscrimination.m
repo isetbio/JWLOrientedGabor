@@ -25,6 +25,9 @@
 clear
 ieInit
 
+plotConeResponseFlag = false; % plot an example movie of cone responses during one trial
+saveConeCurrentsFlag = true;  % save cone responses across all trials (after temporal integration within trials)
+
 %% Specify parameters for contrast values and noise repititions
 
 % Specify angles of Gabor stimulus orientation
@@ -47,12 +50,13 @@ oi  = oiCreate('wvf human');
 % stimulus parameters
 params            = paramsGaborColorOpponent();
 
-params.fov        = 1.5; % Gabor is windowed with 1.5 deg aperture
-params.freq       = 6;   % ... and has spatial frequency of 6 cpd 
-params.GaborFlag  = .25; % ... and std of 0.25 (per image)
-params.nSteps     = 100; % 100 time steps (1 ms sampling)
-params.ecc        = 6;   % 6 degrees eccentricity
-params.contrast   = .25; % Max contrat of 0.25
+params.fov        = 1.5;            % Gabor is windowed with 1.5 deg aperture
+params.freq       = 6*params.fov;   % ... and has spatial frequency of 6 cpd 
+params.GaborFlag  = .25/params.fov; % ... and std of .25 deg
+params.nSteps     = 100;            % 100 time steps (1 ms sampling)
+params.ecc        = 6;              % 6 degrees eccentricity
+params.contrast   = .25;            % Max contrat of 0.25
+
 
 % We build a dummy scene here just so we can subsequently calculate
 % the sensor size.  But this scene itself is not used.  Rather we
@@ -76,26 +80,37 @@ sensor = sensorSet(sensor,'noise flag',2);
 storedConeCurrents = cell(1,nAngles); 
 for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
     fprintf('\n'); 
-    params.ang        = angleArr(angleInd);
+
+    % We render a new scene for each stimulus orientation (but not for
+    % repeated trials for the same orientation). We also pad the FOV by
+    % factor padFactor so that eye movements do not cause the sensor to
+    % move out of the scence FOV
+    padFactor             = 2;
+    theseParams           = params;
+    theseParams.ang       = angleArr(angleInd);
+    theseParams.freq      = params.freq * padFactor;
+    theseParams.GaborFlag = params.GaborFlag / padFactor;
+    
+    scene = sceneCreate('harmonic', theseParams);
+    scene = sceneSet(scene, 'h fov', params.fov*padFactor);
+    
+    % The mean scene luminance is set to 200 cd/m2, based on the calibration of the monitor
+    scene = sceneAdjustLuminance(scene, 200);
+    % vcAddAndSelectObject(scene); sceneWindow;
+    
+    % Compute optical image
+    oi = oiCompute(oi, scene);
+    % vcAddAndSelectObject(oi); oiWindow;
     
     for trial = 1:nTrials
         fprintf('.'); drawnow();
         
-        eyePos = randn(params.nSteps, 2)*3; % eye position in units of number of cones
-        %eyePos =  (1:params.nSteps)' * [1 1];
+        eyePos = randn(params.nSteps, 2); % eye position in units of number of cones
         
-        scene = sceneCreate('harmonic', params);
-        scene = sceneSet(scene, 'h fov', params.fov*2);
-        
-        % The mean scene luminance is set to 200 cd/m2, based on the calibration of the monitor
-        scene = sceneAdjustLuminance(scene, 200);
-        % vcAddAndSelectObject(scene); sceneWindow;
-        
-        % oi  = oiCreate('wvf human');
-        % Compute optical image
-        oi = oiCompute(oi, scene);
-        % vcAddAndSelectObject(oi); oiWindow;
-        
+        % for debugging, try a translation or square wave oscillations
+        % eyePos =  (1:params.nSteps)' * [1 0];
+        % eyePos =  square((1:params.nSteps)/params.nSteps*2*pi*5)' * [1 0];
+
         % Loop through frames to build movie
         for t = 1 : params.nSteps
             
@@ -107,15 +122,11 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
                 volts = zeros([sensorGet(sensor, 'size') params.nSteps]);
             end
             volts(:,:,t) = sensorGet(sensor, 'volts');
-            % vcAddObject(sensor); sensorWindow;
         end % t
         
         % Set the stimuls into the sensor object
         sensor = sensorSet(sensor, 'volts', volts);
-        
-        
-        % vcAddObject(scene); sceneWindow;
-        % vcAddObject(sensor); sensorWindow;
+               
         
         %% Train linear SVM and find cross-validated accuracy
         % Create the outer segment object
@@ -127,17 +138,19 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
         
         storedConeCurrents{angleInd}(trial,:) = coneCurrentSignal(:);
         
-        % visualize cone response for one example trial
-        if trial == 1
-            fH = vcNewGraphWin;
+        % visualize cone response for an example trials
+        if plotConeResponseFlag && trial == 1
+            vcAddObject(scene); sceneWindow;
+            
+            vcNewGraphWin;
             coneCurrentSignal = osGet(os, 'conecurrentsignal');
             
-            volts = sensorGet(sensor, 'volts');
-            % waitforbuttonpress;
+            subplot(3,1,1)
+            imagesc(mean(coneCurrentSignal,3));axis image
             for ii = 1:params.nSteps
-                subplot(2,1,1)
+                subplot(3,1,2)
                 imagesc(coneCurrentSignal(:,:,ii)); title(ii), axis image
-                subplot(2,1,2)
+                subplot(3,1,3)
                 imagesc(volts(:,:,ii)); title(ii), axis image
                 pause(0.1);
             end % nSteps
@@ -147,10 +160,17 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
    
 end %angleInd
 
-        
+coneData = [storedConeCurrents{1}; storedConeCurrents{2}];
+labels   = [ones(nTrials,1); -1*ones(nTrials,1)];
+
+if saveConeCurrentsFlag
+    savePth = fullfile(fileparts(which(mfilename)), 'data');
+    save(fullfile(savePth, sprintf('coneResponses%s', datestr(now, 'YYYY-mm-DD_HH:MM:SS'))), ...
+        'coneData', 'labels');
+end
 % Fit a linear svm classifier between two orientations
 
-m1 = fitcsvm([storedConeCurrents{1}; storedConeCurrents{2}], [ones(nTrials,1); -1*ones(nTrials,1)], 'KernelFunction', 'linear');
+m1 = fitcsvm(coneData, labels, 'KernelFunction', 'linear');
 
 % Calculate cross-validated accuracy based on model:
 cv = crossval(m1,'kfold',5);
@@ -158,8 +178,6 @@ rocArea = 1-kfoldLoss(cv)';
 
 return
 
-title(sprintf('Pooled responses in LMS space, p(Correct) = %2.0f', 100*rocArea));
-set(gca,'fontsize',14);
 
 
 
