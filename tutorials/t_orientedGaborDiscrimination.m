@@ -5,57 +5,38 @@
 % Carrasco and Jon Winawer.
 %
 % Script outline:
-%     1. Build scene as an achromatic Gabor patch with Horwitz Lab
-%         display and imageHarmonic.
-%     2. Build oi and sensor with specified properties  (pupil
-%         width, macular density, eccentricity, etc.).
-%     3. Add realistic eye movements to sensor using data from the
-%         experiment.
-%     4. Build the outer segment object with linear filters and compute its
+%     1. Build scene as an achromatic Gabor patch with imageHarmonic.
+%     2. Build oi and sensor with specified properties (eccentricity, etc.)
+%     3. Loop over 2 stimulus orientations and n trials per orientation
+%     4. Within each trial, add eye movements to sensor 
+%     5. Build the outer segment object with linear filters and compute its
 %         response with the sensor structure.
-%     5. Compute the response across each cone type.  For each noise
-%         iteration (a) project the time series of each cone onto the
-%         expected mean time series, (b) take that mean value for each cone
-%         type to give the mean on that particular noise iteration. The
-%         projection step eliminates signals that are orthogonal to the
-%         expected linear temporal response.  The expected response is
-%         derived by running the simulation with the noise flag set to 0
-%         (photon noise only). This calculation produces an (L, M, S)
-%         triplet for each noise iteration.  This is a specific
-%         implementation of an ideal observer; see the paper for details.
-%     6. This process is carried out for a range of retinal locations with
-%         stimuli at +/- 20 deg of vertical and varying levels of
-%         contrast/noise. The pooled response for the cone array at the two
-%         orientations are comparedusing a linear SVM, and the
+%     6. Sum the response over time for each cone as a cheap way to simulate
+%          downstream temporal integration of cone outputs 
+%     7. The result of each trial is a vector of cone responses. The result
+%         for each stimulus orientation is a matrix of trial by cone responses
+%         Theses responses are compared using a linear SVM, and the
 %         cross-validated accuracy of the linear SVM is calculated.
-%      7. The accuracy is plotted as a function of the contrast, and a
-%         psychometric function of the form
-%
-%               p = 1 - 0.5*exp(-(x/alpha)^beta)
-%
-%         is fit to the curve, where alpha is the threshold for detection
-%         and beta is the slope of the curve.
+%     
+%     TODO: spatial integration of cone outputs prior to classification
 %
 % JRG/NC/BW ISETBIO Team, Copyright 2015
 
 clear
 ieInit
-ieSessionSet('wait bar', 'off')
-wFlag = ieSessionGet('wait bar');
 
 %% Specify parameters for contrast values and noise repititions
 
 % Specify angles of Gabor stimulus orientation
 angleArr = (pi/180)*[-20 20]; nAngles = length(angleArr);
 
-% Specify retinal location where stimulus is presented
+% Specify retinal location where stimulus is presented (6 deg above fovea)
 locationRadius = 6; % degrees of visual angle
 locationAngle  = 0; % degrees of polar angle (0 is vertical)
 
 nTrials        = 50;    % number of trials per stimulus condition
 
-% Basic human optics parameters.  Perhaps we need to get the macaque optics
-% built here.
+% Basic human optics parameters. 
 oi  = oiCreate('wvf human');
 
 %% Initialize the optics and the sensor
@@ -66,13 +47,12 @@ oi  = oiCreate('wvf human');
 % stimulus parameters
 params            = paramsGaborColorOpponent();
 
-
-params.fov        = 1.5;
-params.freq       = 6;
-params.GaborFlag  = .25; % standard deviation of the Gaussian window (per image)
-params.nSteps     = 100; % 666; % 160+346+160
-params.ecc        = 6;
-params.contrast   = 0.25;
+params.fov        = 1.5; % Gabor is windowed with 1.5 deg aperture
+params.freq       = 6;   % ... and has spatial frequency of 6 cpd 
+params.GaborFlag  = .25; % ... and std of 0.25 (per image)
+params.nSteps     = 100; % 100 time steps (1 ms sampling)
+params.ecc        = 6;   % 6 degrees eccentricity
+params.contrast   = .25; % Max contrat of 0.25
 
 % We build a dummy scene here just so we can subsequently calculate
 % the sensor size.  But this scene itself is not used.  Rather we
@@ -101,12 +81,11 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
     for trial = 1:nTrials
         fprintf('.'); drawnow();
         
-        eyePos = randn(params.nSteps, 10)*3; % eye position in units of number of cones
+        eyePos = randn(params.nSteps, 2)*3; % eye position in units of number of cones
         %eyePos =  (1:params.nSteps)' * [1 1];
-        % eyePos = zeros(size(eyePosI));
         
         scene = sceneCreate('harmonic', params);
-        scene = sceneSet(scene, 'h fov', params.fov);
+        scene = sceneSet(scene, 'h fov', params.fov*2);
         
         % The mean scene luminance is set to 200 cd/m2, based on the calibration of the monitor
         scene = sceneAdjustLuminance(scene, 200);
@@ -148,22 +127,24 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
         
         storedConeCurrents{angleInd}(trial,:) = coneCurrentSignal(:);
         
-    end
-    % visualize
-    if 0
-        fH = vcNewGraphWin;
-        coneCurrentSignal = osGet(os, 'conecurrentsignal');
+        % visualize cone response for one example trial
+        if trial == 1
+            fH = vcNewGraphWin;
+            coneCurrentSignal = osGet(os, 'conecurrentsignal');
+            
+            volts = sensorGet(sensor, 'volts');
+            % waitforbuttonpress;
+            for ii = 1:params.nSteps
+                subplot(2,1,1)
+                imagesc(coneCurrentSignal(:,:,ii)); title(ii), axis image
+                subplot(2,1,2)
+                imagesc(volts(:,:,ii)); title(ii), axis image
+                pause(0.1);
+            end % nSteps
+        end
         
-        volts = sensorGet(sensor, 'volts');
-        waitforbuttonpress;
-        for ii = 1:params.nSteps
-            subplot(2,1,1)
-            imagesc(coneCurrentSignal(:,:,ii)); title(ii), axis image
-            subplot(2,1,2)
-            imagesc(volts(:,:,ii)); title(ii), axis image
-            pause(0.1);
-        end % nSteps
     end
+   
 end %angleInd
 
         
