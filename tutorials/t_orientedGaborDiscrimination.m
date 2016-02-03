@@ -110,7 +110,7 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
         % for debugging, try a translation or square wave oscillations
         % eyePos =  (1:params.nSteps)' * [1 0];
         % eyePos =  square((1:params.nSteps)/params.nSteps*2*pi*5)' * [1 0];
-
+        
         % Loop through frames to build movie
         for t = 1 : params.nSteps
             
@@ -126,7 +126,7 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
         
         % Set the stimuls into the sensor object
         sensor = sensorSet(sensor, 'volts', volts);
-               
+        
         
         %% Train linear SVM and find cross-validated accuracy
         % Create the outer segment object
@@ -135,6 +135,30 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
         % Compute the photocurrent for the whole time series
         os = osCompute(os, sensor);
         coneCurrentSignal = sum(osGet(os, 'conecurrentsignal'),3);
+
+% %         To implement RGC spatial pooling, go to isetbio rgc branch and
+% %         uncomment to line 160: 
+%         % Create rgc object for spatial pooling
+%         clear params
+%         params.name    = 'Macaque inner retina 1'; % This instance
+%         params.model   = 'pool';    % Computational model
+%         params.row     = sensorGet(sensor,'row');  % N row samples
+%         params.col     = sensorGet(sensor,'col');  % N col samples
+%         params.spacing = sensorGet(sensor,'width','um'); % Cone width
+%         params.timing  = sensorGet(sensor,'time interval','sec'); % Temporal sampling
+%         params.eyeSide   = 'left';   % Which eye
+%         params.eyeRadius = 2;        % Radius in mm
+%         params.eyeAngle  = 90;       % Polar angle in degrees
+%         
+%         rgc1 = rgcCreate(params);
+%         for cellTypeInd = 1:5%length(obj.mosaic)
+%             rgcSet(rgc1, 'mosaic', rgcMosaicPool(rgc1));
+%         end
+%         
+%         rgc1 = rgcCompute(rgc1, os);
+%         for cellTypeInd = 1:5
+%             rgcSignal{cellTypeInd} = cellfun(@sum,mosaicGet(rgc1.mosaic{cellTypeInd}, 'linearResponse'),'uniformoutput',false);
+%         end
         
         storedConeCurrents{angleInd}(trial,:) = coneCurrentSignal(:);
         
@@ -161,7 +185,7 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
 end %angleInd
 
 coneData = [storedConeCurrents{1}; storedConeCurrents{2}];
-labels   = [ones(nTrials,1); -1*ones(nTrials,1)];
+labels   = [ones(19,1); -1*ones(19,1)];
 
 if saveConeCurrentsFlag
     savePth = fullfile(fileparts(which(mfilename)), 'data');
