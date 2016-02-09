@@ -140,12 +140,6 @@ for angleInd = 1:nAngles
         coneCurrentSignal = sum(osGet(os, 'conecurrentsignal'),3);
         params.coneArraySize = size(coneCurrentSignal);
 
-        % To implement RGC spatial pooling using isetbio RGC
-        % calculations, checkout rgc branch of isetbio from github and 
-        % then insert rgc code from end of this script below
-        % ==>
-        % <==
-        
         storedConeCurrents{angleInd}(trial,:) = coneCurrentSignal(:);
         
         % visualize cone response for an example trials
@@ -161,10 +155,10 @@ for angleInd = 1:nAngles
             for ii = 1:params.nSteps
                 subplot(3,1,2)                
                 imagesc(coneCurrentSignal(:,:,ii)); axis image
-                title('Cone output at each time point');
+                title('Cone output at single time points');
                 subplot(3,1,3)                
                 imagesc(volts(:,:,ii));  axis image
-                title('Cone voltage at each time point');
+                title('Cone voltage at single time points');
                 pause(0.1);
             end % nSteps
         end
@@ -214,7 +208,6 @@ rgc = struct('ss', [], 'rf', [], 'data', []);
 % We will make several RGC classes defined by scaleFactor, which will scale
 % both the receptive field size and the subsampling rate (the bigger the
 % RF, the more coarsely we subsample).
-scaleFactor = linspace(2.8,3.6,4);
 scaleFactor = linspace(2,4,4);
 for ii = 1:length(scaleFactor)
     % Center surround RF. The receptive fields have an excitatory center
@@ -268,31 +261,3 @@ errorbar(scaleFactor, mean(rocAreaRGC), std(rocAreaRGC),'o-', 'LineWidth', 4, 'M
 xlabel('Cone to Midget Ganglion Cell Ratio')
 ylabel('Classification Accuracy')
 
-return
-
-
-%% --------------------------------------------------------------
-% Insert the code below at line 144 (arrows) to create rgc object for
-% spatial pooling
-%  ==>  
-clear params
-params.name    = 'Macaque inner retina 1'; % This instance
-params.model   = 'pool';    % Computational model
-params.row     = sensorGet(sensor,'row');  % N row samples
-params.col     = sensorGet(sensor,'col');  % N col samples
-params.spacing = sensorGet(sensor,'width','um'); % Cone width
-params.timing  = sensorGet(sensor,'time interval','sec'); % Temporal sampling
-params.eyeSide   = 'left';   % Which eye
-params.eyeRadius = 2;        % Radius in mm
-params.eyeAngle  = 90;       % Polar angle in degrees
-
-rgc1 = rgcCreate(params);
-for cellTypeInd = 1:5%length(obj.mosaic)
-    rgcSet(rgc1, 'mosaic', rgcMosaicPool(rgc1, cellTypeInd));
-end
-
-rgc1 = rgcCompute(rgc1, os);
-for cellTypeInd = 1:5
-    rgcSignal{cellTypeInd} = cell2mat(cellfun(@sum,mosaicGet(rgc1.mosaic{cellTypeInd}, 'linearResponse'),'uniformoutput',false));
-end
-%  <==  
