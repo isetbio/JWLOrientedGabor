@@ -8,24 +8,23 @@
 %     1. Build scene as an achromatic Gabor patch with imageHarmonic.
 %     2. Build oi and sensor with specified properties (eccentricity, etc.)
 %     3. Loop over 2 stimulus orientations and n trials per orientation
-%     4. Within each trial, add eye movements to sensor 
+%     4. Within each trial, add eye movements to sensor
 %     5. Build the outer segment object with linear filters and compute its
 %         response with the sensor structure.
 %     6. Sum the response over time for each cone as a cheap way to simulate
-%          downstream temporal integration of cone outputs 
-%     7. The result of each trial is a vector of cone responses. The result
-%         for each stimulus orientation is a matrix of trial by cone responses
-%         Theses responses are compared using a linear SVM, and the
-%         cross-validated accuracy of the linear SVM is calculated.
-%     
-%     TODO: spatial integration of cone outputs prior to classification
+%          downstream temporal integration of cone outputs
+%     7. Save the cone response as they are time consuming to compute
+%     8. From the saved cone file, compute simplified RGC outputs by
+%           convolution (DoG) and subsampling
+%     9. Compute linear discriminant of stimulus orientation using cone
+%           outputs and RGC outputs
 %
 % JRG/NC/BW ISETBIO Team, Copyright 2015
 
 clear
 ieInit
 
-plotConeResponseFlag = false; % plot an example movie of cone responses during one trial
+plotConeResponseFlag = true; % plot an example movie of cone responses during one trial
 saveConeCurrentsFlag = true;  % save cone responses across all trials (after temporal integration within trials)
 
 %% Specify parameters for contrast values and noise repititions
@@ -37,9 +36,19 @@ angleArr = (pi/180)*[-20 20]; nAngles = length(angleArr);
 locationRadius = 6; % degrees of visual angle
 locationAngle  = 0; % degrees of polar angle (0 is vertical)
 
-nTrials        = 50;    % number of trials per stimulus condition
+% Number of trials per stimulus condition
+nTrials        = 50;
 
-% Basic human optics parameters. 
+% Eye movement function handle
+%   random jitter
+fun{1} = @(n) randn(n, 2)*2;
+%   directional drift
+fun{2} = @(n) (1:n)' * [1 0];
+%   square wave oscillation
+fun{3} = @(n) square((1:n)/params.n*2*pi*5)' * [1 0];
+eyePosFun = fun{1};
+
+% Basic human optics parameters.
 oi  = oiCreate('wvf human');
 
 %% Initialize the optics and the sensor
@@ -51,7 +60,7 @@ oi  = oiCreate('wvf human');
 params            = paramsGaborColorOpponent();
 
 params.fov        = 1.5;            % Gabor is windowed with 1.5 deg aperture
-params.freq       = 6*params.fov;   % ... and has spatial frequency of 6 cpd 
+params.freq       = 6*params.fov;   % ... and has spatial frequency of 6 cpd
 params.GaborFlag  = .25/params.fov; % ... and std of .25 deg
 params.nSteps     = 100;            % 100 time steps (1 ms sampling)
 params.ecc        = 6;              % 6 degrees eccentricity
@@ -75,16 +84,17 @@ sensor = sensorSet(sensor, 'time interval', params.timeInterval); % 1 ms
 % This computes with sensor and photon noise
 sensor = sensorSet(sensor,'noise flag',2);
 
-%% Loop over color and contrast to build the response level
+%% Loop over two stimulus classes and repeated trials and compute cone responses 
 
-storedConeCurrents = cell(1,nAngles); 
-for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
-    fprintf('\n'); 
+storedConeCurrents = cell(1,nAngles);
 
+for angleInd = 1:nAngles
+     % fprintf('\n'); % Comment out for publishing
+    
     % We render a new scene for each stimulus orientation (but not for
-    % repeated trials for the same orientation). We also pad the FOV by
-    % factor padFactor so that eye movements do not cause the sensor to
-    % move out of the scence FOV
+    % repeated trials for the same orientation). We also pad the scene
+    % field of view by factor padFactor so that eye movements do not cause 
+    % the sensor to move out of the scence field of view
     padFactor             = 2;
     theseParams           = params;
     theseParams.ang       = angleArr(angleInd);
@@ -94,39 +104,30 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
     scene = sceneCreate('harmonic', theseParams);
     scene = sceneSet(scene, 'h fov', params.fov*padFactor);
     
-    % The mean scene luminance is set to 200 cd/m2, based on the calibration of the monitor
-    scene = sceneAdjustLuminance(scene, 200);
-    % vcAddAndSelectObject(scene); sceneWindow;
-    
-    % Compute optical image
+    % Compute optical image - also computed once per stimulus class (not
+    % re-computed for new trials within a stimulus class)
     oi = oiCompute(oi, scene);
-    % vcAddAndSelectObject(oi); oiWindow;
     
-    for trial = 1:nTrials
-        fprintf('.'); drawnow();
+    % Loop over trials. Each trial gets its own eye movments.
+    for trial = 1:nTrials 
+        % fprintf('.'); drawnow();  % Comment out for publishing
         
-        eyePos = randn(params.nSteps, 2); % eye position in units of number of cones
-        
-        % for debugging, try a translation or square wave oscillations
-        % eyePos =  (1:params.nSteps)' * [1 0];
-        % eyePos =  square((1:params.nSteps)/params.nSteps*2*pi*5)' * [1 0];
+        % Eye position in units of number of cones
+        eyePos = eyePosFun(params.nSteps); 
         
         % Loop through frames to build movie
+        volts = zeros([sensorGet(sensor, 'size') params.nSteps]);
         for t = 1 : params.nSteps
             
             % Compute absorptions
             sensor = sensorSet(sensor, 'positions', eyePos(t, :));
             sensor = coneAbsorptions(sensor, oi);
             
-            if t == 1
-                volts = zeros([sensorGet(sensor, 'size') params.nSteps]);
-            end
             volts(:,:,t) = sensorGet(sensor, 'volts');
         end % t
         
         % Set the stimuls into the sensor object
         sensor = sensorSet(sensor, 'volts', volts);
-        
         
         %% Train linear SVM and find cross-validated accuracy
         % Create the outer segment object
@@ -135,30 +136,13 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
         % Compute the photocurrent for the whole time series
         os = osCompute(os, sensor);
         coneCurrentSignal = sum(osGet(os, 'conecurrentsignal'),3);
+        params.coneArraySize = size(coneCurrentSignal);
 
-% %         To implement RGC spatial pooling, go to isetbio rgc branch and
-% %         uncomment to line 160: 
-%         % Create rgc object for spatial pooling
-%         clear params
-%         params.name    = 'Macaque inner retina 1'; % This instance
-%         params.model   = 'pool';    % Computational model
-%         params.row     = sensorGet(sensor,'row');  % N row samples
-%         params.col     = sensorGet(sensor,'col');  % N col samples
-%         params.spacing = sensorGet(sensor,'width','um'); % Cone width
-%         params.timing  = sensorGet(sensor,'time interval','sec'); % Temporal sampling
-%         params.eyeSide   = 'left';   % Which eye
-%         params.eyeRadius = 2;        % Radius in mm
-%         params.eyeAngle  = 90;       % Polar angle in degrees
-%         
-%         rgc1 = rgcCreate(params);
-%         for cellTypeInd = 1:5%length(obj.mosaic)
-%             rgcSet(rgc1, 'mosaic', rgcMosaicPool(rgc1));
-%         end
-%         
-%         rgc1 = rgcCompute(rgc1, os);
-%         for cellTypeInd = 1:5
-%             rgcSignal{cellTypeInd} = cellfun(@sum,mosaicGet(rgc1.mosaic{cellTypeInd}, 'linearResponse'),'uniformoutput',false);
-%         end
+        % To implement RGC spatial pooling using isetbio RGC
+        % calculations, checkout rgc branch of isetbio from github and 
+        % then insert rgc code from end of this script below
+        % ==>
+        % <==
         
         storedConeCurrents{angleInd}(trial,:) = coneCurrentSignal(:);
         
@@ -171,155 +155,142 @@ for angleInd = 1:nAngles    % +/- angleArr(angleInd) degs
             
             subplot(3,1,1)
             imagesc(mean(coneCurrentSignal,3));axis image
+            title('Mean cone output across trial');
             for ii = 1:params.nSteps
-                subplot(3,1,2)
-                imagesc(coneCurrentSignal(:,:,ii)); title(ii), axis image
-                subplot(3,1,3)
-                imagesc(volts(:,:,ii)); title(ii), axis image
+                subplot(3,1,2)                
+                imagesc(coneCurrentSignal(:,:,ii)); axis image
+                title('Cone output at each time point');
+                subplot(3,1,3)                
+                imagesc(volts(:,:,ii));  axis image
+                title('Cone voltage at each time point');
                 pause(0.1);
             end % nSteps
         end
         
     end
-   
+    
 end %angleInd
 
+
+%% Save
 coneData = [storedConeCurrents{1}; storedConeCurrents{2}];
-labels   = [ones(19,1); -1*ones(19,1)];
+labels   = [ones(nTrials,1); -1*ones(nTrials,1)];
+
+dataPth = fullfile(fileparts(fileparts(which(mfilename))), 'data');
 
 if saveConeCurrentsFlag
-    savePth = fullfile(fileparts(which(mfilename)), 'data');
-    save(fullfile(savePth, sprintf('coneResponses%s', datestr(now, 'YYYY-mm-DD_HH:MM:SS'))), ...
-        'coneData', 'labels');
+    fname = fullfile(dataPth, sprintf('coneResponses%s.mat', datestr(now, 'YYYY-mm-DD_HH.MM.SS')));
+    save(fname,  'coneData', 'labels', 'params', 'eyePosFun');
 end
-% Fit a linear svm classifier between two orientations
 
-m1 = fitcsvm(coneData, labels, 'KernelFunction', 'linear');
 
-% Calculate cross-validated accuracy based on model:
-cv = crossval(m1,'kfold',5);
-rocArea = 1-kfoldLoss(cv)';
+%% Classifiy
+
+
+d = dir(fullfile(dataPth, '*.mat'));
+[~,idx] = sort([d.datenum]);
+
+load(fullfile(dataPth, d(idx(end)).name));
+
+% Fit a linear svm classifier between two orientations and calculate
+% cross-validated accuracy based on model
+
+% -------- first for cone signals ---------------------------------------
+m = fitcsvm(coneData, labels, 'KernelFunction', 'linear');
+cv = crossval(m,'kfold',5);
+rocAreaCones = 1-kfoldLoss(cv);
+
+% -------- then for RGC signals -----------------------------------------
+%  RGC hack - bandpass filter and subsample
+
+% RGC is a strucutred array. Each element corresponds to one model of RGCs.
+% The model is defined by a spatial receptive field 'rf' and a subsampling
+% rate 'ss'. The output of the RGCs are stored in 'data'. The inputs come
+% from the cone outputs.
+rgc = struct('ss', [], 'rf', [], 'data', []);
+
+% We will make several RGC classes defined by scaleFactor, which will scale
+% both the receptive field size and the subsampling rate (the bigger the
+% RF, the more coarsely we subsample).
+scaleFactor = linspace(2.8,3.6,4);
+scaleFactor = linspace(2,4,4);
+for ii = 1:length(scaleFactor)
+    % Center surround RF. The receptive fields have an excitatory center
+    % with std of 1 cone * scaleFactor. The inhibitory surround has twice
+    % the sd of the center. The cell is balanced, so that the sum of center
+    % minus surround = 0. 
+    rfCenter   = fspecial('Gaussian', 20,scaleFactor(ii));
+    rfSurround = fspecial('Gaussian', 20,2*scaleFactor(ii));
+    rgc(ii).rf =  rfCenter - rfSurround;    
+    rgc(ii).subsample = scaleFactor(ii);
+end
+
+%  Load stored cone data
+coneData = reshape(coneData, [], params.coneArraySize(1), params.coneArraySize(2));
+
+
+%  Loop across RGC types
+nBtsrp = 20;
+rocAreaRGC = NaN(nBtsrp, length(rgc));
+for ii = 1:length(rgc)
+    ss  = rgc(ii).subsample;
+    rf  = rgc(ii).rf;
+    
+    % Loop across trials, extracting RGC signals by convolution + subsample
+    for trial = 1:size(coneData,1)
+        coneCurrentSignal = squeeze(coneData(trial,:,:));
+        tmp = conv2(coneCurrentSignal,rf, 'valid');
+        tmp = tmp(round(ss:ss:end),round(ss:ss:end));
+        rgc(ii).data(trial,:) = tmp(:);
+    end
+    
+    % Classify RGC outputs
+    for btstrp = 1:nBtsrp        
+        % scrambled = labels(randperm(length(labels)));
+        m = fitcsvm(rgc(ii).data, labels, 'KernelFunction', 'linear');
+        cv = crossval(m,'kfold',5);
+        rocAreaRGC(btstrp, ii) = 1-kfoldLoss(cv);
+    end
+end
+
+fprintf('ROC Area for cones: %4.2f\n', rocAreaCones)
+for ii = 1:length(rgc);
+    fprintf('ROC Area for RGC class %d: %4.2f\n', ii, mean(rocAreaRGC(:,ii)))
+end
+
+%% Plot classification accuracy as function of convergence ratio
+fH = vcNewGraphWin;
+set(fH, 'Color', 'w')
+set(gca,'FontSize',20); hold on
+errorbar(scaleFactor, mean(rocAreaRGC), std(rocAreaRGC),'o-', 'LineWidth', 4, 'MarkerSize', 12)
+xlabel('Cone to Midget Ganglion Cell Ratio')
+ylabel('Classification Accuracy')
 
 return
 
 
+%% --------------------------------------------------------------
+% Insert the code below at line 144 (arrows) to create rgc object for
+% spatial pooling
+%  ==>  
+clear params
+params.name    = 'Macaque inner retina 1'; % This instance
+params.model   = 'pool';    % Computational model
+params.row     = sensorGet(sensor,'row');  % N row samples
+params.col     = sensorGet(sensor,'col');  % N col samples
+params.spacing = sensorGet(sensor,'width','um'); % Cone width
+params.timing  = sensorGet(sensor,'time interval','sec'); % Temporal sampling
+params.eyeSide   = 'left';   % Which eye
+params.eyeRadius = 2;        % Radius in mm
+params.eyeAngle  = 90;       % Polar angle in degrees
 
+rgc1 = rgcCreate(params);
+for cellTypeInd = 1:5%length(obj.mosaic)
+    rgcSet(rgc1, 'mosaic', rgcMosaicPool(rgc1, cellTypeInd));
+end
 
-%% Fit psychometric curve to thresholds as a function of contrast
-[xData, yData] = prepareCurveData( maxContrast', squeeze(rocArea(angleInd,locationInd,:)));
-
-% Set up fittype and options.
-ft = fittype( '1 - 0.5*exp(-(x/a)^b)', 'independent', 'x', 'dependent', 'y' );
-opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
-opts.Display = 'Off';
-opts.StartPoint = [0.3 0.95];
-
-% Fit a curve between contrast level (x) and probability of correction
-% detection.
-% bootWeibullFit(stimLevels, nCorrect, nTrials, varargin)
-% in computationaleyebrain/simulations/Pixel Visibility/ ...
-[fitresult, gof] = fit( xData, yData, ft, opts );
-
-% Plot fit with data.
-figure( 'Name', 'untitled fit 1' );
-
-h = plot( fitresult, xData, yData );
-hold on; scatter(maxContrast,squeeze(rocArea(angleInd,locationInd,:)),40,'filled');
-% set(gca,'xscale','log')
-legend( h, 'data', 'fitted curve', 'Location', 'NorthWest' );
-% Label axes
-xlabel Contrast
-ylabel p(Correct)
-grid on
-thresh1 = fitresult.a;
-title(sprintf('Discrimination for Angle = %2.2f Location %d\nContrast \\alpha = %1.2f',(180/pi)*angleArr(angleInd),locationInd,(thresh1)));
-set(gca,'fontsize',16)
-axis([0 1 0.5 1]);
-
-%%
-
-
-
-%% Show the movie of volts
-%
-% % This should be a sensorMovie() call.
-% %
-% % Can we easily make that movie when we color the cones by type
-% vcNewGraphWin;axis image; colormap(gray)
-% for ii=1:params.nSteps
-%     imagesc(volts(:,:,ii)); pause(.2);
-% end
-
-% % Time series at a point
-% vcNewGraphWin; plot(squeeze(volts(1,1,:)))
-%
-% %% Movie of the cone absorptions over cone mosaic
-% % from t_VernierCones by HM
-%
-% step = 1;
-% tmp = coneImageActivity(sensor,[],step,false);
-%
-% % Show the movie
-% vcNewGraphWin;
-% tmp = tmp/max(tmp(:));
-% for ii=1:size(tmp,4)
-%     img = squeeze(tmp(:,:,:,ii));
-%     imshow(img.^3); truesize;
-%     title('Cone absorptions')
-%     drawnow
-% end
-%
-% %% Outer segment calculation
-%
-% % The outer segment converts cone absorptions into cone photocurrent.
-% % There are 'linear','biophys' and 'identity' types of conversion.  The
-% % linear is a standard convolution.  The biophys is based on Rieke's
-% % biophysical work.  And identity is a copy operation.
-% os = osCreate('linear');
-%
-% % Compute the photocurrent
-% os = osCompute(os, sensor);
-%
-% % Plot the photocurrent for a pixel
-% % Let's JG and BW mess around with various plotting things to check the
-% % validity.
-% osPlot(os,sensor);
-%
-% % Input = RGB
-% % os = osCreate('identity');
-% % os = osSet(os, 'rgbData', sceneRGB);
-%
-% %% Rieke biophysics case
-%
-% os = osCreate('biophys');
-%
-% % Compute the photocurrent
-% os = osCompute(os, sensor);
-%
-% % Plot the photocurrent for a pixel
-% % Let's JG and BW mess around with various plotting things to check the
-% % validity.
-% osPlot(os,sensor,'output')
-%
-% %% Build rgc
-%
-% eyeAngle = 180; % degrees
-% eyeRadius = 3; % mm
-% eyeSide = 'right';
-% rgc1 = rgcCreate('GLM', scene, sensor, os, eyeSide, eyeRadius, eyeAngle);
-%
-% rgc1 = rgcCompute(rgc1, os);
-%
-% % rgcPlot(rgc1, 'mosaic');
-% % rgcPlot(rgc1, 'linearResponse');
-% rgcPlot(rgc1, 'spikeResponse');
-% %% Build rgc response movie
-% %  https://youtu.be/R4YQCTZi7s8
-%
-% % % osLinear
-% % rgcMovie(rgc1, sensor);
-%
-% % % osIdentity
-% % rgcMovie(rgc1, os);
-%
-%
+rgc1 = rgcCompute(rgc1, os);
+for cellTypeInd = 1:5
+    rgcSignal{cellTypeInd} = cell2mat(cellfun(@sum,mosaicGet(rgc1.mosaic{cellTypeInd}, 'linearResponse'),'uniformoutput',false));
+end
+%  <==  
