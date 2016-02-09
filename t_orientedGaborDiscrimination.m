@@ -57,15 +57,17 @@ oi  = oiCreate('wvf human');
 % stimulus consists of an achromatic Gabor patch at +/- 20 deg.
 
 % stimulus parameters
-params            = paramsGaborColorOpponent();
+%params            = paramsGaborColorOpponent();
 
-params.fov        = 1.5;            % Gabor is windowed with 1.5 deg aperture
-params.freq       = 6*params.fov;   % ... and has spatial frequency of 6 cpd
-params.GaborFlag  = .25/params.fov; % ... and std of .25 deg
-params.nSteps     = 100;            % 100 time steps (1 ms sampling)
-params.ecc        = 6;              % 6 degrees eccentricity
-params.contrast   = .25;            % Max contrat of 0.25
-
+params.fov           = 1.5;            % Gabor is windowed with 1.5 deg aperture
+params.freq          = 6*params.fov;   % ... and has spatial frequency of 6 cpd
+params.GaborFlag     = .25/params.fov; % ... and std of .25 deg
+params.nSteps        = 100;            % 100 time steps (1 ms sampling)
+params.ecc           = 6;              % 6 degrees eccentricity
+params.contrast      = .25;            % Max contrat of 0.25
+params.expTime       = 0.001;
+params.timeInterval  = 0.001;
+params.meanLuminance = 100;
 
 % We build a dummy scene here just so we can subsequently calculate
 % the sensor size.  But this scene itself is not used.  Rather we
@@ -176,7 +178,7 @@ end %angleInd
 coneData = [storedConeCurrents{1}; storedConeCurrents{2}];
 labels   = [ones(nTrials,1); -1*ones(nTrials,1)];
 
-dataPth = fullfile(fileparts(fileparts(which(mfilename))), 'data');
+dataPth = fullfile(fileparts(which(mfilename)), 'data');
 
 if saveConeCurrentsFlag
     fname = fullfile(dataPth, sprintf('coneResponses%s.mat', datestr(now, 'YYYY-mm-DD_HH.MM.SS')));
