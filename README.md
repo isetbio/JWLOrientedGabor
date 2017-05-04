@@ -1,4 +1,22 @@
 # JWLOrientedGabor
+
+
+# Iteration 2: to be used for new grant (June 2017??)
+% TODO 
+%  1. Get our stimulus descriptions (retinal position, contrast, size,
+%           spatial frequency, duration, orientation, luminance, etc)
+%  See below (Iteration 1)
+%
+%  2. Write a function to make the stimuli, similar to <vaStimuli>
+%  After that, we need to make a cone mosaic, do eye movements, BP, RGCs,
+%       *cortex*, classifier, temporal integration, spatial integration
+% To consider: what do we know about differences in cell density as a
+%   function of polar angle (cones, bipolars, RGCs, etc)
+
+# Iteration 1: for grant submitted 11/07/2016, 'Linking brain and behavior 'around' the visual field'
+
+See script: t_orientedGaborDiscrimination.m
+
 Simulation of an experiment by Marisa Carrasco and Jon Winawer measuring orientation discrimination performance for an acrhomatic, peripheral  Gabor. 
 
 The Gabor is at 6 deg eccentricity, 6 cpd, 1.5 deg windwo, and +/- 20 deg from vertical. 
