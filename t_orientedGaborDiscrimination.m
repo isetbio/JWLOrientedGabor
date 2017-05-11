@@ -1,7 +1,7 @@
 %% t_orientedGaborDiscrimination
 %
 % Model cone responses for the experiment on measuring orientation
-% discrimination thresholds of an acrhomatic, peripheral Gabor by Marisa
+% discrimination thresholds of an achromatic, peripheral Gabor by Marisa
 % Carrasco and Jon Winawer.
 %
 % Script outline:
@@ -21,11 +21,17 @@
 %
 % JRG/NC/BW ISETBIO Team, Copyright 2015
 
+if isempty(which('ieInit'))
+    addpath(genpath('~/matlab/toolboxes/isetbio/'));
+    addpath(genpath('~/matlab/git/JWLOrientedGabor/'))
+end
+
 clear
 ieInit
 
-plotConeResponseFlag = true; % plot an example movie of cone responses during one trial
-saveConeCurrentsFlag = true;  % save cone responses across all trials (after temporal integration within trials)
+whichEye = 'left';
+plotConeResponseFlag = true;  % plot an example movie of cone responses during one trial
+saveConeCurrentsFlag = true; % save cone responses across all trials (after temporal integration within trials)
 
 %% Specify parameters for contrast values and noise repititions
 
@@ -34,9 +40,13 @@ angleArr = (pi/180)*[-20 20]; nAngles = length(angleArr);
 
 % Specify retinal location where stimulus is presented (6 deg above fovea)
 locationRadius = 6; % degrees of visual angle
-locationAngle  = 0; % degrees of polar angle (0 is vertical)
+locationAngle  = 270; % 0 is right, 90 is superior, 180 is left, 270 inferior
 
-% Number of trials per stimulus condition
+% convert retinal location to m
+deg2m = .3/1000;
+locationRadiusM = locationRadius * deg2m;
+
+% Number of trials per stimulus condition (50)
 nTrials        = 50;
 
 % Eye movement function handle
@@ -62,13 +72,13 @@ oi  = oiCreate('wvf human');
 params.fov           = 1.5;            % Gabor is windowed with 1.5 deg aperture
 params.freq          = 6*params.fov;   % ... and has spatial frequency of 6 cpd
 params.GaborFlag     = .25/params.fov; % ... and std of .25 deg
-params.nSteps        = 100;            % 100 time steps (1 ms sampling)
+params.nSteps        = 5;%100;            % 100 time steps (1 ms sampling)
 params.ecc           = 6;              % 6 degrees eccentricity
-params.contrast      = .25;            % Max contrat of 0.25
+params.contrast      = .1;%25;            % Max contrast of 0.25
 params.expTime       = 0.001;
 params.timeInterval  = 0.001;
 params.meanLuminance = 100;
-
+params.polarAngle    = locationAngle;
 % We build a dummy scene here just so we can subsequently calculate
 % the sensor size.  But this scene itself is not used.  Rather we
 % build the scene below.
@@ -78,7 +88,9 @@ scene = sceneSet(scene, 'h fov', params.fov);
 
 coneP = coneCreate; % The cone properties properties
 
-sensor = sensorCreate('human', coneP, [locationRadius(1) locationAngle(1)]);
+coneP = coneMosaic;
+
+sensor = sensorCreate('human', coneP, [locationRadiusM(1) locationAngle(1)], whichEye);
 sensor = sensorSetSizeToFOV(sensor, params.fov, scene, oi);
 sensor = sensorSet(sensor, 'exp time', params.expTime); % 1 ms
 sensor = sensorSet(sensor, 'time interval', params.timeInterval); % 1 ms
@@ -91,7 +103,7 @@ sensor = sensorSet(sensor,'noise flag',2);
 storedConeCurrents = cell(1,nAngles);
 
 for angleInd = 1:nAngles
-     % fprintf('\n'); % Comment out for publishing
+     fprintf('\n'); % Comment out for publishing
     
     % We render a new scene for each stimulus orientation (but not for
     % repeated trials for the same orientation). We also pad the scene
@@ -180,84 +192,121 @@ if saveConeCurrentsFlag
 end
 
 
+return
 %% Classifiy
-
-
-d = dir(fullfile(dataPth, '*.mat'));
-[~,idx] = sort([d.datenum]);
-
-load(fullfile(dataPth, d(idx(end)).name));
-
-% Fit a linear svm classifier between two orientations and calculate
-% cross-validated accuracy based on model
-
-% -------- first for cone signals ---------------------------------------
-m = fitcsvm(coneData, labels, 'KernelFunction', 'linear');
-cv = crossval(m,'kfold',5);
-rocAreaCones = 1-kfoldLoss(cv);
-
-% -------- then for RGC signals -----------------------------------------
-%  RGC hack - bandpass filter and subsample
-
-% RGC is a strucutred array. Each element corresponds to one model of RGCs.
-% The model is defined by a spatial receptive field 'rf' and a subsampling
-% rate 'ss'. The output of the RGCs are stored in 'data'. The inputs come
-% from the cone outputs.
-rgc = struct('ss', [], 'rf', [], 'data', []);
-
-% We will make several RGC classes defined by scaleFactor, which will scale
-% both the receptive field size and the subsampling rate (the bigger the
-% RF, the more coarsely we subsample).
-scaleFactor = linspace(2,4,4);
-for ii = 1:length(scaleFactor)
-    % Center surround RF. The receptive fields have an excitatory center
-    % with std of 1 cone * scaleFactor. The inhibitory surround has twice
-    % the sd of the center. The cell is balanced, so that the sum of center
-    % minus surround = 0. 
-    rfCenter   = fspecial('Gaussian', 20,scaleFactor(ii));
-    rfSurround = fspecial('Gaussian', 20,2*scaleFactor(ii));
-    rgc(ii).rf =  rfCenter - rfSurround;    
-    rgc(ii).subsample = scaleFactor(ii);
-end
-
-%  Load stored cone data
-coneData = reshape(coneData, [], params.coneArraySize(1), params.coneArraySize(2));
-
-
-%  Loop across RGC types
-nBtsrp = 20;
-rocAreaRGC = NaN(nBtsrp, length(rgc));
-for ii = 1:length(rgc)
-    ss  = rgc(ii).subsample;
-    rf  = rgc(ii).rf;
+meridianName = cell(1,4);
+cellnum = NaN(1,4);
+rocStored = [];
+rocSEM = [];
+for meridian = 1:4
     
-    % Loop across trials, extracting RGC signals by convolution + subsample
-    for trial = 1:size(coneData,1)
-        coneCurrentSignal = squeeze(coneData(trial,:,:));
-        tmp = conv2(coneCurrentSignal,rf, 'valid');
-        tmp = tmp(round(ss:ss:end),round(ss:ss:end));
-        rgc(ii).data(trial,:) = tmp(:);
+    d = dir(fullfile(dataPth, '*.mat'));
+    [~,idx] = sort([d.datenum]);
+    
+    load(fullfile(dataPth, d(idx(end-meridian+1)).name));
+    
+    cellnum(meridian) = size(coneData,2);
+    angles(meridian) = params.polarAngle;
+    switch params.polarAngle
+        case 0,     meridianName{meridian} = 'Nasal (HM)'; 
+        case 90,    meridianName{meridian} = 'Superior (LVM)';
+        case 180,   meridianName{meridian} = 'Temporal (HM)';
+        case 270,   meridianName{meridian} = 'Inferior (UVM)';
     end
     
-    % Classify RGC outputs
-    for btstrp = 1:nBtsrp        
-        % scrambled = labels(randperm(length(labels)));
-        m = fitcsvm(rgc(ii).data, labels, 'KernelFunction', 'linear');
-        cv = crossval(m,'kfold',5);
-        rocAreaRGC(btstrp, ii) = 1-kfoldLoss(cv);
+    % Fit a linear svm classifier between two orientations and calculate
+    % cross-validated accuracy based on model
+    
+    % -------- first for cone signals ---------------------------------------
+    m = fitcsvm(coneData, labels, 'KernelFunction', 'linear');
+    cv = crossval(m,'kfold',5);
+    rocAreaCones = 1-kfoldLoss(cv);
+    
+    % -------- then for RGC signals -----------------------------------------
+    %  RGC hack - bandpass filter and subsample
+    
+    % RGC is a strucutred array. Each element corresponds to one model of RGCs.
+    % The model is defined by a spatial receptive field 'rf' and a subsampling
+    % rate 'ss'. The output of the RGCs are stored in 'data'. The inputs come
+    % from the cone outputs.
+    rgc = struct('ss', [], 'rf', [], 'data', []);
+    
+    % We will make several RGC classes defined by scaleFactor, which will scale
+    % both the receptive field size and the subsampling rate (the bigger the
+    % RF, the more coarsely we subsample).
+    scaleFactor = linspace(1.4,1.8,4);
+    scaleFactor = linspace(1.8,4, 3);%logspace(log10(1), log10(10),10);
+    scaleFactor = [2 3];
+    %scaleFactor = linspace(1.4,1.8,4);
+    for ii = 1:length(scaleFactor)
+        % Center surround RF. The receptive fields have an excitatory center
+        % with std of 1 cone * scaleFactor. The inhibitory surround has twice
+        % the sd of the center. The cell is balanced, so that the sum of center
+        % minus surround = 0.
+        rfCenter   = fspecial('Gaussian', 20,scaleFactor(ii));
+        rfSurround = fspecial('Gaussian', 20,2*scaleFactor(ii));
+        rgc(ii).rf =  rfCenter - rfSurround;
+        rgc(ii).subsample = scaleFactor(ii);
     end
+    
+    %  Load stored cone data
+    coneDataR = reshape(coneData, [], params.coneArraySize(1), params.coneArraySize(2));
+    
+    
+    %  Loop across RGC types
+    nBtsrp = 20;
+    rocAreaRGC = NaN(nBtsrp, length(rgc));
+    for ii = 1:length(rgc)
+        ss  = rgc(ii).subsample;
+        rf  = rgc(ii).rf;
+        
+        % Loop across trials, extracting RGC signals by convolution + subsample
+        for trial = 1:size(coneDataR,1)
+            coneCurrentSignal = squeeze(coneDataR(trial,:,:));
+            tmp = conv2(coneCurrentSignal,rf, 'valid');
+            tmp = tmp(round(ss:ss:end),round(ss:ss:end));
+            rgc(ii).data(trial,:) = tmp(:);
+        end
+        
+        % Classify RGC outputs
+        for btstrp = 1:nBtsrp
+            % scrambled = labels(randperm(length(labels)));
+            m = fitcsvm(rgc(ii).data, labels, 'KernelFunction', 'linear');
+            cv = crossval(m,'kfold',5);
+            rocAreaRGC(btstrp, ii) = 1-kfoldLoss(cv);
+        end
+    end
+    
+    fprintf('ROC Area for cones: %4.2f\n', rocAreaCones)
+    for ii = 1:length(rgc)
+        fprintf('ROC Area for RGC class %d: %4.2f\n', ii, mean(rocAreaRGC(:,ii)))
+    end
+    
+    % Plot classification accuracy as function of convergence ratio
+    if meridian == 1, fH = vcNewGraphWin; end
+    set(fH, 'Color', 'w')
+    set(gca,'FontSize',20); hold on
+    errorbar(scaleFactor, mean(rocAreaRGC), std(rocAreaRGC),'o-', 'LineWidth', 4, 'MarkerSize', 12)
+    xlabel('Cone to Midget Ganglion Cell Ratio')
+    ylabel('Classification Accuracy')
+    
+    rocStored(meridian,:) = mean(rocAreaRGC);
+    rocSEM(meridian,:) = std(rocAreaRGC);
 end
 
-fprintf('ROC Area for cones: %4.2f\n', rocAreaCones)
-for ii = 1:length(rgc);
-    fprintf('ROC Area for RGC class %d: %4.2f\n', ii, mean(rocAreaRGC(:,ii)))
-end
+legend(meridianName)
 
-%% Plot classification accuracy as function of convergence ratio
-fH = vcNewGraphWin;
-set(fH, 'Color', 'w')
-set(gca,'FontSize',20); hold on
-errorbar(scaleFactor, mean(rocAreaRGC), std(rocAreaRGC),'o-', 'LineWidth', 4, 'MarkerSize', 12)
-xlabel('Cone to Midget Ganglion Cell Ratio')
-ylabel('Classification Accuracy')
+%%
+fH = vcNewGraphWin;    set(fH, 'Color', 'w')
+p = polar(0,.5, 'k');
+hold on
+set(gca,'FontSize',20);
+set(p, 'visible', 'off');
+for ii = 1:size(rocStored,2)
+    p = polar(deg2rad([angles angles(1)]), rocStored([1:end 1],ii)'-.5, 'o-');
+    set(p, 'LineWidth', 4, 'MarkerSize', 12)
+    errorbar(0, rocStored(angles==90,ii)-.5, rocSEM(angles==90,ii), 'LineWidth', 3, 'Color', get(p, 'color'));
+end
+hgexport(gcf, sprintf('~/Desktop/polarPF%s.eps', whichEye))
+title('Classification Accuracy')
 
