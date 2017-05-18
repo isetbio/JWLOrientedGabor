@@ -19,7 +19,7 @@ See script: t_orientedGaborDiscrimination.m
 
 Simulation of an experiment by Marisa Carrasco and Jon Winawer measuring orientation discrimination performance for an acrhomatic, peripheral  Gabor. 
 
-The Gabor is at 6 deg eccentricity, 6 cpd, 1.5 deg windwo, and +/- 20 deg from vertical. 
+The Gabor is at 6 deg eccentricity, 6 cpd, 1.5 deg window, and +/- 20 deg from vertical. 
 
 Trials are simulated as a 100 ms static exposure with scene jitter created by eye movements (sampling from a 2D isotropic Gaussian distribution, std = 2 cones).
 

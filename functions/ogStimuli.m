@@ -1,7 +1,7 @@
-function [left, right, scenes, tseries, fname] = ogStimuli(varargin)
-% OGSTIMULI - Create the pair of oriented stimuli (left and right)
+function [OG, scenes, tseries, fname] = ogStimuli(varargin)
+% OGSTIMULI - Create oriented stimuli (e.g., left and right)
 %
-%  [aligned, offset, scenes, tseries, fname] = ogStimuli(varargin)
+%  [OG, scenes, tseries, fname] = ogStimuli(varargin)
 %
 % There is one input argument that is a struct with these parameters
 %
@@ -20,10 +20,10 @@ function [left, right, scenes, tseries, fname] = ogStimuli(varargin)
 % The default display is an Apple LCD monitor.
 %
 % Examples: REWRITE EXAMPLE
-%    clear p; p.barOffset = 3; p.barWidth  = 3;
+%    clear p; fov = 2; p.ang = 0; p.freq  = 6*fov; p.GaborFlag = .25*fov;
 %    p.tsamples = [-60:70]; p.timesd = 20;  
-%    [~,offset,~,tseries, fname] = vaStimuli(p);
-%    offset.visualize;
+%    [OG,~,tseries, fname] = ogStimuli(p);
+%    OG.visualize;
 %    vcNewGraphWin; plot(tseries)
 %
 % Notes
@@ -33,17 +33,14 @@ function [left, right, scenes, tseries, fname] = ogStimuli(varargin)
 %
 % See also vaStimuli in WLVernier repository
 
-%%
-params = varargin{1};
+%% Load a stored image, if it exists
 
-% Stored imageBasis filename with the same parameters as this
-%[~,fname] = vaFname(params);
 fname = fullfile(ogRootPath, 'Stimulus', 'stimulus.mat');
 
 if exist(fname,'file')
     disp('Loading stimulus from file - parameters match')
     try
-        load(fname,'aligned','offset','scenes','tseries');
+        load(fname,'OG','scenes','tseries');
         return;
     catch
         disp('File found, but not the variables.  Creating.')
@@ -53,41 +50,35 @@ else
 end
 
 
-%%
+%% Parse inputs
 p = inputParser;
 
 p.KeepUnmatched = true;   % Sometimes we overload p for SVM and cMosaic
 
-p.addParameter('vernier',vernierP,@isstruct);
-
-p.addParameter('tsamples',(-50:100),@isvector);  % Time samples (ms)
-p.addParameter('timesd',20,@isscalar);           % Time standard deviation
-
-% When the LCD-Apple display is 210, 210 pixels and sceneFOV is 0.35, then 1
-% pixel is 6 arc sec
-p.addParameter('sceneFOV',0.35,@isscalar);  % Degrees. 
-p.addParameter('distance',0.3,@isscalar);   % Meters
+p.addParameter('gabor', harmonicP,@isstruct);
+p.addParameter('tsamples', (-50:100),@isvector);  % Time samples (ms)
+p.addParameter('timesd', 20,@isscalar);           % Time standard deviation
+p.addParameter('sceneFOV',2,@isscalar);           % Degrees
+p.addParameter('distance',0.57,@isscalar);        % Meters
+p.addParameter('bgColor',0.5,@isscalar);          % 0 to 1 (assumed grayscale)
 
 p.parse(varargin{:});
 
-vernier   = p.Results.vernier;
-barWidth  = vernier.barWidth;
-barOffset = vernier.offset;
-bgColor   = vernier.bgColor;
+%% Derive variables from parsed inputs
+oGabor     = p.Results.gabor; %
 
 tsamples  = p.Results.tsamples;
 timesd    = p.Results.timesd;
+sceneFOV  = p.Results.sceneFOV;
+distance  = p.Results.distance;
+bgColor   = p.Results.bgColor;
 
-sceneFOV = p.Results.sceneFOV;
-distance = p.Results.distance;
-
-%% Build Gaussian time series.
+%% Build Gaussian time series (soft window for stimulus in time)
 
 tseries = exp(-(tsamples/timesd).^2);
 tseries = ieScale(tseries,0,1);
 
 %%  Scene parameters in general
-clear sparams; 
 
 % The size of the integration for the cone mosaic is 5 minutes for a line.
 % There are two lines, so the stimulus should be more than 10 minutes.  We
@@ -97,46 +88,47 @@ clear sparams;
 % We create the scene and thus the oi to be a bit bigger to allow for eye
 % movements.  We set the scene to be .35*60 ~ 21 minutes.  The oi is even a
 % little bigger to allow for blur.
-sparams.fov      = sceneFOV;
+sparams.fov      = sceneFOV;    % degrees
 sparams.distance = distance;    % Meters
+sparams.bgColor  = bgColor;     % scaled from 0 to 1
 
 % Basic vernier parameters for the oiSequence.  Reverse order forces the
 % allocation first so the array does not grow over the loop.
-clear vparams;
 for ii = 3:-1:1
-    vparams(ii) = vernier;
+    ogparams(ii) = oGabor;
 end
 
 % Uniform field, no line, just the background color
-vparams(1).name     = 'uniform'; 
-vparams(1).bgColor  = bgColor; 
-vparams(1).barWidth = 0;
+ogparams(1).name     = 'uniform'; 
+ogparams(1).contrast = 0;
 
-% Offset Line on a zero background
-vparams(2).name     = 'offset';  
-vparams(2).bgColor  = 0; 
-vparams(2).offset   = barOffset;
-vparams(2).barWidth = barWidth;   % The bar width is 1 minute, 10 * 6sec
+% Left oriented Gabor on a zero background
+ogparams(2).name     = 'leftOG';  
+ogparams(2).contrast = 1;
+ogparams(2).freq     = freq;
+ogparams(2).ang      = ang;
+ogparams(2).GaborFlag = GaussSD;
 
-% Aligned lines on a zero background
-vparams(3).name     = 'aligned'; 
-vparams(3).bgColor  = 0; 
-vparams(3).offset   = 0;
-vparams(3).barWidth = barWidth;
+% Right oriented Gabor on a zero background
+ogparams(3).name     = 'rightOG'; 
+ogparams(3).contrast = 1;
+ogparams(3).freq     = freq;
+ogparams(3).ang      = -ang;
+ogparams(3).GaborFlag = GaussSD;
 
 % Offset lines
 P.sampleTimes = tsamples;
-P.testParameters = vparams([1 2]);
+P.testParameters = ogparams([1 2]);
 P.sceneParameters = sparams;
 if isfield(params,'oi'), P.oi = params.oi; end
-[right, scenes] = oisCreate('vernier','add', tseries, P);
+[rightOG, scenes] = oisCreate('harmonic','add', tseries, P);
 % offset.visualize;
 % ieAddObject(offset.oiFixed); ieAddObject(offset.oiModulated); oiWindow;
 % ieAddObject(scenesO{2}); sceneWindow;
 
 % Aligned lines
-P.testParameters = vparams([1 3]);
-left = oisCreate('vernier','add', tseries, P);
+P.testParameters = ogparams([1 3]);
+leftOG = oisCreate('vernier','add', tseries, P);
 % aligned.visualize;
 
 %%
