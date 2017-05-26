@@ -35,19 +35,21 @@ function [OG, scenes, tseries, fname] = ogStimuli(varargin)
 
 %% Load a stored image, if it exists
 
-fname = fullfile(ogRootPath, 'Stimulus', 'stimulus.mat');
+pth = fullfile(ogRootPath, 'Stimulus');
+if ~exist(pth, 'dir'), mkdir(pth); end
+fname = fullfile(pth, 'stimulus.mat');
 
-if exist(fname,'file')
-    disp('Loading stimulus from file - parameters match')
-    try
-        load(fname,'OG','scenes','tseries');
-        return;
-    catch
-        disp('File found, but not the variables.  Creating.')
-    end
-else 
-    disp('Creating and saving stimulus file - no match found')
-end
+% if exist(fname,'file')
+%     disp('Loading stimulus from file - parameters match')
+%     try
+%         load(fname,'OG','scenes','tseries');
+%         return;
+%     catch
+%         disp('File found, but not the variables.  Creating.')
+%     end
+% else 
+%     disp('Creating and saving stimulus file - no match found')
+% end
 
 
 %% Parse inputs
@@ -71,6 +73,8 @@ tsamples  = p.Results.tsamples;
 timesd    = p.Results.timesd;
 sceneFOV  = p.Results.sceneFOV;
 distance  = p.Results.distance;
+
+% Currently not being used because bgColor doesn't exist in sceneSet!
 bgColor   = p.Results.bgColor;
 
 %% Build Gaussian time series (soft window for stimulus in time)
@@ -104,35 +108,30 @@ ogparams(1).contrast = 0;
 
 % Left oriented Gabor on a zero background
 ogparams(2).name     = 'leftOG';  
-ogparams(2).contrast = 1;
-ogparams(2).freq     = freq;
-ogparams(2).ang      = ang;
-ogparams(2).GaborFlag = GaussSD;
 
 % Right oriented Gabor on a zero background
 ogparams(3).name     = 'rightOG'; 
-ogparams(3).contrast = 1;
-ogparams(3).freq     = freq;
-ogparams(3).ang      = -ang;
-ogparams(3).GaborFlag = GaussSD;
+ogparams(3).ang      = -oGabor.ang;
 
-% Offset lines
-P.sampleTimes = tsamples;
-P.testParameters = ogparams([1 2]);
-P.sceneParameters = sparams;
-if isfield(params,'oi'), P.oi = params.oi; end
-[rightOG, scenes] = oisCreate('harmonic','add', tseries, P);
-% offset.visualize;
-% ieAddObject(offset.oiFixed); ieAddObject(offset.oiModulated); oiWindow;
-% ieAddObject(scenesO{2}); sceneWindow;
+% Put test params and scene params into P for use with oisCreate
+P.sampleTimes       = tsamples;
+P.testParameters    = ogparams([1 2]);
+P.sceneParameters   = sparams;
 
-% Aligned lines
+[OG, scenes] = oisCreate('harmonic','add', tseries, P);
+% OG.visualize;
+% ieAddObject(OG.oiFixed); ieAddObject(OG.oiModulated); oiWindow;
+% ieAddObject(scenes{2}); sceneWindow;
+
+% Gabor with opposite rotation
 P.testParameters = ogparams([1 3]);
-leftOG = oisCreate('vernier','add', tseries, P);
-% aligned.visualize;
+OG(2) = oisCreate('harmonic','add', tseries, P);
+% OG(2).visualize;
+% ieAddObject(OG(2).oiFixed); ieAddObject(OG(2).oiModulated); oiWindow;
+
 
 %%
-save(fname,'aligned','offset','scenes','tseries','P');
+save(fname,'OG','scenes','tseries','P');
 
 % Print out the offset in degrees of arc sec 
 % offsetDeg = sceneGet(scenes{1},'degrees per sample')*vparams(2).offset;
