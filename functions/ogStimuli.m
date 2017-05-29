@@ -19,12 +19,29 @@ function [OG, scenes, tseries, fname] = ogStimuli(varargin)
 %
 % The default display is an Apple LCD monitor.
 %
-% Examples: REWRITE EXAMPLE
-%    clear p; fov = 2; p.ang = 0; p.freq  = 6*fov; p.GaborFlag = .25*fov;
-%    p.tsamples = [-60:70]; p.timesd = 20;  
-%    [OG,~,tseries, fname] = ogStimuli(p);
-%    OG.visualize;
-%    vcNewGraphWin; plot(tseries)
+% Outputs
+%
+%  OG       - 1x2 OIsequence array for left- and right-oriented Gabors
+%  scenes   - A 1x2 cell with a uniform field scene and oriented gabor scene
+%  tseries  - A vector of the temporal window modulator for the scene
+%  fname    - Path and filename where stimulus is stored
+%
+% Example: 
+%     params.cmFOV              = 2;
+%     params.em                 = emCreate;
+%     params.tStep              = 0.005;      % seconds
+%     params.sceneFOV           = 2;
+%     params.tsamples           = (-0.060:params.tStep:0.070); % seconds
+%     params.timesd             = 0.100;                      % seconds
+%     params.gabor              = harmonicP; % default harmonic
+%     params.gabor.ang          = (pi/180)* 20;  % Gabor orientation (radians)
+%     params.gabor.freq         = 6*params.sceneFOV;
+%     params.gabor.GaborFlag    = .25/params.sceneFOV; % gaussian sd for gabor
+%     [OG,scenes,tseries, fname] = ogStimuli(params);
+% 
+%     OG(1).visualize
+%     ieAddObject(scenes{2}); sceneWindow;
+%     vcNewGraphWin; plot(tseries)
 %
 % Notes
 %   Luminance 2 log millilamberts
@@ -118,14 +135,14 @@ P.sampleTimes       = tsamples;
 P.testParameters    = ogparams([1 2]);
 P.sceneParameters   = sparams;
 
-[OG, scenes] = oisCreate('harmonic','add', tseries, P);
+[OG, scenes] = oisCreate('harmonic','blend', tseries, P);
 % OG.visualize;
 % ieAddObject(OG.oiFixed); ieAddObject(OG.oiModulated); oiWindow;
 % ieAddObject(scenes{2}); sceneWindow;
 
 % Gabor with opposite rotation
 P.testParameters = ogparams([1 3]);
-OG(2) = oisCreate('harmonic','add', tseries, P);
+OG(2) = oisCreate('harmonic','blend', tseries, P);
 % OG(2).visualize;
 % ieAddObject(OG(2).oiFixed); ieAddObject(OG(2).oiModulated); oiWindow;
 

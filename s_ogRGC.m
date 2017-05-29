@@ -1,0 +1,377 @@
+%% Oriented Gabor Discrimination, take 2
+% This script supercedes t_orientedGaborDiscrimination.m, which no longer runs, 
+% due to changes in isetbio.
+% 
+% Model cone responses for the experiment on measuring orientation discrimination 
+% thresholds of an achromatic, peripheral Gabor. 
+% 
+% Script outline: 
+%%     Build structures 
+% * Build scene as an achromatic Gabor patch with imageHarmonic. 
+% * Build OIS (optical image sequence) 
+% * Cone mosaic 
+% * Bipolars 
+% * RGCs 
+% * Cortex 
+% * Classifier
+%% |   Questions|
+% * |Where do eye movments fit in? (Probably OIS) |
+% * |Spatial and temporal pooling?|
+%% |Experiment|
+% * |  Loop over 2 stimulus orientations and n trials per orientation|
+% * |  Within each trial, add eye movements to sensor|
+% * |  Build the outer segment object with linear filters and compute its|
+% * |      response with the sensor structure.|
+% * |  Sum the response over time for each cone as a cheap way to simulate|
+% * |       downstream temporal integration of cone outputs|
+% * |  Save the cone response as they are time consuming to compute|
+% * |  From the saved cone file, compute simplified RGC outputs by|
+% * |        convolution (DoG) and subsampling|
+% * |  Compute linear discriminant of stimulus orientation using cone|
+% * |        outputs and RGC outputs|
+% 
+% EK/JW/ NYU ISETBIO Team, Copyright 2017
+
+
+%% Some settings - are they needed??
+%%
+
+% whichEye = 'left';
+% plotConeResponseFlag = true;  % plot an example movie of cone responses during one trial
+% saveConeCurrentsFlag = true;  % save cone responses across all trials (after temporal integration within trials)
+%% Specify experiment parameters 
+%%
+
+% Number of trials per stimulus condition (50)
+nTrials = 2;
+
+%% Specify stimulus parameters
+%%
+% Cone mosaic field of view in degrees (do we need this here??  we are just doing the scene)
+params.cmFOV = 2;
+params.em        = emCreate;
+params.em.emFlag = [1 1 1]'; % Include tremor, drift, microsaccades
+
+% Integration time
+params.tStep = 0.002;         % seconds
+
+% Original scene (before eye movements?)
+params.sceneFOV = 2;
+
+% Gaussian temporal window for stimulus
+params.tsamples      = (-0.070:params.tStep:0.070); % This appears to be coded in seconds
+params.timesd        = 0.100;                      % seconds
+
+% Specify retinal location where stimulus is presented
+params.eccentricity = 6;   % visual angle of stimulus center, in deg
+params.polarAngle   = [0 90 180 270]; % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+
+% Make a Gabor with default parameters, then update parameters
+params.gabor = harmonicP;
+params.gabor.ang           = (pi/180)* 20;  % Gabor orientation (radians)
+params.gabor.freq          = 6*params.sceneFOV;
+params.gabor.contrast      = 1; % presumably michelson, [0 1]
+params.gabor.GaborFlag     = .25/params.sceneFOV;
+
+
+%% Make the stimulus
+
+
+[OG,scenes,tseries, fname] = ogStimuli(params);
+
+% OG(1).visualize;
+% vcNewGraphWin; plot(tseries)
+
+
+%% Compute absorotions from multiple tirals
+%%
+
+
+%  Compute absorptions for multiple trials
+tSamples = OG(1).length;
+
+% compute x,y position in m of center of retinal patch from ecc and angle
+[x, y] = pol2cart(params.polarAngle(1), params.eccentricity(1));
+x = x * .3 * 0.001; % .3 mm per deg, .001 mm per meter
+y = y * .3 * 0.001; % .3 mm per deg, .001 mm per meter
+cMosaic = coneMosaic('center', [x, y]);
+
+% Sometimes we set the mosaic size to 15 minutes (.25 deg) because that is
+% the spatial pooling size found by Westheimer and McKee
+cMosaic.setSizeToFOV(params.cmFOV);
+
+% Not sure why these have to match, but there is a bug if they don't.
+cMosaic.integrationTime = OG(1).timeStep;
+% For aligned or offset
+cMosaic.noiseFlag = 'random';
+emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
+    'em', params.em);
+
+% compute absorptions 
+[absorptions, current, interpFilters, meanCur] = cMosaic.compute(OG(1), 'currentFlag', true, ...
+    'emPaths', emPaths);
+
+% Have a look
+% cMosaic.window;
+
+%% Add bipolar cells
+%%
+bp = bipolar(cMosaic,'cellType','onmidget');   % offdiffuse
+bp.set('sRFcenter',10);
+bp.set('sRFsurround',0);
+
+[~, bpNTrialsCenter, bpNTrialsSurround] = bp.compute(cMosaic,'coneTrials',current);
+
+% Have a look
+% bp.window;
+
+%% Retinal ganglion cell model
+%%
+% STILL UNDER CONSTRUCTION
+
+% Choose a cell type
+cellType = 'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
+% irParams.name = 'macaque phys'; % ?? Not sure about this
+irParams.eyeSide = 'left';
+
+% Create inner retina object
+ecc = 0; % Not sure about this, is this related to stimulus or not???
+irParams.eyeRadius = sqrt(sum(ecc.^2)); 
+irParams.eyeAngle = 0; ntrials = 0;
+irParams.eyeRadius = 0;
+innerRetina = ir(bp, irParams);
+
+mosaicParams.centerNoise = 0.2;
+% mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
+% mosaicParams.axisVariance = .1;
+mosaicParams.type  = cellType;
+mosaicParams.model = 'lnp'; %glm option makes matlab shut down at line 87 in rgcGLM ([obj.couplingFilter, obj.couplingMatrix] = buildCouplingFilters(obj, obj.dt))
+
+innerRetina.mosaicCreate(mosaicParams);
+
+% innerRetina.mosaic{1}.set('rfDiameter',10);
+innerRetina.mosaic{1}.rgcInitSpace(innerRetina,cellType);
+
+nTrials = 1; innerRetina.set('numberTrials',nTrials);
+innerRetina.mosaic{1}.get('rfDiameter')
+
+%% Compute the inner retina response and visualize
+
+% Number of trials refers to number of repeats of the same stimulus
+disp('Computing rgc responses');
+[innerRetina, nTrialsSpikes] = innerRetina.compute(bp,'bipolarTrials',bpNTrialsCenter - bpNTrialsSurround); 
+ 
+% Could become - innerRetina.window{mosaicNumber);
+innerRetina.mosaic{1}.window;
+%% Loop over two stimulus classes and repeated trials and compute cone responses
+%%
+storedConeCurrents = cell(1,length(OG));
+
+for angleInd = 1:length(OG)
+    fprintf('\n'); % Comment out for publishing
+    
+    % We render a new scene for each stimulus orientation (but not for
+    % repeated trials for the same orientation). We also pad the scene
+    % field of view by factor padFactor so that eye movements do not cause
+    % the sensor to move out of the scence field of view
+    padFactor             = 2;
+    theseParams           = params;
+    theseParams.ang       = params.orientation(angleInd);
+    theseParams.freq      = params.freq * padFactor;
+    theseParams.GaborFlag = params.GaborFlag / padFactor;
+    
+    scene = sceneCreate('harmonic', theseParams);
+    scene = sceneSet(scene, 'h fov', params.fov*padFactor);
+    
+    % Compute optical image - also computed once per stimulus class (not
+    % re-computed for new trials within a stimulus class)
+    oi = oiCompute(oi, scene);
+    
+    % Loop over trials. Each trial gets its own eye movments.
+    for trial = 1:nTrials
+        % fprintf('.'); drawnow();  % Comment out for publishing
+        
+        % Eye position in units of number of cones
+        eyePos = eyePosFun(params.nSteps);
+        
+        % Loop through frames to build movie
+        volts = zeros([sensorGet(sensor, 'size') params.nSteps]);
+        for t = 1 : params.nSteps
+            
+            % Compute absorptions
+            sensor = sensorSet(sensor, 'positions', eyePos(t, :));
+            sensor = coneAbsorptions(sensor, oi);
+            
+            volts(:,:,t) = sensorGet(sensor, 'volts');
+        end % t
+        
+        % Set the stimuls into the sensor object
+        sensor = sensorSet(sensor, 'volts', volts);
+%% Train linear SVM and find cross-validated accuracy
+% Create the outer segment object
+%%
+        os = osCreate('linear');
+        
+        % Compute the photocurrent for the whole time series
+        os = osCompute(os, sensor);
+        coneCurrentSignal = sum(osGet(os, 'conecurrentsignal'),3);
+        params.coneArraySize = size(coneCurrentSignal);
+        
+        storedConeCurrents{angleInd}(trial,:) = coneCurrentSignal(:);
+        
+        % visualize cone response for an example trials
+        if plotConeResponseFlag && trial == 1
+            vcAddObject(scene); sceneWindow;
+            
+            vcNewGraphWin;
+            coneCurrentSignal = osGet(os, 'conecurrentsignal');
+            
+            subplot(3,1,1)
+            imagesc(mean(coneCurrentSignal,3));axis image
+            title('Mean cone output across trial');
+            for ii = 1:params.nSteps
+                subplot(3,1,2)
+                imagesc(coneCurrentSignal(:,:,ii)); axis image
+                title('Cone output at single time points');
+                subplot(3,1,3)
+                imagesc(volts(:,:,ii));  axis image
+                title('Cone voltage at single time points');
+                pause(0.1);
+            end % nSteps
+        end
+        
+    end
+    
+end %angleInd
+%% Save
+%%
+coneData = [storedConeCurrents{1}; storedConeCurrents{2}];
+labels   = [ones(nTrials,1); -1*ones(nTrials,1)];
+
+dataPth = fullfile(fileparts(which(mfilename)), 'data');
+
+if saveConeCurrentsFlag
+    fname = fullfile(dataPth, sprintf('coneResponses%s.mat', datestr(now, 'YYYY-mm-DD_HH.MM.SS')));
+    save(fname,  'coneData', 'labels', 'params', 'eyePosFun');
+end
+
+
+return
+%% Classifiy
+%%
+meridianName = cell(1,4);
+cellnum = NaN(1,4);
+rocStored = [];
+rocSEM = [];
+for meridian = 1:4
+    
+    d = dir(fullfile(dataPth, '*.mat'));
+    [~,idx] = sort([d.datenum]);
+    
+    load(fullfile(dataPth, d(idx(end-meridian+1)).name));
+    
+    cellnum(meridian) = size(coneData,2);
+    angles(meridian) = params.polarAngle;
+    switch params.polarAngle
+        case 0,     meridianName{meridian} = 'Nasal (HM)';
+        case 90,    meridianName{meridian} = 'Superior (LVM)';
+        case 180,   meridianName{meridian} = 'Temporal (HM)';
+        case 270,   meridianName{meridian} = 'Inferior (UVM)';
+    end
+    
+    % Fit a linear svm classifier between two orientations and calculate
+    % cross-validated accuracy based on model
+    
+    % -------- first for cone signals ---------------------------------------
+    m = fitcsvm(coneData, labels, 'KernelFunction', 'linear');
+    cv = crossval(m,'kfold',5);
+    rocAreaCones = 1-kfoldLoss(cv);
+    
+    % -------- then for RGC signals -----------------------------------------
+    %  RGC hack - bandpass filter and subsample
+    
+    % RGC is a strucutred array. Each element corresponds to one model of RGCs.
+    % The model is defined by a spatial receptive field 'rf' and a subsampling
+    % rate 'ss'. The output of the RGCs are stored in 'data'. The inputs come
+    % from the cone outputs.
+    rgc = struct('ss', [], 'rf', [], 'data', []);
+    
+    % We will make several RGC classes defined by scaleFactor, which will scale
+    % both the receptive field size and the subsampling rate (the bigger the
+    % RF, the more coarsely we subsample).
+    scaleFactor = linspace(1.4,1.8,4);
+    scaleFactor = linspace(1.8,4, 3);%logspace(log10(1), log10(10),10);
+    scaleFactor = [2 3];
+    %scaleFactor = linspace(1.4,1.8,4);
+    for ii = 1:length(scaleFactor)
+        % Center surround RF. The receptive fields have an excitatory center
+        % with std of 1 cone * scaleFactor. The inhibitory surround has twice
+        % the sd of the center. The cell is balanced, so that the sum of center
+        % minus surround = 0.
+        rfCenter   = fspecial('Gaussian', 20,scaleFactor(ii));
+        rfSurround = fspecial('Gaussian', 20,2*scaleFactor(ii));
+        rgc(ii).rf =  rfCenter - rfSurround;
+        rgc(ii).subsample = scaleFactor(ii);
+    end
+    
+    %  Load stored cone data
+    coneDataR = reshape(coneData, [], params.coneArraySize(1), params.coneArraySize(2));
+    
+    
+    %  Loop across RGC types
+    nBtsrp = 20;
+    rocAreaRGC = NaN(nBtsrp, length(rgc));
+    for ii = 1:length(rgc)
+        ss  = rgc(ii).subsample;
+        rf  = rgc(ii).rf;
+        
+        % Loop across trials, extracting RGC signals by convolution + subsample
+        for trial = 1:size(coneDataR,1)
+            coneCurrentSignal = squeeze(coneDataR(trial,:,:));
+            tmp = conv2(coneCurrentSignal,rf, 'valid');
+            tmp = tmp(round(ss:ss:end),round(ss:ss:end));
+            rgc(ii).data(trial,:) = tmp(:);
+        end
+        
+        % Classify RGC outputs
+        for btstrp = 1:nBtsrp
+            % scrambled = labels(randperm(length(labels)));
+            m = fitcsvm(rgc(ii).data, labels, 'KernelFunction', 'linear');
+            cv = crossval(m,'kfold',5);
+            rocAreaRGC(btstrp, ii) = 1-kfoldLoss(cv);
+        end
+    end
+    
+    fprintf('ROC Area for cones: %4.2f\n', rocAreaCones)
+    for ii = 1:length(rgc)
+        fprintf('ROC Area for RGC class %d: %4.2f\n', ii, mean(rocAreaRGC(:,ii)))
+    end
+    
+    % Plot classification accuracy as function of convergence ratio
+    if meridian == 1, fH = vcNewGraphWin; end
+    set(fH, 'Color', 'w')
+    set(gca,'FontSize',20); hold on
+    errorbar(scaleFactor, mean(rocAreaRGC), std(rocAreaRGC),'o-', 'LineWidth', 4, 'MarkerSize', 12)
+    xlabel('Cone to Midget Ganglion Cell Ratio')
+    ylabel('Classification Accuracy')
+    
+    rocStored(meridian,:) = mean(rocAreaRGC);
+    rocSEM(meridian,:) = std(rocAreaRGC);
+end
+
+legend(meridianName)
+%% 
+% 
+%%
+fH = vcNewGraphWin;    set(fH, 'Color', 'w')
+p = polar(0,.5, 'k');
+hold on
+set(gca,'FontSize',20);
+set(p, 'visible', 'off');
+for ii = 1:size(rocStored,2)
+    p = polar(deg2rad([angles angles(1)]), rocStored([1:end 1],ii)'-.5, 'o-');
+    set(p, 'LineWidth', 4, 'MarkerSize', 12)
+    errorbar(0, rocStored(angles==90,ii)-.5, rocSEM(angles==90,ii), 'LineWidth', 3, 'Color', get(p, 'color'));
+end
+hgexport(gcf, sprintf('~/Desktop/polarPF%s.eps', whichEye))
+title('Classification Accuracy')
