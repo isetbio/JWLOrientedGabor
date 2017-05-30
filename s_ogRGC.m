@@ -70,15 +70,15 @@ params.tsamples            = (-0.070:params.tStep:0.070); % seconds
 params.timesd              = 0.100;                       % seconds
 
 % Specify retinal location where stimulus is presented
-params.eccentricity        = 6;                   % visual angle of stimulus center, in deg
-params.polarAngle          = [0 90 180 270];      % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+params.eccentricity        = 6;                           % visual angle of stimulus center, in deg
+params.polarAngle          = [0 90 180 270];              % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
 
 % Make a Gabor with default parameters, then update parameters
-params.gabor               = harmonicP;           % standard Gabor
-params.gabor.ang           = (pi/180)* 20;        % Gabor orientation (radians)
-params.gabor.freq          = 6*params.sceneFOV;   % spatial frequency (cycles/deg)
-params.gabor.contrast      = 1;                   % presumably michelson, [0 1]
-params.gabor.GaborFlag     = .25/params.sceneFOV; % Gaussian window
+params.gabor               = harmonicP;                   % standard Gabor
+params.gabor.ang           = (pi/180)* 20;                % Gabor orientation (radians)
+params.gabor.freq          = 6*params.sceneFOV;           % spatial frequency (cycles/deg)
+params.gabor.contrast      = 1;                           % presumably michelson, [0 1]
+params.gabor.GaborFlag     = .25/params.sceneFOV;         % Gaussian window
 
 
 %% Make the stimuli
@@ -121,7 +121,10 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 
 %% Add bipolar cells
 
-bp = bipolar(cMosaic,'cellType','ondiffuse','ecc',params.eccentricity(1));   % offdiffuse
+% Check units of eccentricity!
+% bp = bipolar(cMosaic,'cellType','ondiffuse','ecc',params.eccentricity(1));   % offdiffuse,
+bp = bipolar(cMosaic,'cellType','ondiffuse','ecc',cMosaic.center(1));   % offdiffuse
+
 bp.set('sRFcenter',1); % not sure about this..
 bp.set('sRFsurround',1); % not sure about this..
 
@@ -135,12 +138,14 @@ bp.set('sRFsurround',1); % not sure about this..
 %% Retinal ganglion cell model
 
 % Choose a cell type
-cellType = 'onParasol'; %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
+cellType = 'onMidget'; %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
 irParams.name = 'macaque inner retina 1'; % ?? Not sure about this
 irParams.eyeSide = 'left';
 
 % Create inner retina object
-ecc = params.eccentricity(1);
+ecc = params.eccentricity(1); % Check if this is in degrees or m or mm?
+ecc = cMosaic.center(1) * 1000; % in mm now..
+
 irParams.eyeRadius = sqrt(sum(ecc.^2)); 
 irParams.eyeAngle = 0;
 innerRetina = ir(bp, irParams);
