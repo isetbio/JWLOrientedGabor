@@ -5,77 +5,83 @@
 % Model cone responses for the experiment on measuring orientation discrimination 
 % thresholds of an achromatic, peripheral Gabor. 
 % 
-% Script outline: 
-%%     Build structures 
-% * Build scene as an achromatic Gabor patch with imageHarmonic. 
-% * Build OIS (optical image sequence) 
-% * Cone mosaic 
-% * Bipolars 
-% * RGCs 
-% * Cortex 
-% * Classifier
-%% |   Questions|
-% * |Where do eye movments fit in? (Probably OIS) |
-% * |Spatial and temporal pooling?|
-%% |Experiment|
-% * |  Loop over 2 stimulus orientations and n trials per orientation|
-% * |  Within each trial, add eye movements to sensor|
-% * |  Build the outer segment object with linear filters and compute its|
-% * |      response with the sensor structure.|
-% * |  Sum the response over time for each cone as a cheap way to simulate|
-% * |       downstream temporal integration of cone outputs|
-% * |  Save the cone response as they are time consuming to compute|
-% * |  From the saved cone file, compute simplified RGC outputs by|
-% * |        convolution (DoG) and subsampling|
-% * |  Compute linear discriminant of stimulus orientation using cone|
-% * |        outputs and RGC outputs|
+%% ---------------------- Script outline ---------------------- 
+%   
+%   Build structures:
+%
+%       * Build scene as an achromatic Gabor patch with imageHarmonic. 
+%       * Build OIS (optical image sequence) 
+%       * Cone mosaic 
+%       * Bipolars 
+%       * RGCs 
+%       * Cortex 
+%       * Classifier
+
+%% ---------------------- Questions ----------------------
+%
+%       * Where do eye movments fit in? (Probably OIS)
+%       * Spatial and temporal pooling?
+
+%% ---------------------- Experiment ----------------------
+%
+%       *   Loop over 2 stimulus orientations and n trials per orientation
+%       *   Within each trial, add eye movements to sensor
+%       *   Build the outer segment object with linear filters and compute its
+%              response with the sensor structure.
+%       *   Sum the response over time for each cone as a cheap way to simulate
+%              downstream temporal integration of cone outputs
+%       *   Save the cone response as they are time consuming to compute
+%       *   From the saved cone file, compute simplified RGC outputs by
+%              convolution (DoG) and subsampling
+%       *   Compute linear discriminant of stimulus orientation using cone
+%       *      outputs and RGC outputs
 % 
+
 % EK/JW/ NYU ISETBIO Team, Copyright 2017
 
 
-%% Some settings - are they needed??
-%%
+%% Some general settings - are they needed??
 
 % whichEye = 'left';
 % plotConeResponseFlag = true;  % plot an example movie of cone responses during one trial
 % saveConeCurrentsFlag = true;  % save cone responses across all trials (after temporal integration within trials)
-%% Specify experiment parameters 
-%%
 
-% Number of trials per stimulus condition (50)
-nTrials = 2;
+
+%% Specify experiment parameters 
+
+% Number of trials per stimulus condition
+nTrials = 10;
 
 %% Specify stimulus parameters
-%%
+
 % Cone mosaic field of view in degrees (do we need this here??  we are just doing the scene)
-params.cmFOV = 2;
+params.cmFOV     = 2;           % degrees
 params.em        = emCreate;
-params.em.emFlag = [1 1 1]'; % Include tremor, drift, microsaccades
+params.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
 
 % Integration time
-params.tStep = 0.002;         % seconds
+params.tStep     = 0.002;       % seconds
 
 % Original scene (before eye movements?)
-params.sceneFOV = 2;
+params.sceneFOV  = 2;           % degrees
 
 % Gaussian temporal window for stimulus
-params.tsamples      = (-0.070:params.tStep:0.070); % This appears to be coded in seconds
-params.timesd        = 0.100;                      % seconds
+params.tsamples            = (-0.070:params.tStep:0.070); % seconds
+params.timesd              = 0.100;                       % seconds
 
 % Specify retinal location where stimulus is presented
-params.eccentricity = 6;   % visual angle of stimulus center, in deg
-params.polarAngle   = [0 90 180 270]; % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+params.eccentricity        = 6;                   % visual angle of stimulus center, in deg
+params.polarAngle          = [0 90 180 270];      % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
 
 % Make a Gabor with default parameters, then update parameters
-params.gabor = harmonicP;
-params.gabor.ang           = (pi/180)* 20;  % Gabor orientation (radians)
-params.gabor.freq          = 6*params.sceneFOV;
-params.gabor.contrast      = 1; % presumably michelson, [0 1]
-params.gabor.GaborFlag     = .25/params.sceneFOV;
+params.gabor               = harmonicP;           % standard Gabor
+params.gabor.ang           = (pi/180)* 20;        % Gabor orientation (radians)
+params.gabor.freq          = 6*params.sceneFOV;   % spatial frequency (cycles/deg)
+params.gabor.contrast      = 1;                   % presumably michelson, [0 1]
+params.gabor.GaborFlag     = .25/params.sceneFOV; % Gaussian window
 
 
-%% Make the stimulus
-
+%% Make the stimuli
 
 [OG,scenes,tseries, fname] = ogStimuli(params);
 
@@ -84,10 +90,8 @@ params.gabor.GaborFlag     = .25/params.sceneFOV;
 
 
 %% Compute absorotions from multiple tirals
-%%
 
-
-%  Compute absorptions for multiple trials
+% Compute absorptions for multiple trials
 tSamples = OG(1).length;
 
 % compute x,y position in m of center of retinal patch from ecc and angle
@@ -102,12 +106,13 @@ cMosaic.setSizeToFOV(params.cmFOV);
 
 % Not sure why these have to match, but there is a bug if they don't.
 cMosaic.integrationTime = OG(1).timeStep;
-% For aligned or offset
 cMosaic.noiseFlag = 'random';
-emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
-    'em', params.em);
 
-% compute absorptions 
+% Add eye movements
+emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
+    'em', params.em); % path is in terms of cones shifted
+
+% Compute absorptions 
 [absorptions, current, interpFilters, meanCur] = cMosaic.compute(OG(1), 'currentFlag', true, ...
     'emPaths', emPaths);
 
@@ -115,55 +120,60 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 % cMosaic.window;
 
 %% Add bipolar cells
-%%
-bp = bipolar(cMosaic,'cellType','onmidget');   % offdiffuse
-bp.set('sRFcenter',10);
-bp.set('sRFsurround',0);
+
+bp = bipolar(cMosaic,'cellType','ondiffuse','ecc',params.eccentricity(1));   % offdiffuse
+bp.set('sRFcenter',1); % not sure about this..
+bp.set('sRFsurround',1); % not sure about this..
 
 [~, bpNTrialsCenter, bpNTrialsSurround] = bp.compute(cMosaic,'coneTrials',current);
 
 % Have a look
 % bp.window;
+% bpFilter = bipolarFilter(bp, cMosaic,'graph',true);
+% vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
 %% Retinal ganglion cell model
-%%
-% STILL UNDER CONSTRUCTION
 
 % Choose a cell type
-cellType = 'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
-% irParams.name = 'macaque phys'; % ?? Not sure about this
+cellType = 'onParasol'; %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
+irParams.name = 'macaque inner retina 1'; % ?? Not sure about this
 irParams.eyeSide = 'left';
 
 % Create inner retina object
-ecc = 0; % Not sure about this, is this related to stimulus or not???
+ecc = params.eccentricity(1);
 irParams.eyeRadius = sqrt(sum(ecc.^2)); 
-irParams.eyeAngle = 0; ntrials = 0;
-irParams.eyeRadius = 0;
+irParams.eyeAngle = 0;
 innerRetina = ir(bp, irParams);
 
 mosaicParams.centerNoise = 0.2;
 % mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
 % mosaicParams.axisVariance = .1;
 mosaicParams.type  = cellType;
-mosaicParams.model = 'lnp'; %glm option makes matlab shut down at line 87 in rgcGLM ([obj.couplingFilter, obj.couplingMatrix] = buildCouplingFilters(obj, obj.dt))
+mosaicParams.model = 'glm';
 
 innerRetina.mosaicCreate(mosaicParams);
 
 % innerRetina.mosaic{1}.set('rfDiameter',10);
 innerRetina.mosaic{1}.rgcInitSpace(innerRetina,cellType);
 
-nTrials = 1; innerRetina.set('numberTrials',nTrials);
+innerRetina.set('numberTrials',nTrials);
 innerRetina.mosaic{1}.get('rfDiameter')
 
-%% Compute the inner retina response and visualize
+% Compute the inner retina response and visualize
 
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
 [innerRetina, nTrialsSpikes] = innerRetina.compute(bp,'bipolarTrials',bpNTrialsCenter - bpNTrialsSurround); 
  
-% Could become - innerRetina.window{mosaicNumber);
+% Have a look
 innerRetina.mosaic{1}.window;
-%% Loop over two stimulus classes and repeated trials and compute cone responses
+
+
+
+
+
+%% VERSION 1 code:
+%Loop over two stimulus classes and repeated trials and compute cone responses
 %%
 storedConeCurrents = cell(1,length(OG));
 
