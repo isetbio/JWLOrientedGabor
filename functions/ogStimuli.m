@@ -79,7 +79,7 @@ p.addParameter('tsamples', (-50:100),@isvector);  % Time samples (ms)
 p.addParameter('timesd', 20,@isscalar);           % Time standard deviation
 p.addParameter('sceneFOV',2,@isscalar);           % Degrees
 p.addParameter('distance',0.57,@isscalar);        % Meters
-p.addParameter('bgColor',0.5,@isscalar);          % 0 to 1 (assumed grayscale)
+p.addParameter('bgColor',0.5,@isscalar);          % 0 to 1 (assumed grayscale) | currently not used
 
 p.parse(varargin{:});
 

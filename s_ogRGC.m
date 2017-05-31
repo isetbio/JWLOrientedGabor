@@ -2,8 +2,9 @@
 % This script supercedes t_orientedGaborDiscrimination.m, which no longer runs, 
 % due to changes in isetbio.
 % 
-% Model cone responses for the experiment on measuring orientation discrimination 
-% thresholds of an achromatic, peripheral Gabor. 
+% Model cone, bipolar, RGC, cortical, and behavioral (computational
+% observer) responses for the experiment on measuring orientation
+% discrimination thresholds of an achromatic, peripheral Gabor.
 % 
 %% ---------------------- Script outline ---------------------- 
 %   
@@ -24,69 +25,81 @@
 
 %% ---------------------- Experiment ----------------------
 %
-%       *   Loop over 2 stimulus orientations and n trials per orientation
-%       *   Within each trial, add eye movements to sensor
+%       *   Loop over 4 spatial positions (left, right, lower, upper)
+%       *   For each position, loop over 2 stimulus orientations and n 
+%               trials per orientation
+%       *   Within each trial, add eye movements to sensor (or OIS?)
 %       *   Build the outer segment object with linear filters and compute its
 %              response with the sensor structure.
-%       *   Sum the response over time for each cone as a cheap way to simulate
-%              downstream temporal integration of cone outputs
-%       *   Save the cone response as they are time consuming to compute
-%       *   From the saved cone file, compute simplified RGC outputs by
-%              convolution (DoG) and subsampling
-%       *   Compute linear discriminant of stimulus orientation using cone
-%       *      outputs and RGC outputs
+%       *   Build the bipolar layer and compute responses (on and off??)
+%       *   Build the RGC layer and compute responses (on and off midgets?)
+%       *   Compute cortical responses from spatial / temporal responses
+%       *   Compute linear discriminant of stimulus orientation using
+%              cortical responses
 % 
 
 % EK/JW/ NYU ISETBIO Team, Copyright 2017
 
 
-%% Some general settings - are they needed??
-
-% whichEye = 'left';
-% plotConeResponseFlag = true;  % plot an example movie of cone responses during one trial
-% saveConeCurrentsFlag = true;  % save cone responses across all trials (after temporal integration within trials)
+% % Cone density; see coneDensity.m
+% % load cone density data.  Units are cones / mm^2
+% d = load('coneDensity.mat');
+% figure,  plot(d.inferior.eccMM, d.inferior.density)
+% hold on, plot(d.superior.eccMM, d.superior.density)
+% hold on, plot(d.temporal.eccMM, d.temporal.density)
+% hold on, plot(d.nasal.eccMM, d.nasal.density)
+% set(gca, 'YScale', 'log')
+% legend('Inferior', 'Superior', 'Temporal', 'Nasal')
 
 
 %% Specify experiment parameters 
 
 % Number of trials per stimulus condition
-nTrials = 10;
+nTrials  = 10;
+whichEye = 'left'; 
+
 
 %% Specify stimulus parameters
 
 % Cone mosaic field of view in degrees (do we need this here??  we are just doing the scene)
 params.cmFOV     = 2;           % degrees
-params.em        = emCreate;
+params.em        = emCreate;    % eye movements: consider adjusting to 
+%                                   account for cone spacing and for data
+%                                   from different stimulus conditions
 params.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
 
-% Integration time
-params.tStep     = 0.002;       % seconds
 
-% Original scene (before eye movements?)
-params.sceneFOV  = 2;           % degrees
 
 % Gaussian temporal window for stimulus
-params.tsamples            = (-0.070:params.tStep:0.070); % seconds
-params.timesd              = 0.100;                       % seconds
+tStep = 0.002; % Time step for making optical image sequence (seconds)
+params.tsamples            = (-0.070:tStep:0.070); % seconds
+params.timesd              = 0.100;                % seconds
 
-% Specify retinal location where stimulus is presented
-params.eccentricity        = 6;                           % visual angle of stimulus center, in deg
-params.polarAngle          = [0 90 180 270];              % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+% Scene field of view
+params.sceneFOV  = 2;           % degrees
 
-% Make a Gabor with default parameters, then update parameters
+% Make a Gabor with default parameters, then update parameters. Will need
+%   to fit within sceneFOV
 params.gabor               = harmonicP;                   % standard Gabor
 params.gabor.ang           = (pi/180)* 20;                % Gabor orientation (radians)
 params.gabor.freq          = 6*params.sceneFOV;           % spatial frequency (cycles/deg)
 params.gabor.contrast      = 1;                           % presumably michelson, [0 1]
 params.gabor.GaborFlag     = .25/params.sceneFOV;         % Gaussian window
 
+% Specify retinal location where stimulus is presented
+params.eccentricity        = 2;                           % visual angle of stimulus center, in deg
+params.polarAngle          = 90;                          % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+
 
 %% Make the stimuli
+
 
 [OG,scenes,tseries, fname] = ogStimuli(params);
 
 % OG(1).visualize;
-% vcNewGraphWin; plot(tseries)
+% vcNewGraphWin; 
+%   plot(OG(1).timeAxis, OG(1).modulationFunction); 
+%   xlabel('Time (s)'); ylabel('Stimulus amplitude')
 
 
 %% Compute absorotions from multiple tirals
@@ -98,7 +111,7 @@ tSamples = OG(1).length;
 [x, y] = pol2cart(params.polarAngle(1), params.eccentricity(1));
 x = x * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 y = y * .3 * 0.001; % .3 mm per deg, .001 mm per meter
-cMosaic = coneMosaic('center', [x, y]);
+cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
 
 % Sometimes we set the mosaic size to 15 minutes (.25 deg) because that is
 % the spatial pooling size found by Westheimer and McKee
