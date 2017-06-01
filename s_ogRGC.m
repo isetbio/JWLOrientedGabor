@@ -20,8 +20,15 @@
 
 %% ---------------------- Questions ----------------------
 %
-%       * Where do eye movments fit in? (Probably OIS)
-%       * Spatial and temporal pooling?
+%       * Spatial and temporal pooling for cortex?
+%       * Repeated trials are handled awkardly. For example, repeated
+%           trials are stored within separate cell arrays for inner retina
+%           mosaics (which is good), but are not stored at all within
+%           coneMosais or bipolar mosaics. As a result, we need to store
+%           the repeated trial data in separate variables, not attached to
+%           the data strucutres, which causes complications when passing
+%           one data structure (say a bp) into another (eg, innerretina).
+%       * Why does inner retina allow multiple mosaics whereas bp does not?
 
 %% ---------------------- Experiment ----------------------
 %
@@ -136,27 +143,37 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 
 %% Add bipolar cells
 
-% Check units of eccentricity!
+% Run two bipolar cell models
 cellTypes = {'onmidget' 'offmidget'};
 
-bp = bipolar(cMosaic,'cellType',cellTypes{1},'ecc',cMosaic.center(1));   % offdiffuse
+% ON MIDGET
 
-bp.set('sRFcenter',1); % not sure about this..
-bp.set('sRFsurround',1); % not sure about this..
+% Check units of eccentricity!
+bp{1} = bipolar(cMosaic,'cellType',cellTypes{1},'ecc',cMosaic.center(1));   % offdiffuse
 
-[~, bpOnMNTrialsCenter, bpOnMNTrialsSurround] = bp.compute(cMosaic,'coneTrials',current);
+bp{1}.set('sRFcenter',1); % not sure about this..
+bp{1}.set('sRFsurround',1); % not sure about this..
+
+[~, bpOnMNTrialsCenter, bpOnMNTrialsSurround] = bp{1}.compute(cMosaic,'coneTrials',current);
 
 % Have a look
 % bp.window;
 % bpFilter = bipolarFilter(bp, cMosaic,'graph',true);
 % vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
-bp = bipolar(cMosaic,'cellType',cellTypes{2},'ecc',cMosaic.center(1));   % offdiffuse
+% OFF MIDGET
 
-bp.set('sRFcenter',1); % not sure about this..
-bp.set('sRFsurround',1); % not sure about this..
+bp{2} = bipolar(cMosaic,'cellType',cellTypes{2},'ecc',cMosaic.center(1));   
 
-[~, bpOffMNTrialsCenter, bpOffMNTrialsSurround] = bp.compute(cMosaic,'coneTrials',current);
+bp{2}.set('sRFcenter',1); % not sure about this..
+bp{2}.set('sRFsurround',1); % not sure about this..
+
+[~, bpOffMNTrialsCenter, bpOffMNTrialsSurround] = bp{2}.compute(cMosaic,'coneTrials',current);
+
+% Have a look
+% bp.window;
+% bpFilter = bipolarFilter(bp, cMosaic,'graph',true);
+% vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
 %% Retinal ganglion cell model
 
@@ -166,8 +183,9 @@ irParams.name = 'macaque inner retina 1'; % ?? Not sure about this
 irParams.eyeSide = 'left';
 
 % Create inner retina object
-ecc = params.eccentricity(1); % Check if ecc should be in degrees or m or mm?
+ecc = params.eccentricity(1); % Check if ecc should be in degrees, radius or m or mm?
 ecc = cMosaic.center(1) * 1000; % in mm now..
+% ecc = deg2rad(params.eccentricity(1));
 
 irParams.eyeRadius = sqrt(sum(ecc.^2)); 
 irParams.eyeAngle = 0;
@@ -179,13 +197,19 @@ innerRetina = ir(bp, irParams);
 mosaicParams.centerNoise = 0.2;
 mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
 mosaicParams.axisVariance = .1;
-mosaicParams.type  = cellType;
-mosaicParams.model = 'glm';
+% mosaicParams.type  = cellType;
+mosaicParams.model = 'lnp';
 
+% Get onMidget RGC from onMidget Bipolars
+mosaicParams.type  = cellTypes{1};
 innerRetina.mosaicCreate(mosaicParams);
 
-% innerRetina.mosaic{1}.set('rfDiameter',10);
-innerRetina.mosaic{1}.rgcInitSpace(innerRetina,cellType);
+% Get onMidget RGC from offMidget Bipolars
+mosaicParams.type  = cellTypes{2};
+innerRetina.mosaicCreate(mosaicParams);
+
+
+
 
 innerRetina.set('numberTrials',nTrials);
 innerRetina.mosaic{1}.get('rfDiameter')
@@ -194,12 +218,14 @@ innerRetina.mosaic{1}.get('rfDiameter')
 
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
-[innerRetina, nTrialsSpikes] = innerRetina.compute(bp,'bipolarTrials',bpOnMNTrialsCenter - bpOnMNTrialsSurround); 
+[innerRetinaMidgetOn, nTrialsSpikesMidgetOn] = innerRetina.compute(bp,'bipolarTrials',bpOnMNTrialsCenter - bpOnMNTrialsSurround); 
+
+[innerRetinaMidgetOff, nTrialsSpikesMidgetOff] = innerRetina.compute(bp,'bipolarTrials',bpOffMNTrialsCenter - bpOffMNTrialsSurround); 
+
  
 % Have a look
 innerRetina.mosaic{1}.window;
-
-
+innerRetina.mosaic{2}.window;
 
 
 
