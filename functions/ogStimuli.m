@@ -111,7 +111,9 @@ tseries = ieScale(tseries,0,1);
 % little bigger to allow for blur.
 sparams.fov      = sceneFOV;    % degrees
 sparams.distance = distance;    % Meters
-sparams.bgColor  = bgColor;     % scaled from 0 to 1
+
+% [NOT USED BY OISCREATE]
+% sparams.bgColor  = bgColor;     % scaled from 0 to 1 
 
 % Basic vernier parameters for the oiSequence.  Reverse order forces the
 % allocation first so the array does not grow over the loop.

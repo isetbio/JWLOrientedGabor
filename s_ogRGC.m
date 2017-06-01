@@ -61,15 +61,6 @@ whichEye = 'left';
 
 %% Specify stimulus parameters
 
-% Cone mosaic field of view in degrees (do we need this here??  we are just doing the scene)
-params.cmFOV     = 2;           % degrees
-params.em        = emCreate;    % eye movements: consider adjusting to 
-%                                   account for cone spacing and for data
-%                                   from different stimulus conditions
-params.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
-
-
-
 % Gaussian temporal window for stimulus
 tStep = 0.002; % Time step for making optical image sequence (seconds)
 params.tsamples            = (-0.070:tStep:0.070); % seconds
@@ -102,15 +93,24 @@ params.polarAngle          = 90;                          % polar angle (deg): 0
 %   xlabel('Time (s)'); ylabel('Stimulus amplitude')
 
 
-%% Compute absorotions from multiple tirals
+%% Compute absorptions from multiple tirals
 
 % Compute absorptions for multiple trials
-tSamples = OG(1).length;
+tSamples         = OG(1).length;
 
-% compute x,y position in m of center of retinal patch from ecc and angle
+% Cone mosaic field of view in degrees
+params.cmFOV     = 2;           % degrees
+params.em        = emCreate;    % eye movements: consider adjusting to 
+                                %   account for cone spacing and for data
+                                %   from different stimulus conditions
+params.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
+
+% Compute x,y position in m of center of retinal patch from ecc and angle
 [x, y] = pol2cart(params.polarAngle(1), params.eccentricity(1));
 x = x * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 y = y * .3 * 0.001; % .3 mm per deg, .001 mm per meter
+
+% Create cone mosaic
 cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
 
 % Sometimes we set the mosaic size to 15 minutes (.25 deg) because that is
@@ -119,6 +119,8 @@ cMosaic.setSizeToFOV(params.cmFOV);
 
 % Not sure why these have to match, but there is a bug if they don't.
 cMosaic.integrationTime = OG(1).timeStep;
+
+% Add photon noise
 cMosaic.noiseFlag = 'random';
 
 % Add eye movements
@@ -161,11 +163,14 @@ ecc = cMosaic.center(1) * 1000; % in mm now..
 
 irParams.eyeRadius = sqrt(sum(ecc.^2)); 
 irParams.eyeAngle = 0;
+
+% Compute inner retina with bipolar (bp) cell outputs
 innerRetina = ir(bp, irParams);
 
+% Do we want to use these parameters?
 mosaicParams.centerNoise = 0.2;
-% mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
-% mosaicParams.axisVariance = .1;
+mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
+mosaicParams.axisVariance = .1;
 mosaicParams.type  = cellType;
 mosaicParams.model = 'glm';
 
