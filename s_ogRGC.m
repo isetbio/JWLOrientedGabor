@@ -78,7 +78,7 @@ params.gabor.contrast      = 1;                           % presumably michelson
 params.gabor.GaborFlag     = .25/params.sceneFOV;         % Gaussian window
 
 % Specify retinal location where stimulus is presented
-params.eccentricity        = 2;                           % visual angle of stimulus center, in deg
+params.eccentricity        = 6;                           % visual angle of stimulus center, in deg
 params.polarAngle          = 90;                          % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
 
 
@@ -137,28 +137,36 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 %% Add bipolar cells
 
 % Check units of eccentricity!
-% bp = bipolar(cMosaic,'cellType','ondiffuse','ecc',params.eccentricity(1));   % offdiffuse,
-bp = bipolar(cMosaic,'cellType','ondiffuse','ecc',cMosaic.center(1));   % offdiffuse
+cellTypes = {'onmidget' 'offmidget'};
+
+bp = bipolar(cMosaic,'cellType',cellTypes{1},'ecc',cMosaic.center(1));   % offdiffuse
 
 bp.set('sRFcenter',1); % not sure about this..
 bp.set('sRFsurround',1); % not sure about this..
 
-[~, bpNTrialsCenter, bpNTrialsSurround] = bp.compute(cMosaic,'coneTrials',current);
+[~, bpOnMNTrialsCenter, bpOnMNTrialsSurround] = bp.compute(cMosaic,'coneTrials',current);
 
 % Have a look
 % bp.window;
 % bpFilter = bipolarFilter(bp, cMosaic,'graph',true);
 % vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
+bp = bipolar(cMosaic,'cellType',cellTypes{2},'ecc',cMosaic.center(1));   % offdiffuse
+
+bp.set('sRFcenter',1); % not sure about this..
+bp.set('sRFsurround',1); % not sure about this..
+
+[~, bpOffMNTrialsCenter, bpOffMNTrialsSurround] = bp.compute(cMosaic,'coneTrials',current);
+
 %% Retinal ganglion cell model
 
 % Choose a cell type
-cellType = 'onMidget'; %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
+cellTypes = {'onMidget' 'offMidget'};     %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
 irParams.name = 'macaque inner retina 1'; % ?? Not sure about this
 irParams.eyeSide = 'left';
 
 % Create inner retina object
-ecc = params.eccentricity(1); % Check if this is in degrees or m or mm?
+ecc = params.eccentricity(1); % Check if ecc should be in degrees or m or mm?
 ecc = cMosaic.center(1) * 1000; % in mm now..
 
 irParams.eyeRadius = sqrt(sum(ecc.^2)); 
@@ -186,7 +194,7 @@ innerRetina.mosaic{1}.get('rfDiameter')
 
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
-[innerRetina, nTrialsSpikes] = innerRetina.compute(bp,'bipolarTrials',bpNTrialsCenter - bpNTrialsSurround); 
+[innerRetina, nTrialsSpikes] = innerRetina.compute(bp,'bipolarTrials',bpOnMNTrialsCenter - bpOnMNTrialsSurround); 
  
 % Have a look
 innerRetina.mosaic{1}.window;
