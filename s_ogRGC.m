@@ -29,6 +29,9 @@
 %           the data strucutres, which causes complications when passing
 %           one data structure (say a bp) into another (eg, innerretina).
 %       * Why does inner retina allow multiple mosaics whereas bp does not?
+%       * Conceptual question: How to combine the bipolar responses into the RGC layer?
+%       * How should we deal with the negative responses from off midget
+%       RGC that turn into no signal after rectification?
 
 %% ---------------------- Experiment ----------------------
 %
@@ -69,7 +72,7 @@ whichEye = 'left';
 %% Specify stimulus parameters
 
 % Gaussian temporal window for stimulus
-tStep = 0.002; % Time step for making optical image sequence (seconds)
+tStep                      = 0.002; % Time step for making optical image sequence (seconds)
 params.tsamples            = (-0.070:tStep:0.070); % seconds
 params.timesd              = 0.100;                % seconds
 
@@ -78,15 +81,15 @@ params.sceneFOV  = 2;           % degrees
 
 % Make a Gabor with default parameters, then update parameters. Will need
 %   to fit within sceneFOV
-params.gabor               = harmonicP;                   % standard Gabor
+params.gabor               = harmonicP;                   % Standard Gabor
 params.gabor.ang           = (pi/180)* 20;                % Gabor orientation (radians)
-params.gabor.freq          = 6*params.sceneFOV;           % spatial frequency (cycles/deg)
-params.gabor.contrast      = 1;                           % presumably michelson, [0 1]
+params.gabor.freq          = 6*params.sceneFOV;           % Spatial frequency (cycles/deg)
+params.gabor.contrast      = 1;                           % Presumably michelson, [0 1]
 params.gabor.GaborFlag     = .25/params.sceneFOV;         % Gaussian window
 
 % Specify retinal location where stimulus is presented
-params.eccentricity        = 6;                           % visual angle of stimulus center, in deg
-params.polarAngle          = 90;                          % polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+params.eccentricity        = 6;                           % Visual angle of stimulus center, in deg
+params.polarAngle          = 90;                          % Polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
 
 
 %% Make the stimuli
@@ -149,7 +152,7 @@ cellTypes = {'onmidget' 'offmidget'};
 % ON MIDGET
 
 % Check units of eccentricity!
-bp{1} = bipolar(cMosaic,'cellType',cellTypes{1},'ecc',cMosaic.center(1));   % offdiffuse
+bp{1} = bipolar(cMosaic,'cellType',cellTypes{1},'ecc',cMosaic.center(1));   
 
 bp{1}.set('sRFcenter',1); % not sure about this..
 bp{1}.set('sRFsurround',1); % not sure about this..
@@ -157,8 +160,8 @@ bp{1}.set('sRFsurround',1); % not sure about this..
 [~, bpOnMNTrialsCenter, bpOnMNTrialsSurround] = bp{1}.compute(cMosaic,'coneTrials',current);
 
 % Have a look
-% bp.window;
-% bpFilter = bipolarFilter(bp, cMosaic,'graph',true);
+% bp{1}.window;
+% bpFilter = bipolarFilter(bp{1}, cMosaic,'graph',true);
 % vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
 % OFF MIDGET
@@ -171,8 +174,8 @@ bp{2}.set('sRFsurround',1); % not sure about this..
 [~, bpOffMNTrialsCenter, bpOffMNTrialsSurround] = bp{2}.compute(cMosaic,'coneTrials',current);
 
 % Have a look
-% bp.window;
-% bpFilter = bipolarFilter(bp, cMosaic,'graph',true);
+% bp{2}.window;
+% bpFilter = bipolarFilter(bp{2}, cMosaic,'graph',true);
 % vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
 %% Retinal ganglion cell model
@@ -180,7 +183,7 @@ bp{2}.set('sRFsurround',1); % not sure about this..
 % Choose a cell type
 cellTypes = {'onMidget' 'offMidget'};     %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
 irParams.name = 'macaque inner retina 1'; % ?? Not sure about this
-irParams.eyeSide = 'left';
+irParams.eyeSide = whichEye;
 
 % Create inner retina object
 ecc = params.eccentricity(1); % Check if ecc should be in degrees, radius or m or mm?
@@ -208,15 +211,10 @@ innerRetina.mosaicCreate(mosaicParams);
 mosaicParams.type  = cellTypes{2};
 innerRetina.mosaicCreate(mosaicParams);
 
-
-
-
+% Set nr of trials / repeats of the same stimulus
 innerRetina.set('numberTrials',nTrials);
-innerRetina.mosaic{1}.get('rfDiameter')
 
-% Compute the inner retina response and visualize
-
-% Number of trials refers to number of repeats of the same stimulus
+% Compute the inner retina response
 disp('Computing rgc responses');
 [innerRetinaMidgetOn, nTrialsSpikesMidgetOn] = innerRetina.compute(bp,'bipolarTrials',bpOnMNTrialsCenter - bpOnMNTrialsSurround); 
 
@@ -228,7 +226,7 @@ innerRetina.mosaic{1}.window;
 innerRetina.mosaic{2}.window;
 
 
-
+return
 %% VERSION 1 code:
 %Loop over two stimulus classes and repeated trials and compute cone responses
 %%
