@@ -28,9 +28,9 @@
 %           the repeated trial data in separate variables, not attached to
 %           the data strucutres, which causes complications when passing
 %           one data structure (say a bp) into another (eg, innerretina).
-%       * Why does inner retina allow multiple mosaics whereas bp does not?
-%       * Conceptual question: How to combine the bipolar responses into the RGC layer?
-%       * How should we deal with the negative responses from off midget
+%       * (SOLVED) Why does inner retina allow multiple mosaics whereas bp does not?
+%       * (SOLVED) How to combine the bipolar responses into the RGC layer?
+%       * (SOLVED) How should we deal with the negative responses from off midget
 %       RGC that turn into no signal after rectification?
 
 %% ---------------------- Experiment ----------------------
@@ -147,42 +147,36 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 %% Add bipolar cells
 
 % Run two bipolar cell models
-cellTypes = {'onmidget' 'offmidget'};
+bpCellTypes = {'onmidget' 'offmidget'};
 
-% ON MIDGET
-
-% Check units of eccentricity!
-bp{1} = bipolar(cMosaic,'cellType',cellTypes{1},'ecc',cMosaic.center(1));   
-
-bp{1}.set('sRFcenter',1); % not sure about this..
-bp{1}.set('sRFsurround',1); % not sure about this..
-
-[~, bpOnMNTrialsCenter, bpOnMNTrialsSurround] = bp{1}.compute(cMosaic,'coneTrials',current);
+for bpCellTypeInd = 1:length(bpCellTypes)
+    
+    clear bpParams
+    bpParams.cellType = bpCellTypes{bpCellTypeInd};
+    bpParams.ecc = cMosaic.center(1);
+    bpParams.rectifyType = 1;
+    
+    % Add the current cell type as a new bipolar mosaic
+    bpMosaic{bpCellTypeInd} = bipolar(cMosaic, bpParams);
+    bpMosaic{bpCellTypeInd}.set('sRFcenter',1);
+    bpMosaic{bpCellTypeInd}.set('sRFsurround',1); % Do we want the surround to be 1?
+    
+    [~, bpNTrialsCenterTemp, bpNTrialsSurroundTemp] = bpMosaic{bpCellTypeInd}.compute(cMosaic,'coneTrials',current);
+    bpNTrials{bpCellTypeInd} = bpNTrialsCenterTemp-bpNTrialsSurroundTemp;
+    clear bpNTrialsCenterTemp bpNTrialsSurroundTemp
+end
 
 % Have a look
 % bp{1}.window;
 % bpFilter = bipolarFilter(bp{1}, cMosaic,'graph',true);
 % vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
-% OFF MIDGET
-
-bp{2} = bipolar(cMosaic,'cellType',cellTypes{2},'ecc',cMosaic.center(1));   
-
-bp{2}.set('sRFcenter',1); % not sure about this..
-bp{2}.set('sRFsurround',1); % not sure about this..
-
-[~, bpOffMNTrialsCenter, bpOffMNTrialsSurround] = bp{2}.compute(cMosaic,'coneTrials',current);
-
-% Have a look
-% bp{2}.window;
-% bpFilter = bipolarFilter(bp{2}, cMosaic,'graph',true);
-% vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
 %% Retinal ganglion cell model
 
 % Choose a cell type
-cellTypes = {'onMidget' 'offMidget'};     %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
-irParams.name = 'macaque inner retina 1'; % ?? Not sure about this
+irCellTypes = {'onMidget' 'offMidget'};     %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
+irParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
 irParams.eyeSide = whichEye;
 
 % Create inner retina object
@@ -194,39 +188,38 @@ irParams.eyeRadius = sqrt(sum(ecc.^2));
 irParams.eyeAngle = 0;
 
 % Compute inner retina with bipolar (bp) cell outputs
-innerRetina = ir(bp, irParams);
+innerRetina = ir(bpMosaic, irParams);
 
 % Do we want to use these parameters?
 mosaicParams.centerNoise = 0.2;
 mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
 mosaicParams.axisVariance = .1;
-% mosaicParams.type  = cellType;
 mosaicParams.model = 'lnp';
 
-% Get onMidget RGC from onMidget Bipolars
-mosaicParams.type  = cellTypes{1};
-innerRetina.mosaicCreate(mosaicParams);
 
-% Get onMidget RGC from offMidget Bipolars
-mosaicParams.type  = cellTypes{2};
-innerRetina.mosaicCreate(mosaicParams);
+for irCellTypeInd = 1:length(irCellTypes)
+    mosaicParams.type = irCellTypes{irCellTypeInd};
+    innerRetina.mosaicCreate(mosaicParams);
+end
 
 % Set nr of trials / repeats of the same stimulus
 innerRetina.set('numberTrials',nTrials);
 
-% Compute the inner retina response
+
+%% Compute the inner retina response and visualize
+
+% Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
-[innerRetinaMidgetOn, nTrialsSpikesMidgetOn] = innerRetina.compute(bp,'bipolarTrials',bpOnMNTrialsCenter - bpOnMNTrialsSurround); 
+[innerRetina, nTrialsSpikes] = innerRetina.compute(bpMosaic,'bipolarTrials',bpNTrials,'coupling',false); 
 
-[innerRetinaMidgetOff, nTrialsSpikesMidgetOff] = innerRetina.compute(bp,'bipolarTrials',bpOffMNTrialsCenter - bpOffMNTrialsSurround); 
-
- 
 % Have a look
 innerRetina.mosaic{1}.window;
 innerRetina.mosaic{2}.window;
 
 
 return
+
+
 %% VERSION 1 code:
 %Loop over two stimulus classes and repeated trials and compute cone responses
 %%
