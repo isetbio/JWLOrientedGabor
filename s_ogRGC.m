@@ -20,7 +20,7 @@
 
 %% ---------------------- Questions ----------------------
 %
-%       * Spatial and temporal pooling for cortex?
+%       * Spatial and temporal pooling for cortex? (Contact Nicholas C!)
 %       * Repeated trials are handled awkardly. For example, repeated
 %           trials are stored within separate cell arrays for inner retina
 %           mosaics (which is good), but are not stored at all within
@@ -32,7 +32,20 @@
 %       * (SOLVED) How to combine the bipolar responses into the RGC layer?
 %       * (SOLVED) How should we deal with the negative responses from off midget
 %       RGC that turn into no signal after rectification?
-
+%       * Can we incorporate off-axis optical data from Pablo Artal
+%               Example: Figure 5 from Jaeken and Artal, 2012
+%       * How is the denisty of cones, bipolars, and RGCs handled as a
+%               function of eccentricity?
+%           It appears that:
+%               Cone density is based on Curcio. (fine)
+%               Bipolar mosaic is exactly matched to the cone mosaic (fine)
+%               RGC density is cell-type dependent (e.g. Offs denser than
+%               Ons, which is good). The functions of position come from
+%               EJ. What abou Curcio? Watson (2014)? EJ, for example, has
+%               inferior and superior matched. But Watson (using Curcio)
+%               does not. 
+%       * How is RGC rf size determined as a function of eccentricity?
+%
 %% ---------------------- Experiment ----------------------
 %
 %       *   Loop over 4 spatial positions (left, right, lower, upper)
