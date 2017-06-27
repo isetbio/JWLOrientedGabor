@@ -134,7 +134,9 @@ x = x * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 y = y * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 
 % Create cone mosaic
+% cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
 cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
+
 
 % Sometimes we set the mosaic size to 15 minutes (.25 deg) because that is
 % the spatial pooling size found by Westheimer and McKee
@@ -157,20 +159,31 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 % Have a look
 % cMosaic.window;
 
-%% Add bipolar cells
+%% Create bipolar layer with multiple mosaics
 
-% Run two bipolar cell models
-bpCellTypes = {'onmidget' 'offmidget'};
+% Create a bipolar layer
+clear bpLayerParams
+bpLayerParams.ecc = cMosaic.center(1);
+
+bpL = bipolarLayer(cMosaic,bpLayerParams);
+
+
+% Now make each type of bipolar mosaics. 
+bpCellTypes = {'ondiffuse','offdiffuse','onmidget','offmidget','onSBC'};
+clear bpMosaicParams
+bpMosaicParams.rectifyType = 1;
+
+bpMosaic  = cell(1,length(bpCellTypes));
+bpNTrials = cell(1,length(bpCellTypes));
 
 for bpCellTypeInd = 1:length(bpCellTypes)
     
-    clear bpParams
-    bpParams.cellType = bpCellTypes{bpCellTypeInd};
-    bpParams.ecc = cMosaic.center(1);
-    bpParams.rectifyType = 1;
+    bpMosaicParams.cellType = bpCellTypes{bpCellTypeInd};
     
     % Add the current cell type as a new bipolar mosaic
-    bpMosaic{bpCellTypeInd} = bipolar(cMosaic, bpParams);
+    bpMosaic{bpCellTypeInd} = bipolarLayer(cMosaic, bpMosaicParams);
+    
+    % Set and compute are not yet implemented in the bipolarLayer
     bpMosaic{bpCellTypeInd}.set('sRFcenter',1);
     bpMosaic{bpCellTypeInd}.set('sRFsurround',1); % Do we want the surround to be 1?
     
@@ -179,55 +192,64 @@ for bpCellTypeInd = 1:length(bpCellTypes)
     clear bpNTrialsCenterTemp bpNTrialsSurroundTemp
 end
 
+% Add mosaics to the bipolar layer
+bpL.mosaic = bpMosaic;
+
 % Have a look
-% bp{1}.window;
+% bpL.mosaic{1}.window;
+
 % bpFilter = bipolarFilter(bp{1}, cMosaic,'graph',true);
 % vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
 
 
 %% Retinal ganglion cell model
 
+clear irParams mosaicParams
+
+% Create retina ganglion cell layer object based on bipolar layer
+rgcL = rgcLayer(bpL);
+
 % Choose a cell type
-irCellTypes = {'onMidget' 'offMidget'};     %'onMidget'; %'OFF Midget';  % 'offParasol'; 'onMidget' ...
+irCellTypes = {'on parasol','off parasol','on midget','off midget','smallbistratified'};    
 irParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
 irParams.eyeSide = whichEye;
 
+% [I believe we don't need this anymore, is inherited from BP layer] 
 % Create inner retina object
-ecc = params.eccentricity(1); % Check if ecc should be in degrees, radius or m or mm?
-ecc = cMosaic.center(1) * 1000; % in mm now..
-% ecc = deg2rad(params.eccentricity(1));
+% ecc = params.eccentricity(1); % Check if ecc should be in degrees, radius or m or mm?
+% ecc = cMosaic.center(1) * 1000; % in mm now..
+% irParams.eyeRadius = sqrt(sum(ecc.^2)); 
+% irParams.eyeAngle = 0;
 
-irParams.eyeRadius = sqrt(sum(ecc.^2)); 
-irParams.eyeAngle = 0;
-
-% Compute inner retina with bipolar (bp) cell outputs
-innerRetina = ir(bpMosaic, irParams);
+% % Compute inner retina with bipolar (bp) cell outputs
+% innerRetina = ir(bpMosaic, irParams);
 
 % Do we want to use these parameters?
 mosaicParams.centerNoise = 0.2;
 mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
 mosaicParams.axisVariance = .1;
 mosaicParams.model = 'lnp';
-
+% mosaicParams.rfDiameter = [3 3];
 
 for irCellTypeInd = 1:length(irCellTypes)
     mosaicParams.type = irCellTypes{irCellTypeInd};
-    innerRetina.mosaicCreate(mosaicParams);
+    mosaicParams.inMosaic = 1;
+    rgcL.mosaicCreate(mosaicParams);
 end
 
 % Set nr of trials / repeats of the same stimulus
-innerRetina.set('numberTrials',nTrials);
+rgcL.set('numberTrials',nTrials);
 
 
 %% Compute the inner retina response and visualize
 
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
-[innerRetina, nTrialsSpikes] = innerRetina.compute(bpMosaic,'bipolarTrials',bpNTrials,'coupling',false); 
+[rgcL, nTrialsSpikes] = rgcL.compute(bpMosaic,'bipolarTrials',bpNTrials,'coupling',false); 
 
 % Have a look
-innerRetina.mosaic{1}.window;
-innerRetina.mosaic{2}.window;
+rgcL.mosaic{1}.window;
+rgcL.mosaic{2}.window;
 
 
 return
