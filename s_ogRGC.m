@@ -232,7 +232,7 @@ rgcParams.axisVariance = .1;
 
 for idx = 1:length(rgcCellTypes)
     rgcParams.rfDiameter = diameters(idx);
-    rgcL.mosaic{idx} = rgcL.mosaicCreate(bpL.mosaic{idx},rgcCellTypes{idx},'LNP', rgcParams);
+    rgcL.mosaic{idx} = rgcLNP(rgcL, bpL.mosaic{idx},rgcCellTypes{idx},rgcParams);
     
 end
 
