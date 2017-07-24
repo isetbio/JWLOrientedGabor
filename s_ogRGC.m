@@ -134,9 +134,7 @@ x = x * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 y = y * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 
 % Create cone mosaic
-% cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
 cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
-
 
 % Sometimes we set the mosaic size to 15 minutes (.25 deg) because that is
 % the spatial pooling size found by Westheimer and McKee
@@ -161,22 +159,18 @@ cMosaic.window;
 
 %% Create bipolar layer with multiple mosaics
 
-% Create a bipolar layer
 clear bpL bpMosaicParams
 
+% Create a bipolar layer
 bpL = bipolarLayer(cMosaic);
-
 
 % Now make each type of bipolar mosaics. 
 bpCellTypes = {'on diffuse','off diffuse','on midget','off midget','on SBC'};
 
 bpMosaicParams.rectifyType = 1;
 
-
 for idx = 1:length(bpCellTypes)
-    
-%     bpMosaicParams.cellType = bpCellTypes{bpCellTypeInd};
-    
+        
     % How should we define this??
 %     bpMosaicParams.spread  = 2;  % RF diameter w.r.t. input samples
 %     bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
@@ -207,7 +201,7 @@ clear rgcL rgcParams
 % Create retina ganglion cell layer object based on bipolar layer
 rgcL = rgcLayer(bpL);
 
-% Choose a cell type
+% Choose cell types
 rgcCellTypes = {'on parasol','off parasol','on midget','off midget'};   
 
 diameters = round([10 10 5 5 20]); % We shouldn't have to manually set this.. but for now the retialLocationToTEE seems to get debugged
@@ -215,21 +209,12 @@ diameters = round([10 10 5 5 20]); % We shouldn't have to manually set this.. bu
 rgcParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
 rgcParams.eyeSide = whichEye;
 
-% [I believe we don't need this anymore, is inherited from BP layer] 
-    % Create inner retina object
-    % ecc = params.eccentricity(1); % Check if ecc should be in degrees, radius or m or mm?
-    % ecc = cMosaic.center(1) * 1000; % in mm now..
-    % irParams.eyeRadius = sqrt(sum(ecc.^2)); 
-    % irParams.eyeAngle = 0;
-
-    % % Compute inner retina with bipolar (bp) cell outputs
-    % innerRetina = ir(bpMosaic, irParams);
-
 % Do we want to use these parameters?
 rgcParams.centerNoise = 0.2;
 rgcParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
 rgcParams.axisVariance = .1;
 
+% Loop over celltypes to create RGC mosaics in the rgc layer
 for idx = 1:length(rgcCellTypes)
     rgcParams.rfDiameter = diameters(idx);
     rgcL.mosaic{idx} = rgcLNP(rgcL, bpL.mosaic{idx},rgcCellTypes{idx},rgcParams);
@@ -244,7 +229,7 @@ rgcL.set('numberTrials',nTrials);
 
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
-rgcL = rgcL.compute;
+% rgcL = rgcL.compute;
 [rgcL, nTrialsSpikes] = rgcL.compute('bipolarTrials',bpNTrials,'coupling',false);
 % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{idx},'bipolarTrials',bpNTrials,'coupling',false); 
 % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{1},'bipolarTrials',bpNTrials,'coupling',false,'bipolarScale',50,'bipolarContrast',0.2); 
