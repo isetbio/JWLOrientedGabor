@@ -162,41 +162,39 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 %% Create bipolar layer with multiple mosaics
 
 % Create a bipolar layer
-clear bpLayerParams
-bpLayerParams.ecc = cMosaic.center(1);
+clear bpL bpMosaicParams
 
-bpL = bipolarLayer(cMosaic,bpLayerParams);
+bpL = bipolarLayer(cMosaic);
 
 
 % Now make each type of bipolar mosaics. 
-bpCellTypes = {'ondiffuse','offdiffuse','onmidget','offmidget','onSBC'};
-clear bpMosaicParams
+bpCellTypes = {'on diffuse','off diffuse','on midget','off midget','on SBC'};
+
 bpMosaicParams.rectifyType = 1;
 
-bpMosaic  = cell(1,length(bpCellTypes));
-bpNTrials = cell(1,length(bpCellTypes));
 
-for bpCellTypeInd = 1:length(bpCellTypes)
+for idx = 1:length(bpCellTypes)
     
-    bpMosaicParams.cellType = bpCellTypes{bpCellTypeInd};
+%     bpMosaicParams.cellType = bpCellTypes{bpCellTypeInd};
     
+    % How should we define this??
+%     bpMosaicParams.spread  = 2;  % RF diameter w.r.t. input samples
+%     bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
+
     % Add the current cell type as a new bipolar mosaic
-    bpMosaic{bpCellTypeInd} = bipolarLayer(cMosaic, bpMosaicParams);
-    
+    bpL.mosaic{idx} = bipolarMosaic(cMosaic, bpCellTypes{idx}, bpMosaicParams);
+        
     % Set and compute are not yet implemented in the bipolarLayer
-    bpMosaic{bpCellTypeInd}.set('sRFcenter',1);
-    bpMosaic{bpCellTypeInd}.set('sRFsurround',1); % Do we want the surround to be 1?
+%     bpL.mosaic{bpCellTypeInd}.set('sRFcenter',1);
+%     bpL.mosaic{bpCellTypeInd}.set('sRFsurround',1); % Do we want the surround to be 1?
     
-    [~, bpNTrialsCenterTemp, bpNTrialsSurroundTemp] = bpMosaic{bpCellTypeInd}.compute(cMosaic,'coneTrials',current);
-    bpNTrials{bpCellTypeInd} = bpNTrialsCenterTemp-bpNTrialsSurroundTemp;
+    [~, bpNTrialsCenterTemp, bpNTrialsSurroundTemp] = bpL.mosaic{idx}.compute('coneTrials',current);
+    bpNTrials{idx} = bpNTrialsCenterTemp-bpNTrialsSurroundTemp;
     clear bpNTrialsCenterTemp bpNTrialsSurroundTemp
 end
 
-% Add mosaics to the bipolar layer
-bpL.mosaic = bpMosaic;
-
 % Have a look
-% bpL.mosaic{1}.window;
+bpL.window;
 
 % bpFilter = bipolarFilter(bp{1}, cMosaic,'graph',true);
 % vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
@@ -204,37 +202,38 @@ bpL.mosaic = bpMosaic;
 
 %% Retinal ganglion cell model
 
-clear irParams mosaicParams
+clear rgcL rgcParams
 
 % Create retina ganglion cell layer object based on bipolar layer
 rgcL = rgcLayer(bpL);
 
 % Choose a cell type
-irCellTypes = {'on parasol','off parasol','on midget','off midget','smallbistratified'};    
-irParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
-irParams.eyeSide = whichEye;
+rgcCellTypes = {'on parasol','off parasol','on midget','off midget'};%,'smallbistratified'};   
+
+diameters = round([10 10 5 5 20]); % We shouldn't have to manually set this.. but for now the retialLocationToTEE seems to get debugged
+
+rgcParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
+rgcParams.eyeSide = whichEye;
 
 % [I believe we don't need this anymore, is inherited from BP layer] 
-% Create inner retina object
-% ecc = params.eccentricity(1); % Check if ecc should be in degrees, radius or m or mm?
-% ecc = cMosaic.center(1) * 1000; % in mm now..
-% irParams.eyeRadius = sqrt(sum(ecc.^2)); 
-% irParams.eyeAngle = 0;
+    % Create inner retina object
+    % ecc = params.eccentricity(1); % Check if ecc should be in degrees, radius or m or mm?
+    % ecc = cMosaic.center(1) * 1000; % in mm now..
+    % irParams.eyeRadius = sqrt(sum(ecc.^2)); 
+    % irParams.eyeAngle = 0;
 
-% % Compute inner retina with bipolar (bp) cell outputs
-% innerRetina = ir(bpMosaic, irParams);
+    % % Compute inner retina with bipolar (bp) cell outputs
+    % innerRetina = ir(bpMosaic, irParams);
 
 % Do we want to use these parameters?
-mosaicParams.centerNoise = 0.2;
-mosaicParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
-mosaicParams.axisVariance = .1;
-mosaicParams.model = 'lnp';
-% mosaicParams.rfDiameter = [3 3];
+rgcParams.centerNoise = 0.2;
+rgcParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
+rgcParams.axisVariance = .1;
 
-for irCellTypeInd = 1:length(irCellTypes)
-    mosaicParams.type = irCellTypes{irCellTypeInd};
-    mosaicParams.inMosaic = 1;
-    rgcL.mosaicCreate(mosaicParams);
+for idx = 1:length(rgcCellTypes)
+    rgcParams.rfDiameter = diameters(idx);
+    rgcL.mosaic{idx} = rgcL.mosaicCreate(bpL.mosaic{idx},rgcCellTypes{idx},'LNP', rgcParams);
+    
 end
 
 % Set nr of trials / repeats of the same stimulus
@@ -245,11 +244,13 @@ rgcL.set('numberTrials',nTrials);
 
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
-[rgcL, nTrialsSpikes] = rgcL.compute(bpMosaic,'bipolarTrials',bpNTrials,'coupling',false); 
+% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic,'bipolarTrials',bpNTrials,'coupling',false); 
+[rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{1},'bipolarTrials',bpNTrials,'coupling',false,'bipolarScale',50,'bipolarContrast',0.2); 
+% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic,'bipolarTrials',bpNTrials,'bipolarScale',50,'bipolarContrast',0.2); 
+
 
 % Have a look
-rgcL.mosaic{1}.window;
-rgcL.mosaic{2}.window;
+rgcL.window;
 
 
 return
