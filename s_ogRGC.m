@@ -157,7 +157,7 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
     'emPaths', emPaths);
 
 % Have a look
-% cMosaic.window;
+cMosaic.window;
 
 %% Create bipolar layer with multiple mosaics
 
@@ -208,7 +208,7 @@ clear rgcL rgcParams
 rgcL = rgcLayer(bpL);
 
 % Choose a cell type
-rgcCellTypes = {'on parasol','off parasol','on midget','off midget'};%,'smallbistratified'};   
+rgcCellTypes = {'on parasol','off parasol','on midget','off midget'};   
 
 diameters = round([10 10 5 5 20]); % We shouldn't have to manually set this.. but for now the retialLocationToTEE seems to get debugged
 
@@ -244,8 +244,10 @@ rgcL.set('numberTrials',nTrials);
 
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
-% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic,'bipolarTrials',bpNTrials,'coupling',false); 
-[rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{1},'bipolarTrials',bpNTrials,'coupling',false,'bipolarScale',50,'bipolarContrast',0.2); 
+rgcL = rgcL.compute;
+[rgcL, nTrialsSpikes] = rgcL.compute('bipolarTrials',bpNTrials,'coupling',false);
+% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{idx},'bipolarTrials',bpNTrials,'coupling',false); 
+% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{1},'bipolarTrials',bpNTrials,'coupling',false,'bipolarScale',50,'bipolarContrast',0.2); 
 % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic,'bipolarTrials',bpNTrials,'bipolarScale',50,'bipolarContrast',0.2); 
 
 
