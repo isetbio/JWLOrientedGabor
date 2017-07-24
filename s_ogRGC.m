@@ -78,7 +78,7 @@
 %% Specify experiment parameters 
 
 % Number of trials per stimulus condition
-nTrials  = 10;
+nTrials  = 50;
 whichEye = 'left'; 
 
 
@@ -86,7 +86,9 @@ whichEye = 'left';
 
 % Gaussian temporal window for stimulus
 tStep                      = 0.002; % Time step for making optical image sequence (seconds)
-params.tsamples            = (-0.070:tStep:0.070); % seconds
+% params.tsamples            = (-0.070:tStep:0.070); % seconds
+params.tsamples            = (-0.2:tStep:0.2); % seconds
+
 params.timesd              = 0.100;                % seconds
 
 % Scene field of view
@@ -96,13 +98,13 @@ params.sceneFOV  = 2;           % degrees
 %   to fit within sceneFOV
 params.gabor               = harmonicP;                   % Standard Gabor
 params.gabor.ang           = (pi/180)* 20;                % Gabor orientation (radians)
-params.gabor.freq          = 6*params.sceneFOV;           % Spatial frequency (cycles/deg)
+params.gabor.freq          = 6*params.sceneFOV;           % Spatial frequency (cycles/FOV)
 params.gabor.contrast      = 1;                           % Presumably michelson, [0 1]
 params.gabor.GaborFlag     = .25/params.sceneFOV;         % Gaussian window
 
 % Specify retinal location where stimulus is presented
 params.eccentricity        = 6;                           % Visual angle of stimulus center, in deg
-params.polarAngle          = 90;                          % Polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+params.polarAngle          = deg2rad(90);                          % Polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
 
 
 %% Make the stimuli
@@ -230,10 +232,13 @@ rgcL.set('numberTrials',nTrials);
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
 % rgcL = rgcL.compute;
-[rgcL, nTrialsSpikes] = rgcL.compute('bipolarTrials',bpNTrials,'coupling',false);
-% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{idx},'bipolarTrials',bpNTrials,'coupling',false); 
-% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{1},'bipolarTrials',bpNTrials,'coupling',false,'bipolarScale',50,'bipolarContrast',0.2); 
-% [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic,'bipolarTrials',bpNTrials,'bipolarScale',50,'bipolarContrast',0.2); 
+[rgcL, nTrialsSpikes] = rgcL.compute('bipolarScale',50,'bipolarContrast',0.2,'bipolarTrials',bpNTrials,'coupling',false);
+
+% 
+% [rgcL, nTrialsSpikes] = rgcL.compute('bipolarTrials',bpNTrials,'coupling',false);
+% % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{idx},'bipolarTrials',bpNTrials,'coupling',false); 
+% % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{1},'bipolarTrials',bpNTrials,'coupling',false,'bipolarScale',50,'bipolarContrast',0.2); 
+% % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic,'bipolarTrials',bpNTrials,'bipolarScale',50,'bipolarContrast',0.2); 
 
 
 % Have a look
