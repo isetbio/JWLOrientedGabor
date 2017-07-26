@@ -184,8 +184,8 @@ for idx = 1:length(bpCellTypes)
 %     bpL.mosaic{bpCellTypeInd}.set('sRFcenter',1);
 %     bpL.mosaic{bpCellTypeInd}.set('sRFsurround',1); % Do we want the surround to be 1?
     
-    [~, bpNTrialsCenterTemp, bpNTrialsSurroundTemp] = bpL.mosaic{idx}.compute('coneTrials',current);
-    bpNTrials{idx} = bpNTrialsCenterTemp-bpNTrialsSurroundTemp;
+    bpNTrials{idx} = bpL.mosaic{idx}.compute('coneTrials',current);
+    % bpNTrials{idx} = bpNTrialsCenterTemp-bpNTrialsSurroundTemp;
     clear bpNTrialsCenterTemp bpNTrialsSurroundTemp
 end
 
@@ -232,7 +232,7 @@ rgcL.set('numberTrials',nTrials);
 % Number of trials refers to number of repeats of the same stimulus
 disp('Computing rgc responses');
 % rgcL = rgcL.compute;
-[rgcL, nTrialsSpikes] = rgcL.compute('bipolarScale',50,'bipolarContrast',0.2,'bipolarTrials',bpNTrials,'coupling',false);
+nTrialsSpikes = rgcL.compute('bipolarScale',50,'bipolarContrast',0.2,'bipolarTrials',bpNTrials,'coupling',false);
 
 % 
 % [rgcL, nTrialsSpikes] = rgcL.compute('bipolarTrials',bpNTrials,'coupling',false);
