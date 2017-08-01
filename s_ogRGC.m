@@ -86,8 +86,8 @@ whichEye = 'left';
 
 % Gaussian temporal window for stimulus
 tStep                      = 0.002; % Time step for making optical image sequence (seconds)
-% params.tsamples            = (-0.070:tStep:0.070); % seconds
-params.tsamples            = (-0.2:tStep:0.2); % seconds
+params.tsamples            = (-0.070:tStep:0.070); % seconds
+% params.tsamples            = (-0.2:tStep:0.2); % seconds
 
 params.timesd              = 0.100;                % seconds
 
@@ -164,7 +164,7 @@ cMosaic.window;
 clear bpL bpMosaicParams
 
 % Create a bipolar layer
-bpL = bipolarLayer(cMosaic);
+bpL = bipolarLayer(cMosaic, 'nTrials', nTrials);
 
 % Now make each type of bipolar mosaics. 
 bpCellTypes = {'on diffuse','off diffuse','on midget','off midget','on SBC'};
@@ -185,8 +185,7 @@ for idx = 1:length(bpCellTypes)
 %     bpL.mosaic{bpCellTypeInd}.set('sRFsurround',1); % Do we want the surround to be 1?
     
     bpNTrials{idx} = bpL.mosaic{idx}.compute('coneTrials',current);
-    % bpNTrials{idx} = bpNTrialsCenterTemp-bpNTrialsSurroundTemp;
-    clear bpNTrialsCenterTemp bpNTrialsSurroundTemp
+
 end
 
 % Have a look
@@ -206,7 +205,7 @@ rgcL = rgcLayer(bpL);
 % Choose cell types
 rgcCellTypes = {'on parasol','off parasol','on midget','off midget'};   
 
-diameters = round([10 10 5 5 20]); % We shouldn't have to manually set this.. but for now the retialLocationToTEE seems to get debugged
+diameters = round([10 10 5 5 20]); % In microns. % Should we have to manually set this?
 
 rgcParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
 rgcParams.eyeSide = whichEye;
