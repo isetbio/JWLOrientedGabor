@@ -127,15 +127,16 @@ ogparams(3).ang      = oGabor.ang;
 
 % Put test params and scene params into P for use with oisCreate
 P.sampleTimes       = tsamples;
-P.testParameters    = ogparams([1 2]);
 P.sceneParameters   = sparams;
 
+% Blend uniform and ccw Gabor for temporal windowing
+P.testParameters    = ogparams([1 2]);
 [OG, scenes] = oisCreate('harmonic','blend', tseries, P);
 % OG.visualize;
 % ieAddObject(OG.oiFixed); ieAddObject(OG.oiModulated); oiWindow;
 % ieAddObject(scenes{2}); sceneWindow;
 
-% Gabor with opposite rotation
+% Blend uniform and cw Gabor for temporal windowing
 P.testParameters = ogparams([1 3]);
 OG(2) = oisCreate('harmonic','blend', tseries, P);
 % OG(2).visualize;
