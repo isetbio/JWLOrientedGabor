@@ -1,5 +1,5 @@
 function [OG, scenes, tseries, fname] = ogStimuli(varargin)
-% OGSTIMULI - Create oriented stimuli (e.g., left and right)
+% OGSTIMULI - Create oriented stimuli (e.g., cw and ccw for 2 AFC expt)
 %
 %  [OG, scenes, tseries, fname] = ogStimuli(varargin)
 %
@@ -21,7 +21,7 @@ function [OG, scenes, tseries, fname] = ogStimuli(varargin)
 %
 % Outputs
 %
-%  OG       - 1x2 OIsequence array for left- and right-oriented Gabors
+%  OG       - 1x2 OIsequence array for ccw- and cw-oriented Gabors
 %  scenes   - A 1x2 cell with a uniform field scene and oriented gabor scene
 %  tseries  - A vector of the temporal window modulator for the scene
 %  fname    - Path and filename where stimulus is stored
@@ -44,7 +44,8 @@ function [OG, scenes, tseries, fname] = ogStimuli(varargin)
 %     vcNewGraphWin; plot(tseries)
 %
 % Notes
-%   Luminance 2 log millilamberts
+%   Luminance 2 log millilamberts ?? 
+%   It appears that luminance is not used?? Check.
 %
 % JW & EK, NYU ISETBIO Team, 2017
 %
@@ -100,37 +101,29 @@ tseries = exp(-(tsamples/timesd).^2);
 tseries = ieScale(tseries,0,1);
 
 %%  Scene parameters in general
-
-% The size of the integration for the cone mosaic is 5 minutes for a line.
-% There are two lines, so the stimulus should be more than 10 minutes.  We
-% set up the cone mosaic to be about 15 minutes, and we will try shrinking
-% it later.  And enlarging it.
-%
-% We create the scene and thus the oi to be a bit bigger to allow for eye
-% movements.  We set the scene to be .35*60 ~ 21 minutes.  The oi is even a
-% little bigger to allow for blur.
 sparams.fov      = sceneFOV;    % degrees
 sparams.distance = distance;    % Meters
 
 % [NOT USED BY OISCREATE]
 % sparams.bgColor  = bgColor;     % scaled from 0 to 1 
 
-% Basic vernier parameters for the oiSequence.  Reverse order forces the
-% allocation first so the array does not grow over the loop.
-for ii = 3:-1:1
-    ogparams(ii) = oGabor;
-end
+% Basic Gabor parameters for the oiSequence.  We make 3 for CW, CCW,
+% and blank. CW and CCW are for the 2 AFC. Blank is for mixing with the
+% Gabors for the temporal windowing.
+ogparams(1:3) = oGabor;
 
-% Uniform field, no line, just the background color
+% Uniform field, no Gabor, just the background color
 ogparams(1).name     = 'uniform'; 
 ogparams(1).contrast = 0;
 
-% Left oriented Gabor on a zero background
-ogparams(2).name     = 'leftOG';  
+% CCW oriented Gabor on a zero background. The function which makes the
+% Gabors, harmonicP, treats 0 as vertical and clockwise as positive.
+ogparams(2).name     = 'ccwOG';  
+ogparams(2).ang      = -oGabor.ang;
 
-% Right oriented Gabor on a zero background
-ogparams(3).name     = 'rightOG'; 
-ogparams(3).ang      = -oGabor.ang;
+% CW oriented Gabor on a zero background
+ogparams(3).name     = 'cwOG'; 
+ogparams(3).ang      = oGabor.ang;
 
 % Put test params and scene params into P for use with oisCreate
 P.sampleTimes       = tsamples;

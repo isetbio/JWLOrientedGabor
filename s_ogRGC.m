@@ -2,10 +2,15 @@
 % This script supercedes t_orientedGaborDiscrimination.m, which no longer runs, 
 % due to changes in isetbio.
 % 
-% Model cone, bipolar, RGC, cortical, and behavioral (computational
+% Long-term goal:
+%   Model cone, bipolar, RGC, cortical, and behavioral (computational
 % observer) responses for the experiment on measuring orientation
 % discrimination thresholds of an achromatic, peripheral Gabor.
-% 
+%
+% So far:
+%   Model cone, bipolar, RGC responses
+
+
 %% ---------------------- Script outline ---------------------- 
 %   
 %   Build structures:
@@ -21,7 +26,7 @@
 %% ---------------------- Questions ----------------------
 %
 %       * Spatial and temporal pooling for cortex? (Contact Nicholas C!)
-%       * Repeated trials are handled awkardly. For example, repeated
+%       * Repeated trials are handled awkwardly. For example, repeated
 %           trials are stored within separate cell arrays for inner retina
 %           mosaics (which is good), but are not stored at all within
 %           coneMosais or bipolar mosaics. As a result, we need to store
@@ -32,7 +37,7 @@
 %       * (SOLVED) How to combine the bipolar responses into the RGC layer?
 %       * (SOLVED) How should we deal with the negative responses from off midget
 %       RGC that turn into no signal after rectification?
-%       * Can we incorporate off-axis optical data from Pablo Artal
+%       * TODO: Oncorporate off-axis optical data from Pablo Artal
 %               Example: Figure 5 from Jaeken and Artal, 2012
 %       * How is the denisty of cones, bipolars, and RGCs handled as a
 %               function of eccentricity?
@@ -54,26 +59,27 @@
 %       *   Within each trial, add eye movements to sensor (or OIS?)
 %       *   Build the outer segment object with linear filters and compute its
 %              response with the sensor structure.
-%       *   Build the bipolar layer and compute responses (on and off??)
-%       *   Build the RGC layer and compute responses (on and off midgets?)
+%       *   Build the bipolar layer and compute responses (which cell types?)
+%       *   Build the RGC layer and compute responses (which cell types?)
 %       *   Compute cortical responses from spatial / temporal responses
 %       *   Compute linear discriminant of stimulus orientation using
-%              cortical responses
+%              outputs at various stages
 % 
 
 % EK/JW/ NYU ISETBIO Team, Copyright 2017
 
 
-% % Cone density; see coneDensity.m
-% % load cone density data.  Units are cones / mm^2
-% d = load('coneDensity.mat');
-% figure,  plot(d.inferior.eccMM, d.inferior.density)
-% hold on, plot(d.superior.eccMM, d.superior.density)
-% hold on, plot(d.temporal.eccMM, d.temporal.density)
-% hold on, plot(d.nasal.eccMM, d.nasal.density)
-% set(gca, 'YScale', 'log')
-% legend('Inferior', 'Superior', 'Temporal', 'Nasal')
-
+% % Cone density; see new function coneDensity.m
+% Note that there are multiple sources in the literature for Cone Density:
+%   Curcio (default); Song etc.
+% Example:
+% coneDensity = coneDensityReadData('eccentricity',8*1e-3,'angle',10,'whichEye','left');
+% m2deg = 1000*3;
+% deg2m = 1/m2deg;
+% ecc = (0.1:.5:60) * deg2m;
+% coneDensity = coneDensityReadData('eccentricity',ecc,'angle',ecc*0,'whichEye','left');
+% figure, plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity) coneDensity], 'o-')
+% % Compare to FOV, p.46, Figure 3.1
 
 %% Specify experiment parameters 
 
@@ -86,31 +92,31 @@ whichEye = 'left';
 
 % Gaussian temporal window for stimulus
 tStep                      = 0.002; % Time step for making optical image sequence (seconds)
-params.tsamples            = (-0.070:tStep:0.070); % seconds
-% params.tsamples            = (-0.2:tStep:0.2); % seconds
-
-params.timesd              = 0.100;                % seconds
+sparams.tsamples            = (-0.200:tStep:0.200); % seconds
+sparams.timesd              = 0.100;                % sd of temporal Gaussian window
 
 % Scene field of view
-params.sceneFOV  = 2;           % degrees
+sparams.sceneFOV  = 2;           % degrees (Diameter??)
 
 % Make a Gabor with default parameters, then update parameters. Will need
 %   to fit within sceneFOV
-params.gabor               = harmonicP;                   % Standard Gabor
-params.gabor.ang           = (pi/180)* 20;                % Gabor orientation (radians)
-params.gabor.freq          = 6*params.sceneFOV;           % Spatial frequency (cycles/FOV)
-params.gabor.contrast      = 1;                           % Presumably michelson, [0 1]
-params.gabor.GaborFlag     = .25/params.sceneFOV;         % Gaussian window
+%
+% Note that the angle convention for harmonics is different that spatial
+% position for the cone mosaic. For the harmonic, 0 is vertical, pi/4 is 4
+% deg up and right.
+sparams.gabor               = harmonicP;                   % Standard Gabor
+sparams.gabor.ang           = (pi/180)* 20;                % Gabor orientation (radians) - question: what is 0??
+sparams.gabor.freq          = 6*sparams.sceneFOV;          % Spatial frequency (cycles/FOV)
+sparams.gabor.contrast      = 1;                           % Presumably michelson, [0 1]
+sparams.gabor.GaborFlag     = .25/sparams.sceneFOV;        % Gaussian window
 
 % Specify retinal location where stimulus is presented
-params.eccentricity        = 6;                           % Visual angle of stimulus center, in deg
-params.polarAngle          = deg2rad(90);                          % Polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
+sparams.eccentricity        = 6;                           % Visual angle of stimulus center, in deg
+sparams.polarAngle          = deg2rad(90);                 % Polar angle (deg): 0 is right, 90 is superior, 180 is left, 270 inferior
 
 
 %% Make the stimuli
-
-
-[OG,scenes,tseries, fname] = ogStimuli(params);
+[OG,scenes,tseries, fname] = ogStimuli(sparams);
 
 % OG(1).visualize;
 % vcNewGraphWin; 
@@ -124,14 +130,14 @@ params.polarAngle          = deg2rad(90);                          % Polar angle
 tSamples         = OG(1).length;
 
 % Cone mosaic field of view in degrees
-params.cmFOV     = 2;           % degrees
-params.em        = emCreate;    % eye movements: consider adjusting to 
+sparams.cmFOV     = 2;           % degrees
+sparams.em        = emCreate;    % eye movements: consider adjusting to 
                                 %   account for cone spacing and for data
                                 %   from different stimulus conditions
-params.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
+sparams.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
 
 % Compute x,y position in m of center of retinal patch from ecc and angle
-[x, y] = pol2cart(params.polarAngle(1), params.eccentricity(1));
+[x, y] = pol2cart(sparams.polarAngle(1), sparams.eccentricity(1));
 x = x * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 y = y * .3 * 0.001; % .3 mm per deg, .001 mm per meter
 
@@ -140,7 +146,7 @@ cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
 
 % Sometimes we set the mosaic size to 15 minutes (.25 deg) because that is
 % the spatial pooling size found by Westheimer and McKee
-cMosaic.setSizeToFOV(params.cmFOV);
+cMosaic.setSizeToFOV(sparams.cmFOV);
 
 % Not sure why these have to match, but there is a bug if they don't.
 cMosaic.integrationTime = OG(1).timeStep;
@@ -150,7 +156,7 @@ cMosaic.noiseFlag = 'random';
 
 % Add eye movements
 emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
-    'em', params.em); % path is in terms of cones shifted
+    'em', sparams.em); % path is in terms of cones shifted
 
 % Compute absorptions 
 [absorptions, current, interpFilters, meanCur] = cMosaic.compute(OG(1), 'currentFlag', true, ...
