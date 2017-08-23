@@ -5,7 +5,9 @@
 % Long-term goal:
 %   Model cone, bipolar, RGC, cortical, and behavioral (computational
 % observer) responses for the experiment on measuring orientation
-% discrimination thresholds of an achromatic, peripheral Gabor.
+% discrimination thresholds of an achromatic, peripheral Gabor. Account for
+% variation in optics, cone density, and RGC density/RF size as a function
+% of visual field position.
 %
 % So far:
 %   Model cone, bipolar, RGC responses
@@ -51,6 +53,17 @@
 %               does not. 
 %       * How is RGC rf size determined as a function of eccentricity?
 %
+%% ---------------------- TODO ---------------------------
+%       * How to implement position-specific optics?
+%       * Check position specific cone and RGC densities
+%           For LE at 6º ecc and 2º FOV and polar angle of 
+%           -   0 deg (nasal),    the mosaic is 71x71
+%           -  90 deg (superior), the mosaic is 64x64
+%           - 270 deg (inferior), the mosaic is 65x65
+%       * How to validate bipolar responses (including for different class
+%           types?)
+%
+%
 %% ---------------------- Experiment ----------------------
 %
 %       *   Loop over 4 spatial positions (left, right, lower, upper)
@@ -69,16 +82,42 @@
 % EK/JW/ NYU ISETBIO Team, Copyright 2017
 
 
-% % Cone density; see new function coneDensity.m
-% Note that there are multiple sources in the literature for Cone Density:
-%   Curcio (default); Song etc.
-% Example:
-% coneDensity = coneDensityReadData('eccentricity',8*1e-3,'angle',10,'whichEye','left');
-% m2deg = 1000*3;
-% deg2m = 1/m2deg;
-% ecc = (0.1:.5:60) * deg2m;
-% coneDensity = coneDensityReadData('eccentricity',ecc,'angle',ecc*0,'whichEye','left');
-% figure, plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity) coneDensity], 'o-')
+%% Cone density
+
+% Plot cone density as a function of eccentricity and polar angle
+
+m2deg = 1000*3;
+deg2m = 1/m2deg;
+ecc = (0.1:.1:10) * deg2m;
+angles = 0:90:270;
+labels = {'Nasal' 'Superior' 'Temporal' 'Inferior'}';
+
+coneDensity= zeros(length(ecc), length(angles));
+
+for ii = 1:length(angles)
+    coneDensity(:,ii) = coneDensityReadData(...
+        'eccentricity',ecc,...
+        'angle',ecc*0+angles(ii),...
+        'whichEye','left', ...
+        'coneDensitySource', 'Song2011Young'); % could be 'Song2011Young' 'Song2011Old' 'Curcio1990'
+end
+
+% Plot it
+figure, set(gcf, 'Color', 'w')
+colors = [0 0 1; 1 0 0; 0 1 0; 1 .5 0];
+
+subplot(1,2,1); set(gca, 'ColorOrder', colors, 'FontSize', 16); hold on
+plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity); coneDensity]', '-', 'LineWidth', 4)
+legend(labels, 'Location', 'Best')
+xlabel('Eccentricity (deg)');
+ylabel('Cone density (cones / mm^2)');
+
+subplot(1,2,2); set(gca, 'ColorOrder', colors, 'FontSize', 16); hold on
+plot(ecc*m2deg, coneDensity',  '-', 'LineWidth', 4); set(gca, 'XScale', 'log', 'YScale', 'log')
+legend(labels, 'Location', 'Best')
+xlabel('Eccentricity (deg)');
+ylabel('Cone density (cones / mm^2)');
+
 % % Compare to FOV, p.46, Figure 3.1
 
 %% Specify experiment parameters 
@@ -136,7 +175,7 @@ deg2m = .3 * 0.001; % .3 mm per deg, .001 mm per meter
 
 % Specify retinal location where stimulus is presented
 cparams.eccentricity = 6;             % Visual angle of stimulus center, in deg
-cparams.polarAngle   = deg2rad(45);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+cparams.polarAngle   = deg2rad(270);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
 
 % Cone mosaic field of view in degrees
 cparams.cmFOV     = 2; % degrees
@@ -196,8 +235,14 @@ bpCellTypes = {'on diffuse','off diffuse','on midget','off midget','on SBC'};
 
 bpMosaicParams.rectifyType = 1;
 
+% Store the multi-trial time series here (number of cell types x 2 stimuli)
+bpNTrials = cell(length(bpCellTypes), 2);
+
 for idx = 1:length(bpCellTypes)
-        
+    
+    fprintf('Computing bipolar responses for cell type %s', ...
+        bpCellTypes{idx});
+    
     % How should we define this??
     %     bpMosaicParams.spread  = 2;  % RF diameter w.r.t. input samples
     %     bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
@@ -221,8 +266,6 @@ bpL.window;
 
 
 %% Retinal ganglion cell model
-
-clear rgcL rgcParams
 
 % Create retina ganglion cell layer object based on bipolar layer
 rgcL = rgcLayer(bpL);
