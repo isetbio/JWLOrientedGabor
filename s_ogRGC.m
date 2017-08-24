@@ -88,18 +88,19 @@
 
 m2deg = 1000*3;
 deg2m = 1/m2deg;
-ecc = (0.1:.1:10) * deg2m;
+ecc = (0.1:.1:60) * deg2m;
 angles = 0:90:270;
 labels = {'Nasal' 'Superior' 'Temporal' 'Inferior'}';
 
 coneDensity= zeros(length(ecc), length(angles));
-
+dataSources = {'Song2011Young' 'Song2011Old' 'Curcio1990'};
+dataSource  = dataSources{3};
 for ii = 1:length(angles)
     coneDensity(:,ii) = coneDensityReadData(...
         'eccentricity',ecc,...
         'angle',ecc*0+angles(ii),...
-        'whichEye','left', ...
-        'coneDensitySource', 'Song2011Young'); % could be 'Song2011Young' 'Song2011Old' 'Curcio1990'
+        'whichEye','right', ...
+        'coneDensitySource', dataSource); % could be '
 end
 
 % Plot it
@@ -111,14 +112,22 @@ plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity); coneDensity]', '-', 'LineWidth'
 legend(labels, 'Location', 'Best')
 xlabel('Eccentricity (deg)');
 ylabel('Cone density (cones / mm^2)');
+title(sprintf('Cone densities from %s', dataSource))
 
 subplot(1,2,2); set(gca, 'ColorOrder', colors, 'FontSize', 16); hold on
 plot(ecc*m2deg, coneDensity',  '-', 'LineWidth', 4); set(gca, 'XScale', 'log', 'YScale', 'log')
 legend(labels, 'Location', 'Best')
 xlabel('Eccentricity (deg)');
 ylabel('Cone density (cones / mm^2)');
+title(sprintf('Cone densities from %s', dataSource))
 
 % % Compare to FOV, p.46, Figure 3.1
+% Note that our plots look different from Watson 2014, who is also plotting
+% densities from Curcio. We need to check where ISETBIO gets the numbers
+% and where Watson gets the numbers
+%
+% We will also want to check ISETBIO's RGC numbers as a function of visual
+% field position against Watson's
 
 %% Specify experiment parameters 
 
@@ -208,6 +217,11 @@ cparams.em        = emCreate;    % eye movements: consider adjusting to
 cparams.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
 
 % Add eye movements
+%
+% NOTE that eye movements are currently specified in units of cones, not
+% deg or m. If cone density changes with visual field position, then we
+% would implicitly be assuming different size eye movements for different
+% visual field positions.
 emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
     'em', cparams.em); % path is in terms of cones shifted
 
@@ -240,7 +254,7 @@ bpNTrials = cell(length(bpCellTypes), 2);
 
 for idx = 1:length(bpCellTypes)
     
-    fprintf('Computing bipolar responses for cell type %s', ...
+    fprintf('Computing bipolar responses for cell type %s\n', ...
         bpCellTypes{idx});
     
     % How should we define this??
@@ -267,14 +281,18 @@ bpL.window;
 
 %% Retinal ganglion cell model
 
+% We need to think about RGC sampling in two senses: RF size and RGC
+% density
+
 % Create retina ganglion cell layer object based on bipolar layer
 rgcL = rgcLayer(bpL);
 
 % Choose cell types
 rgcCellTypes = {'on parasol','off parasol','on midget','off midget'};   
 
-diameters = round([10 10 5 5 20]); % In microns. % Should we have to manually set this?
+diameters = round([10 10 2 2 20]); % In cones. % Should we have to manually set this?
 
+%diameters = round([
 rgcParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
 rgcParams.eyeSide = whichEye;
 
