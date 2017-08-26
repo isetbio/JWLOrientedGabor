@@ -27,7 +27,6 @@ function [OG, scenes, tseries, fname] = ogStimuli(varargin)
 %  fname    - Path and filename where stimulus is stored
 %
 % Example: 
-%     params.cmFOV              = 2;
 %     params.em                 = emCreate;
 %     params.tStep              = 0.005;      % seconds
 %     params.sceneFOV           = 2;

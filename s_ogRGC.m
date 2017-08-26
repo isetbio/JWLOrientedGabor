@@ -78,7 +78,6 @@
 %       *   Compute linear discriminant of stimulus orientation using
 %              outputs at various stages
 % 
-
 % EK/JW/ NYU ISETBIO Team, Copyright 2017
 
 
@@ -94,7 +93,10 @@ labels = {'Nasal' 'Superior' 'Temporal' 'Inferior'}';
 
 coneDensity= zeros(length(ecc), length(angles));
 dataSources = {'Song2011Young' 'Song2011Old' 'Curcio1990'};
+
 dataSource  = dataSources{3};
+
+
 for ii = 1:length(angles)
     coneDensity(:,ii) = coneDensityReadData(...
         'eccentricity',ecc,...
@@ -180,7 +182,7 @@ sparams.gabor.GaborFlag = sparams.gausSDdeg*deg2fov;   % Gaussian window
 %% CONE MOSAIC
 whichEye = 'left'; 
 
-deg2m = .3 * 0.001; % .3 mm per deg, .001 mm per meter
+deg2m = 1/3 * 0.001; % 3 deg per mm, .001 mm per meter
 
 % Specify retinal location where stimulus is presented
 cparams.eccentricity = 6;             % Visual angle of stimulus center, in deg
@@ -203,8 +205,15 @@ cMosaic.noiseFlag = 'random';
 
 %% EYE MOVEMENTS 
 
-% Compute absorptions for multiple trials
-tSamples         = OG(1).length; % number of time points in optical image sequence
+% NOTE
+%   Eye movements are currently specified in units of cones, not deg or m.
+%   If cone density changes with visual field position, then we would
+%   implicitly be assuming different size eye movements for different
+%   visual field positions.
+
+% We make sure that the number of time points in the eye movement sequence
+% matches the number of time points in the optical image sequence
+tSamples         = OG(1).length;
 
 % Not sure why these have to match, but there is a bug if they don't.
 cMosaic.integrationTime = OG(1).timeStep;
@@ -215,18 +224,17 @@ cparams.em        = emCreate;    % eye movements: consider adjusting to
                                  %   account for cone spacing and for data
                                  %   from different stimulus conditions
 cparams.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
+cparams.em.emFlag = [0 0 0]';    % Include tremor, drift, microsaccades
 
 % Add eye movements
 %
-% NOTE that eye movements are currently specified in units of cones, not
-% deg or m. If cone density changes with visual field position, then we
-% would implicitly be assuming different size eye movements for different
-% visual field positions.
 emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
     'em', cparams.em); % path is in terms of cones shifted
 
 
 %% ABSORPTIONS 
+
+% Compute absorptions for multiple trials
 
 % ccw Gabor
 [absorptions.ccw, current.ccw, interpFilters.ccw, meanCur.ccw] = cMosaic.compute(OG(1), 'currentFlag', true, ...
@@ -238,6 +246,16 @@ emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
 
 % Have a look
 cMosaic.window;
+
+% plot the mean absorptions and current
+sz = cMosaic.rows*cMosaic.cols;
+figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on; 
+plot(min(reshape(cMosaic.current, sz,[])));
+title('current')
+
+figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on; 
+plot(min(reshape(cMosaic.absorptions, sz,[])));
+title('absorptions')
 
 %% BIPOLAR LAYER
 
