@@ -224,10 +224,7 @@ cparams.em        = emCreate;    % eye movements: consider adjusting to
                                  %   account for cone spacing and for data
                                  %   from different stimulus conditions
 cparams.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
-cparams.em.emFlag = [0 0 0]';    % Include tremor, drift, microsaccades
 
-% Add eye movements
-%
 emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
     'em', cparams.em); % path is in terms of cones shifted
 
@@ -257,6 +254,10 @@ figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
 plot(min(reshape(cMosaic.absorptions, sz,[])));
 title('absorptions')
 
+save(fullfile(ogRootPath, 'data', 'OGconeOutputs'),...
+    'absorptions', 'current', 'sparams', 'cparams');
+
+return
 %% BIPOLAR LAYER
 
 % Create a bipolar layer
