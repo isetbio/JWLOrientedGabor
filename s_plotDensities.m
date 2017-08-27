@@ -21,20 +21,20 @@ ang = [0 90 180 270];
 angNames = {'Nasal (HM)','Superior (LVM)','Temporal (HM)', 'Inferior (UVM)'};
 
 % Plot cone densities
-figure('Color','w');
+figure('Color','w'); cmap = lines(4);
 for ii = 1:length(ang)
     
     coneDensity = coneDensityReadData('eccentricity',ecc,'angle',ones(size(ecc))*ang(ii),'whichEye','left');
 
     subplot(211); hold all;
-    plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity) coneDensity], '-', 'LineWidth', 2)
+    plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity) coneDensity], 'Color', cmap(ii,:), 'LineWidth', 2)
     xlabel('Eccentricity (deg)'); ylabel('Density (count/mm^2)')
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
     legend(angNames)
     
     
     subplot(212); hold all;
-    plot(ecc*m2deg, coneDensity, '-', 'LineWidth', 2);
+    plot(ecc*m2deg, coneDensity, 'Color', cmap(ii,:),  'LineWidth', 2);
     set(gca,'XScale', 'log', 'YScale', 'log');
     xlabel('Eccentricity (deg)'); ylabel('Density (count/mm^2)')
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
