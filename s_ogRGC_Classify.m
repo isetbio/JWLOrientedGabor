@@ -3,11 +3,11 @@
 % Script with first attempt to classify oriented gabors simulated at
 % 7 different contrast levels, 4 polar angles.
 
-
+FFTflag = true;
 %% Classify
 
-contrastLevels = [0.4:0.1:1.0];
-polarAngles    = [0 90 180 270];
+contrastLevels = [.1 1]; % [0.4:0.1:1.0];
+polarAngles    = 0; % [0 90 180 270];
 
 P = nan(length(polarAngles),length(contrastLevels));
 % svmMdl = cell(1, length(contrastLevels));
@@ -22,15 +22,25 @@ for pa = polarAngles
         nTrials = size(absorptions.cw,1);
         tSamples = size(absorptions.cw,4);
         
-        % Reformat the time series for the PCA analysis
-        %
-        % imgListX matrix contains the temporal response for a pixel in a
-        % column. The rows represent time samples by number of trials. These are
-        % the temporal responses across all trials and time points.
-        % 4D array input
-        imgListCW = trial2Matrix(absorptions.cw);
-        imgListCCW  = trial2Matrix(absorptions.ccw);
-        
+        % If requested, fourier transform the cone array outputs
+        if FFTflag
+            absorptions.cwF  = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
+            absorptions.ccwF = abs(fft2(permute(absorptions.ccw, [2 3 1 4])));
+            
+            imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
+            imgListCCW = trial2Matrix(permute(absorptions.ccwF, [3 1 2 4]));
+            
+        else
+            % Reformat the time series for the PCA analysis
+            %
+            % imgListX matrix contains the temporal response for a pixel in a
+            % column. The rows represent time samples times number of trials.
+            % These are the temporal responses across all trials and time
+            % points. The columns represent the cells.
+            % 4D array input
+            imgListCW  = trial2Matrix(absorptions.cw);
+            imgListCCW = trial2Matrix(absorptions.ccw);
+        end
         
         % Concatenate the matrices of the two stimuli
         imgList = cat(1,imgListCW,imgListCCW);
@@ -59,7 +69,7 @@ for pa = polarAngles
         train_index(randperm(nTrials, round(0.8*nTrials))) = 1;
         train_index = train_index > 0;
         
-        % The aligned and offset trials are still matched
+        % The cw and ccw trials are still matched ????
         train_index = repmat(train_index, 2, 1);
         
         % Fit the SVM model.
@@ -70,7 +80,6 @@ for pa = polarAngles
         yp = predict(mdl, data(~train_index, :));
         classLoss = sum(label(~train_index) ~= yp) / length(yp);
         
-        % X(bb) = barOffset(bb);
         P(pa==polarAngles,c==contrastLevels) = (1-classLoss) * 100;
         
         

@@ -1,4 +1,4 @@
-%% Oriented Gabor Discrimination, take 2
+%% Oriented Gabor Discrimination
 % This script supercedes t_orientedGaborDiscrimination.m, which no longer runs,
 % due to changes in isetbio.
 %
@@ -81,56 +81,6 @@
 % EK/JW/ NYU ISETBIO Team, Copyright 2017
 
 
-%% Cone density
-
-% Plot cone density as a function of eccentricity and polar angle
-
-m2deg = 1000*3;
-deg2m = 1/m2deg;
-ecc = (0.1:.1:60) * deg2m;
-angles = 0:90:270;
-labels = {'Nasal' 'Superior' 'Temporal' 'Inferior'}';
-
-coneDensity= zeros(length(ecc), length(angles));
-dataSources = {'Song2011Young' 'Song2011Old' 'Curcio1990'};
-
-dataSource  = dataSources{3};
-
-
-for ii = 1:length(angles)
-    coneDensity(:,ii) = coneDensityReadData(...
-        'eccentricity',ecc,...
-        'angle',ecc*0+angles(ii),...
-        'whichEye','right', ...
-        'coneDensitySource', dataSource); % could be '
-end
-
-% Plot it
-figure, set(gcf, 'Color', 'w')
-colors = [0 0 1; 1 0 0; 0 1 0; 1 .5 0];
-
-subplot(1,2,1); set(gca, 'ColorOrder', colors, 'FontSize', 16); hold on
-plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity); coneDensity]', '-', 'LineWidth', 4)
-legend(labels, 'Location', 'Best')
-xlabel('Eccentricity (deg)');
-ylabel('Cone density (cones / mm^2)');
-title(sprintf('Cone densities from %s', dataSource))
-
-subplot(1,2,2); set(gca, 'ColorOrder', colors, 'FontSize', 16); hold on
-plot(ecc*m2deg, coneDensity',  '-', 'LineWidth', 4); set(gca, 'XScale', 'log', 'YScale', 'log')
-legend(labels, 'Location', 'Best')
-xlabel('Eccentricity (deg)');
-ylabel('Cone density (cones / mm^2)');
-title(sprintf('Cone densities from %s', dataSource))
-
-% % Compare to FOV, p.46, Figure 3.1
-% Note that our plots look different from Watson 2014, who is also plotting
-% densities from Curcio. We need to check where ISETBIO gets the numbers
-% and where Watson gets the numbers
-%
-% We will also want to check ISETBIO's RGC numbers as a function of visual
-% field position against Watson's
-
 %% Specify experiment parameters
 
 % Number of trials per stimulus condition
@@ -138,10 +88,11 @@ nTrials  = 50;
 
 
 %% SCENE AND OPTICAL IMAGE SEQUENCE
-for c = 0.4:0.1:1
+for c = 0.1 % 0.4:0.1:1
     
-    for pa = [0 90 180 270]
-        
+    
+    for pa = 0 % [0 90 180 270]
+        fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d\n', c, pa)
         % ---- SCENE PARAMETERS ---------------------------------------------
         % Gaussian temporal window for stimulus
         tStep            = 0.002;                % Time step for optical image sequence (seconds)
@@ -226,7 +177,7 @@ for c = 0.4:0.1:1
         cparams.em        = emCreate;    % eye movements: consider adjusting to
         %   account for cone spacing and for data
         %   from different stimulus conditions
-        cparams.em.emFlag = [1 1 1]';    % Include tremor, drift, microsaccades
+        cparams.em.emFlag = [0 0 0]';    % Include tremor, drift, microsaccades
         
         emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
             'em', cparams.em); % path is in terms of cones shifted

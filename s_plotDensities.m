@@ -1,6 +1,6 @@
 %% s_plotDensities
 
-% Cone Density, see new function coneDensity.m
+% Cone Density, see new function coneDensityReadData.m
 
 
 % Note that there are multiple sources in the literature for Cone Density:
@@ -30,16 +30,15 @@ for ii = 1:length(ang)
     plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity) coneDensity], 'Color', cmap(ii,:), 'LineWidth', 2)
     xlabel('Eccentricity (deg)'); ylabel('Density (count/mm^2)')
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
-    legend(angNames)
-    
     
     subplot(212); hold all;
     plot(ecc*m2deg, coneDensity, 'Color', cmap(ii,:),  'LineWidth', 2);
     set(gca,'XScale', 'log', 'YScale', 'log');
     xlabel('Eccentricity (deg)'); ylabel('Density (count/mm^2)')
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
-    legend(angNames)
 
 end
+subplot(211), axis tight; legend(angNames, 'Location', 'Best')
+subplot(212), axis tight; legend(angNames, 'Location', 'Best')
 
 % Plot RGC densities
