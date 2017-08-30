@@ -6,7 +6,8 @@
 #SBATCH --mem 128 # memory pool for all cores
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ek99@nyu.edu
-#SBATCH -j oe
+#SBATCH -o slurm.%N.%j.out
+#SBATCH -e slurm.%N.%j.err
 
 module load matlab/2016b
 
