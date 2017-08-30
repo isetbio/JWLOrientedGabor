@@ -177,7 +177,7 @@ for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         cparams.em        = emCreate;    % eye movements: consider adjusting to
         %   account for cone spacing and for data
         %   from different stimulus conditions
-        cparams.em.emFlag = [1 1 0]';    % Include tremor, drift, microsaccades
+        cparams.em.emFlag = [0 0 0]';    % Include tremor, drift, microsaccades
 %         cparams.em.tremor.interval = cparams.em.tremor.interval/2;
         cparams.em.tremor.amplitude = cparams.em.tremor.amplitude/2;
 

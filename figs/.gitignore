@@ -1,0 +1,7 @@
+*~
+*.fig
+*.eps
+*.png
+*.jpg
+.DS_Store
+
