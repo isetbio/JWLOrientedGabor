@@ -178,9 +178,6 @@ for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         %   account for cone spacing and for data
         %   from different stimulus conditions
         cparams.em.emFlag = [0 0 0]';    % Include tremor, drift, microsaccades
-%         cparams.em.tremor.interval = cparams.em.tremor.interval/2;
-        cparams.em.tremor.amplitude = cparams.em.tremor.amplitude/2;
-
         
         emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
             'em', cparams.em); % path is in terms of cones shifted
@@ -202,14 +199,14 @@ for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         % cMosaic.window;
         
         % plot the mean absorptions and current
-        sz = cMosaic.rows*cMosaic.cols;
-        figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on;
-        plot(min(reshape(cMosaic.current, sz,[])));
-        title('current')
+%        sz = cMosaic.rows*cMosaic.cols;
+%        figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on;
+%        plot(min(reshape(cMosaic.current, sz,[])));
+%        title('current')
         
-        figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
-        plot(min(reshape(cMosaic.absorptions, sz,[])));
-        title('absorptions')
+%        figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
+%        plot(min(reshape(cMosaic.absorptions, sz,[])));
+%        title('absorptions')
         
         save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3))),...
             'absorptions', 'current', 'sparams', 'cparams');
