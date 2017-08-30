@@ -12,7 +12,7 @@ if ~exist('polarAngles','var') || isempty(polarAngles)
 end
 
 if ~exist('eyemovement','var') || isempty(eyemovement)
-    eyemovement = {'110'};
+    eyemovement = {'000'};
 end
 
 if ~exist('FFTflag','var') || isempty(FFTflag)
