@@ -1,4 +1,4 @@
-function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,fftFlag)
+function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag)
 
 % Function for HCP based on s_ogRGC_Classify
 
