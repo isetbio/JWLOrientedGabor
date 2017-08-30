@@ -5,7 +5,7 @@
 #SBATCH -t 0-20:00 # time (D-HH:MM)
 #SBATCH --mem 128 # memory pool for all cores
 #SBATCH --mail-type=END,FAIL
-#SBATCH -mail-user=ek99@nyu.edu
+#SBATCH --mail-user=ek99@nyu.edu
 #SBATCH -j oe
 
 module load matlab/2016b
