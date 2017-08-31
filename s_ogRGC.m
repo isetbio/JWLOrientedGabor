@@ -86,7 +86,7 @@
 % Number of trials per stimulus condition
 nTrials  = 50;
 
-
+verbose = true; % if true, plot figures, else not
 %% SCENE AND OPTICAL IMAGE SEQUENCE
 
 for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
@@ -177,11 +177,26 @@ for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         cparams.em        = emCreate;    % eye movements: consider adjusting to
         %   account for cone spacing and for data
         %   from different stimulus conditions
-        cparams.em.emFlag = [0 0 0]';    % Include tremor, drift, microsaccades
+        cparams.em.emFlag = [1 1 0]';    % Include tremor, drift, microsaccades
         
         emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
             'em', cparams.em); % path is in terms of cones shifted
         
+        if verbose
+            figure(99); set(gcf,'Color','w'); clf; subplot(211); plot(1:2:402,squeeze(emPaths(1,:,1)),'k', 'LineWidth', 2); hold on;
+            plot(1:2:402,squeeze(emPaths(1,:,2)), 'r--', 'LineWidth',2)
+            xlabel('Time (ms)'); ylabel('Shift in position (cones)');  legend('X','Y');
+            set(gca, 'TickDir','out','TickLength', [0.015 0.015])
+  
+            subplot(212); plot(squeeze(emPaths(1,:,1)),squeeze(emPaths(2,:,2)), 'k','LineWidth', 2);
+            xlabel('Position X (cones)'); ylabel('Position Y (cones)');
+            set(gca, 'XLim', [-2 2], 'YLim', [-2 2], 'XTick', [-2:2],'YTick', [-2:2],'TickDir','out','TickLength', [0.015 0.015], 'XGrid', 'on','YGrid', 'on'); axis square;
+            box off
+            
+            savefig(fullfile(ogRootPath,'figs',sprintf('eyeTrajectoriesTremorDrift')))
+            hgexport(99,fullfile(ogRootPath,'figs',sprintf('eyeTrajectoriesTremordrift.eps')))
+
+        end
         
         %% ABSORPTIONS
         
@@ -198,15 +213,17 @@ for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         % Have a look
         % cMosaic.window;
         
-        % plot the mean absorptions and current
-%        sz = cMosaic.rows*cMosaic.cols;
-%        figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on;
-%        plot(min(reshape(cMosaic.current, sz,[])));
-%        title('current')
-        
-%        figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
-%        plot(min(reshape(cMosaic.absorptions, sz,[])));
-%        title('absorptions')
+        if verbose
+            % plot the mean absorptions and current
+           sz = cMosaic.rows*cMosaic.cols;
+           figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on;
+           plot(min(reshape(cMosaic.current, sz,[])));
+           title('current')
+
+           figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
+           plot(min(reshape(cMosaic.absorptions, sz,[])));
+           title('absorptions')
+        end
         
         save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3))),...
             'absorptions', 'current', 'sparams', 'cparams');

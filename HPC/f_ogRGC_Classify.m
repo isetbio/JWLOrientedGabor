@@ -80,20 +80,24 @@ for pa = polarAngles
             label = [ones(nTrials, 1); -ones(nTrials, 1)];
             
             % Select some of the data (80%) as the training set.
-            train_index = zeros(nTrials, 1);
-            train_index(randperm(nTrials, round(0.8*nTrials))) = 1;
-            train_index = train_index > 0;
+%             train_index = zeros(nTrials, 1);
+%             train_index(randperm(nTrials, round(0.8*nTrials))) = 1;
+%             train_index = train_index > 0;
             
             % The cw and ccw trials are still matched ????
-            train_index = repmat(train_index, 2, 1);
+%             train_index = repmat(train_index, 2, 1);
             
             % Fit the SVM model.
-            mdl = fitcsvm(data(train_index, :), label(train_index), ...
-                'KernelFunction', 'linear');
+%             mdl = fitcsvm(data(train_index, :), label(train_index), ...
+%                 'KernelFunction', 'linear');
             
-            % predict the data not in the training set.
-            yp = predict(mdl, data(~train_index, :));
-            classLoss = sum(label(~train_index) ~= yp) / length(yp);
+            SVMModel = fitcsvm(data,label,'KernelFunction','linear');
+            CVSVMModel = crossval(SVMModel);
+            classLoss = kfoldLoss(CVSVMModel);
+            
+%             % predict the data not in the training set.
+%             yp = predict(mdl, data(~train_index, :));
+%             classLoss = sum(label(~train_index) ~= yp) / length(yp);
             
             P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
             
