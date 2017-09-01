@@ -1,4 +1,4 @@
-function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag)
+function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag, phaseFlag)
 
 % Function for HCP based on s_ogRGC_Classify
 
@@ -18,6 +18,16 @@ end
 if ~exist('FFTflag','var') || isempty(FFTflag)
     FFTflag = false;
 end
+
+if ~exist('phaseFlag','var') || isempty(phaseFlag)
+phaseFlag = false;
+postFix = '';
+end
+
+if ~exist('postFix','var') || isempty(postFix)
+postFix = '';
+end 
+
 %% Classify
 
 % contrastLevels = [0.01:0.01:0.09, 0.1:0.1:1.0];
@@ -31,7 +41,7 @@ for pa = polarAngles
     for c = contrastLevels
         for em = 1:length(eyemovement)
             % Load dataset
-            load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s.mat',c,pa,cell2mat(eyemovement(em)))));
+            load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_S.mat',c,pa,cell2mat(eyemovement(em)))));
             
             % Get the trials and samples (should be the data for all data sets though
             nTrials = size(absorptions.cw,1);
@@ -39,10 +49,20 @@ for pa = polarAngles
             
             % If requested, fourier transform the cone array outputs
             if FFTflag
-                absorptions.cwF  = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
-                absorptions.ccwF = abs(fft2(permute(absorptions.ccw, [2 3 1 4])));
+
+		if phaseFlag
+
+                absorptions.cwF  = angle(fft2(permute(absorptions.cw, [2 3 1 4])));
+                absorptions.ccwF = angle(fft2(permute(absorptions.ccw, [2 3 1 4])));
+					  postFix = '_phase';
+	else
+
+		  absorptions.cwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
+		  absorptions.ccwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
                 
-                imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
+		end
+		
+		imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
                 imgListCCW = trial2Matrix(permute(absorptions.ccwF, [3 1 2 4]));
                 
             else
@@ -108,7 +128,7 @@ end
 
 
 disp(P);
-save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d.mat',cell2mat(eyemovement),polarAngles,FFTflag)),'P')
+save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_S.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix)),'P')
 
 % Visualize
 % labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle: 270'};
@@ -120,8 +140,8 @@ set(gca, 'XScale','log', 'YLim', [0 100], 'TickDir','out','TickLength',[.015 .01
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-savefig(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d',cell2mat(eyemovement),polarAngles,FFTflag)))
-hgexport(gcf,fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d.eps',cell2mat(eyemovement),polarAngles,FFTflag)))
+%savefig(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s',cell2mat(eyemovement),polarAngles,FFTflag,postFix)))
+%hgexport(gcf,fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s.eps',cell2mat(eyemovement),polarAngles,FFTflag,postFix)))
 
 
 %%
