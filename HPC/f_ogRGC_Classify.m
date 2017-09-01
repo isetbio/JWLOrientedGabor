@@ -20,13 +20,13 @@ if ~exist('FFTflag','var') || isempty(FFTflag)
 end
 
 if ~exist('phaseFlag','var') || isempty(phaseFlag)
-phaseFlag = false;
-postFix = '';
+    phaseFlag = false;
+    postFix = '';
 end
 
 if ~exist('postFix','var') || isempty(postFix)
-postFix = '';
-end 
+    postFix = '';
+end
 
 %% Classify
 
@@ -41,7 +41,7 @@ for pa = polarAngles
     for c = contrastLevels
         for em = 1:length(eyemovement)
             % Load dataset
-            load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_S.mat',c,pa,cell2mat(eyemovement(em)))));
+            load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_L.mat',c,pa,cell2mat(eyemovement(em)))));
             
             % Get the trials and samples (should be the data for all data sets though
             nTrials = size(absorptions.cw,1);
@@ -49,20 +49,20 @@ for pa = polarAngles
             
             % If requested, fourier transform the cone array outputs
             if FFTflag
-
-		if phaseFlag
-
-                absorptions.cwF  = angle(fft2(permute(absorptions.cw, [2 3 1 4])));
-                absorptions.ccwF = angle(fft2(permute(absorptions.ccw, [2 3 1 4])));
-					  postFix = '_phase';
-	else
-
-		  absorptions.cwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
-		  absorptions.ccwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
                 
-		end
-		
-		imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
+                if phaseFlag
+                    
+                    absorptions.cwF  = angle(fft2(permute(absorptions.cw, [2 3 1 4])));
+                    absorptions.ccwF = angle(fft2(permute(absorptions.ccw, [2 3 1 4])));
+                    postFix = '_phase';
+                else
+                    
+                    absorptions.cwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
+                    absorptions.ccwF = abs(fft2(permute(absorptions.ccw, [2 3 1 4])));
+                    
+                end
+                
+                imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
                 imgListCCW = trial2Matrix(permute(absorptions.ccwF, [3 1 2 4]));
                 
             else
@@ -100,24 +100,24 @@ for pa = polarAngles
             label = [ones(nTrials, 1); -ones(nTrials, 1)];
             
             % Select some of the data (80%) as the training set.
-%             train_index = zeros(nTrials, 1);
-%             train_index(randperm(nTrials, round(0.8*nTrials))) = 1;
-%             train_index = train_index > 0;
+            %             train_index = zeros(nTrials, 1);
+            %             train_index(randperm(nTrials, round(0.8*nTrials))) = 1;
+            %             train_index = train_index > 0;
             
             % The cw and ccw trials are still matched ????
-%             train_index = repmat(train_index, 2, 1);
+            %             train_index = repmat(train_index, 2, 1);
             
             % Fit the SVM model.
-%             mdl = fitcsvm(data(train_index, :), label(train_index), ...
-%                 'KernelFunction', 'linear');
+            %             mdl = fitcsvm(data(train_index, :), label(train_index), ...
+            %                 'KernelFunction', 'linear');
             
             SVMModel = fitcsvm(data,label,'KernelFunction','linear');
             CVSVMModel = crossval(SVMModel);
             classLoss = kfoldLoss(CVSVMModel);
             
-%             % predict the data not in the training set.
-%             yp = predict(mdl, data(~train_index, :));
-%             classLoss = sum(label(~train_index) ~= yp) / length(yp);
+            %             % predict the data not in the training set.
+            %             yp = predict(mdl, data(~train_index, :));
+            %             classLoss = sum(label(~train_index) ~= yp) / length(yp);
             
             P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
             
@@ -128,7 +128,7 @@ end
 
 
 disp(P);
-save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_S.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix)),'P')
+save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_L.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix)),'P')
 
 % Visualize
 % labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle: 270'};

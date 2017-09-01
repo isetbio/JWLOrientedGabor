@@ -89,7 +89,7 @@ nTrials  = 50;
 verbose = true; % if true, plot figures, else not
 %% SCENE AND OPTICAL IMAGE SEQUENCE
 
-for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
+for c = 1; %[0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
 
     for pa = 0 % [0 90 180 270]
         fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d\n', c, pa)
@@ -157,7 +157,7 @@ for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         % Add photon noise
         cMosaic.noiseFlag = 'random';
 
-cMosaic.spatialDensity = [0 0 0 1];
+        cMosaic.spatialDensity = [0 1 0 0];
         
         %% EYE MOVEMENTS
         
@@ -227,7 +227,7 @@ cMosaic.spatialDensity = [0 0 0 1];
            title('absorptions')
         end
         
-        save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_S.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3))),...
+        save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_L.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3))),...
             'absorptions', 'current', 'sparams', 'cparams');
         
     end
