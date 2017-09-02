@@ -34,85 +34,86 @@ end
 % polarAngles    = 0; % [0 90 180 270];
 % eyemovement    = {'110'};%{'000', '100', '010', '001'};
 
-P = nan(length(polarAngles),length(contrastLevels),length(eyemovement));
+P = nan(length(polarAngles),length(contrastLevels),length(eyemovement), length(eccen));
 % svmMdl = cell(1, length(contrastLevels));
 
-for pa = polarAngles
-    for c = contrastLevels
-        for em = 1:length(eyemovement)
-            % Load dataset
-            load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s.mat',c,pa,cell2mat(eyemovement(em)))));
-            
-            % Get the trials and samples (should be the data for all data sets though
-            nTrials = size(absorptions.cw,1);
-            tSamples = size(absorptions.cw,4);
-            
-            % If requested, fourier transform the cone array outputs
-            if FFTflag
+for eccen = 0:40
+    for pa = polarAngles
+        for c = contrastLevels
+            for em = 1:length(eyemovement)
+                % Load dataset
+                load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%d.mat',c,pa,cell2mat(eyemovement(em)),eccen)));
                 
-                if phaseFlag
+                % Get the trials and samples (should be the data for all data sets though
+                nTrials = size(absorptions.cw,1);
+                tSamples = size(absorptions.cw,4);
+                
+                % If requested, fourier transform the cone array outputs
+                if FFTflag
                     
-                    absorptions.cwF  = angle(fft2(permute(absorptions.cw, [2 3 1 4])));
-                    absorptions.ccwF = angle(fft2(permute(absorptions.ccw, [2 3 1 4])));
-                    postFix = '_phase';
+                    if phaseFlag
+                        
+                        absorptions.cwF  = angle(fft2(permute(absorptions.cw, [2 3 1 4])));
+                        absorptions.ccwF = angle(fft2(permute(absorptions.ccw, [2 3 1 4])));
+                        postFix = '_phase';
+                    else
+                        
+                        absorptions.cwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
+                        absorptions.ccwF = abs(fft2(permute(absorptions.ccw, [2 3 1 4])));
+                        
+                    end
+                    
+                    imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
+                    imgListCCW = trial2Matrix(permute(absorptions.ccwF, [3 1 2 4]));
+                    
                 else
-                    
-                    absorptions.cwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
-                    absorptions.ccwF = abs(fft2(permute(absorptions.ccw, [2 3 1 4])));
-                    
+                    % Reformat the time series for the PCA analysis
+                    %
+                    % imgListX matrix contains the temporal response for a pixel in a
+                    % column. The rows represent time samples times number of trials.
+                    % These are the temporal responses across all trials and time
+                    % points. The columns represent the cells.
+                    % 4D array input
+                    imgListCW  = trial2Matrix(absorptions.cw);
+                    imgListCCW = trial2Matrix(absorptions.ccw);
                 end
                 
-                imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
-                imgListCCW = trial2Matrix(permute(absorptions.ccwF, [3 1 2 4]));
+                % Concatenate the matrices of the two stimuli
+                imgList = cat(1,imgListCW,imgListCCW);
                 
-            else
-                % Reformat the time series for the PCA analysis
+                % compute the imagebases of the two stimuli
+                imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
+                
+                % Time series of weights
+                weightSeries  = imgList * imageBasis;
+                
+                %% Start classification training
                 %
-                % imgListX matrix contains the temporal response for a pixel in a
-                % column. The rows represent time samples times number of trials.
-                % These are the temporal responses across all trials and time
-                % points. The columns represent the cells.
-                % 4D array input
-                imgListCW  = trial2Matrix(absorptions.cw);
-                imgListCCW = trial2Matrix(absorptions.ccw);
+                % Put the weights from each trial into the rows of a matrix
+                % Each row is another trial
+                nWeights = size(weightSeries,2);
+                data = zeros(2*nTrials,nWeights*tSamples);
+                for ii = 1 : (2*nTrials)
+                    start = (ii-1)*tSamples + 1;
+                    thisTrial = weightSeries(start:(start+tSamples - 1),:);
+                    data(ii,:) = thisTrial(:)';
+                end
+                label = [ones(nTrials, 1); -ones(nTrials, 1)];
+                
+                % Fit the SVM model and cross validate
+                SVMModel = fitcsvm(data,label,'KernelFunction','linear');
+                CVSVMModel = crossval(SVMModel);
+                classLoss = kfoldLoss(CVSVMModel);
+                
+                % Store performance for each polar angle, contrast level and
+                % eyemovement condition
+                P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
+                
+                
             end
-            
-            % Concatenate the matrices of the two stimuli
-            imgList = cat(1,imgListCW,imgListCCW);
-            
-            % compute the imagebases of the two stimuli
-            imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
-            
-            % Time series of weights
-            weightSeries  = imgList * imageBasis;
-            
-            %% Start classification training
-            %
-            % Put the weights from each trial into the rows of a matrix
-            % Each row is another trial
-            nWeights = size(weightSeries,2);
-            data = zeros(2*nTrials,nWeights*tSamples);
-            for ii = 1 : (2*nTrials)
-                start = (ii-1)*tSamples + 1;
-                thisTrial = weightSeries(start:(start+tSamples - 1),:);
-                data(ii,:) = thisTrial(:)';
-            end
-            label = [ones(nTrials, 1); -ones(nTrials, 1)];
-
-            % Fit the SVM model and cross validate
-            SVMModel = fitcsvm(data,label,'KernelFunction','linear');
-            CVSVMModel = crossval(SVMModel);
-            classLoss = kfoldLoss(CVSVMModel);
-           
-            % Store performance for each polar angle, contrast level and
-            % eyemovement condition
-            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
-            
-            
         end
     end
 end
-
 
 disp(P);
 save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix)),'P')
