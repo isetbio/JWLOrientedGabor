@@ -35,7 +35,7 @@ end
 % eyemovement    = {'110'};%{'000', '100', '010', '001'};
 usedEccentricities = 1:40;
 
-P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(usedEccentricites));
+P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(usedEccentricities));
 % svmMdl = cell(1, length(contrastLevels));
 for eccen = 1:length(usedEccentricities)
     for pa = polarAngles
