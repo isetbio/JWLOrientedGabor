@@ -33,7 +33,7 @@ end
 % contrastLevels = [0.01:0.01:0.09, 0.1:0.1:1.0];
 % polarAngles    = 0; % [0 90 180 270];
 % eyemovement    = {'110'};%{'000', '100', '010', '001'};
-usedEccentricities = 2:40;
+usedEccentricities = 6; % 2:40;
 
 P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(usedEccentricities));
 % svmMdl = cell(1, length(contrastLevels));
@@ -50,40 +50,46 @@ for eccen = usedEccentricities
                 
                 % If requested, fourier transform the cone array outputs
                 if FFTflag
+                    % permute to put 2D spatial array first
+                    absorptions.cw  = permute(absorptions.cw,  [2 3 1 4]);
+                    absorptions.ccw = permute(absorptions.ccw, [2 3 1 4]);
+                    
+                    absorptions.cw  = fft2(absorptions.cw);
+                    absorptions.ccw = fft2(absorptions.ccw);
                     
                     if phaseFlag
-                        
-                        absorptions.cwF  = angle(fft2(permute(absorptions.cw, [2 3 1 4])));
-                        absorptions.ccwF = angle(fft2(permute(absorptions.ccw, [2 3 1 4])));
+                        %  compute phase spectrum
+                        absorptions.cw  = angle(absorptions.cw);
+                        absorptions.ccw = angle(absorptions.ccw);
                         postFix = '_phase';
                     else
-                        
-                        absorptions.cwF = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
-                        absorptions.ccwF = abs(fft2(permute(absorptions.ccw, [2 3 1 4])));
-                        
+                        absorptions.cw  = abs(absorptions.cw);
+                        absorptions.ccw = abs(absorptions.ccw);
                     end
                     
-                    imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
-                    imgListCCW = trial2Matrix(permute(absorptions.ccwF, [3 1 2 4]));
                     
-                else
-                    % Reformat the time series for the PCA analysis
-                    %
-                    % imgListX matrix contains the temporal response for a pixel in a
-                    % column. The rows represent time samples times number of trials.
-                    % These are the temporal responses across all trials and time
-                    % points. The columns represent the cells.
-                    % 4D array input
-                    imgListCW  = trial2Matrix(absorptions.cw);
-                    imgListCCW = trial2Matrix(absorptions.ccw);
+                    % unpermute
+                    absorptions.cw  = permute(absorptions.cw,  [3 1 2 4]);
+                    absorptions.ccw = permute(absorptions.ccw, [3 1 2 4]);
+                    
                 end
+                
+                % Reformat the time series for the PCA analysis
+                %
+                % imgListX matrix contains the temporal response for a pixel in a
+                % column. The rows represent time samples times number of trials.
+                % These are the temporal responses across all trials and time
+                % points. The columns represent the cells.
+                % 4D array input
+                imgListCW  = trial2Matrix(absorptions.cw);
+                imgListCCW = trial2Matrix(absorptions.ccw);
+                
+                % Compute the imagebases of the two stimuli
+                imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
                 
                 % Concatenate the matrices of the two stimuli
                 imgList = cat(1,imgListCW,imgListCCW);
-                
-                % compute the imagebases of the two stimuli
-                imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
-                
+                                
                 % Time series of weights
                 weightSeries  = imgList * imageBasis;
                 

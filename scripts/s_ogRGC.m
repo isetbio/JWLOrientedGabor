@@ -88,7 +88,7 @@ nTrials  = 50;
 
 
 %% SCENE AND OPTICAL IMAGE SEQUENCE
-for eccen = 0:1:40
+for eccen = 6%0:1:40
     for c = 1%[0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         
         for pa = 0 % [0 90 180 270]
@@ -146,7 +146,7 @@ for eccen = 0:1:40
             cparams.cmFOV     = 2; % degrees
             
             % Compute x,y position in m of center of retinal patch from ecc and angle
-            [x, y] = pol2cart(cparams.polarAngle(1), cparams.eccentricity(1));
+            [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
             x = x * deg2m;  y = y * deg2m;
             
             cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
