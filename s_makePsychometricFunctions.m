@@ -12,9 +12,9 @@ FFTflag = true;
 
 dataPth = fullfile(ogRootPath,'figs');
 
-contrastLevels    = 1;% [0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
-eccentricities    = 1:40;
-% eyemovement       = {'110'};
+contrastLevels    = [0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+eccentricities    = 6;
+eyemovement       = {'110'};
 % nCLevels           = length(Contrastlevels);     % Number of contrast levels
 % nAccuracy         = length(accuracy.P);          % Actual data (accuracy of linear classifier)
 nTotal            = 100;                           % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
@@ -38,14 +38,14 @@ for em = 1:length(eyemovement)
     for ct = 1;%:length(coneType)
 
         %% 1. Load results
-    fName   = sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen.mat',cell2mat(eyemovement(em)),polarAngles,FFTflag);
+    fName   = sprintf('contrastVSperformance_eye%s_pa%d_fft%d_eccen_test.mat',cell2mat(eyemovement(em)),polarAngles,FFTflag);
     accuracy = load(fullfile(dataPth, fName));
     
     
     %% 2. Fit Weibull
     % Make a Weibull function first with contrast levels and then search for
     % the best fit with the classifier data
-    fit.ctrvar{ct} = fminsearch(@(x) ogFitWeibull(x, contrastLevels, accuracy.P', nTotal), fit.init);
+    fit.ctrvar{ct} = fminsearch(@(x) ogFitWeibull(x, contrastLevels, accuracy.P(:,:,1,6)', nTotal), fit.init);
     
     % Then fit a Weibull function again, but now with the best fit parameters
     % from the previous step.
@@ -70,7 +70,7 @@ end
 figure(1); clf; set(gcf,'Color','w'); hold all;
 
 plot(contrastLevels, fit.ctrpred{1}*100, 'Color', 'k', 'LineWidth',2);
-scatter(contrastLevels, fit.data{1}, [], 'k');
+scatter(contrastLevels, fit.data{1}(:,:,1,6), [], 'k');
 plot(contrastLevels, fit.ctrpred{2}*100, 'Color', 'r', 'LineWidth',2);
 scatter(contrastLevels, fit.data{2},[], 'r');
 plot(contrastLevels, fit.ctrpred{3}*100, 'Color', 'g', 'LineWidth',2);
@@ -82,7 +82,9 @@ set(gca, 'XScale','log', 'YLim', [40 100], 'TickDir','out','TickLength',[.015 .0
 ylabel('Classifier Accuracy')
 % xlabel('Contrast level (Michelson)')
 xlabel('Eccentricity (degrees)');
-title('Linear SVM, Ecc 6, Polar Angle 0, 6cpd, LMS versus monochromatic cone mosaics, with FFT','FontSize',12)
+title('Linear SVM, Ecc 6, Polar Angle 0, 6cpd, with FFT','FontSize',12)
+
+% title('Linear SVM, Ecc 6, Polar Angle 0, 6cpd, LMS versus monochromatic cone mosaics, with FFT','FontSize',12)
 % legend('Fixed Fit','Fixed Data','Tremor Fit','Tremor Data','Drift Fit','Drift Data','Tremor+Drift Fit', 'Tremor+Drift Data','Location','Best')
 % legend('LMS Fit','LMS Data','L Fit','L Data','M Fit','M Data','S Fit', 'S Data','Location','Best')
 % legend('Drift fit speed: 0.00087','Drift data amplitude: 0.00087','Drift fit amplitude: 0.0011', 'Drift data amplitude: 0.0011','Location','Best')

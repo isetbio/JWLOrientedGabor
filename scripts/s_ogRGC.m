@@ -89,7 +89,7 @@ nTrials  = 50;
 
 %% SCENE AND OPTICAL IMAGE SEQUENCE
 for eccen = 6%0:1:40
-    for c = 1%[0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
+    for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         
         for pa = 0 % [0 90 180 270]
             fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
