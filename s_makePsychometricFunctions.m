@@ -12,7 +12,8 @@ FFTflag = true;
 
 dataPth = fullfile(ogRootPath,'figs');
 
-contrastLevels    = [0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+contrastLevels    = 1;% [0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+eccentricities    = 1:40;
 % eyemovement       = {'110'};
 % nCLevels           = length(Contrastlevels);     % Number of contrast levels
 % nAccuracy         = length(accuracy.P);          % Actual data (accuracy of linear classifier)
@@ -31,13 +32,13 @@ fit.thresh = 0.75;
 % for %1:length(eyemovement)
 %     for ct = 1:length(coneTypes)     
     
-coneType = {'', '_L', '_M','_S'};
+% coneType = {'', '_L', '_M','_S'};
 
 for em = 1:length(eyemovement) 
-    for ct = 1:length(coneType)
+    for ct = 1;%:length(coneType)
 
         %% 1. Load results
-    fName   = sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s.mat',cell2mat(eyemovement(em)),polarAngles,FFTflag, coneType{ct});
+    fName   = sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen.mat',cell2mat(eyemovement(em)),polarAngles,FFTflag);
     accuracy = load(fullfile(dataPth, fName));
     
     
@@ -79,14 +80,15 @@ scatter(contrastLevels, fit.data{4}, [], 'b');
 
 set(gca, 'XScale','log', 'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',12);
 ylabel('Classifier Accuracy')
-xlabel('Contrast level (Michelson)')
+% xlabel('Contrast level (Michelson)')
+xlabel('Eccentricity (degrees)');
 title('Linear SVM, Ecc 6, Polar Angle 0, 6cpd, LMS versus monochromatic cone mosaics, with FFT','FontSize',12)
 % legend('Fixed Fit','Fixed Data','Tremor Fit','Tremor Data','Drift Fit','Drift Data','Tremor+Drift Fit', 'Tremor+Drift Data','Location','Best')
-legend('LMS Fit','LMS Data','L Fit','L Data','M Fit','M Data','S Fit', 'S Data','Location','Best')
+% legend('LMS Fit','LMS Data','L Fit','L Data','M Fit','M Data','S Fit', 'S Data','Location','Best')
 % legend('Drift fit speed: 0.00087','Drift data amplitude: 0.00087','Drift fit amplitude: 0.0011', 'Drift data amplitude: 0.0011','Location','Best')
 
 box off
 
-savefig(fullfile(ogRootPath,'figs',sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_monochromatic',polarAngles,FFTflag)))
-hgexport(gcf,fullfile(ogRootPath,'figs',sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_monocrhomatic.eps',polarAngles,FFTflag)))
+savefig(fullfile(ogRootPath,'figs',sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_eccen',polarAngles,FFTflag)))
+hgexport(gcf,fullfile(ogRootPath,'figs',sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_eccen.eps',polarAngles,FFTflag)))
 

@@ -89,10 +89,10 @@ nTrials  = 50;
 
 %% SCENE AND OPTICAL IMAGE SEQUENCE
 for eccen = 0:1:40
-    for c = 1;%[0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
+    for c = 1%[0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
         
         for pa = 0 % [0 90 180 270]
-            fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d\n', c, pa)
+            fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
             % ---- SCENE PARAMETERS ---------------------------------------------
             % Gaussian temporal window for stimulus
             tStep            = 0.002;                % Time step for optical image sequence (seconds)
@@ -122,15 +122,15 @@ for eccen = 0:1:40
             % ---- MAKE SCENE AND OIS --------------------------------------------
             [OG,scenes,tseries, fname] = ogStimuli(sparams);
             
-            % OG(1).visualize; % ccw
-            % vcNewGraphWin;
-            %   plot(OG(1).timeAxis, OG(1).modulationFunction);
-            %   xlabel('Time (s)'); ylabel('Stimulus amplitude')
-            
-            % OG(2).visualize; % cw
-            % vcNewGraphWin;
-            %   plot(OG(1).timeAxis, OG(1).modulationFunction);
-            %   xlabel('Time (s)'); ylabel('Stimulus amplitude')
+%             OG(1).visualize; % ccw
+%             vcNewGraphWin;
+%               plot(OG(1).timeAxis, OG(1).modulationFunction);
+%               xlabel('Time (s)'); ylabel('Stimulus amplitude')
+%             
+%             OG(2).visualize; % cw
+%             vcNewGraphWin;
+%               plot(OG(1).timeAxis, OG(1).modulationFunction);
+%               xlabel('Time (s)'); ylabel('Stimulus amplitude')
             
             %% CONE MOSAIC
             whichEye = 'left';
@@ -208,8 +208,8 @@ for eccen = 0:1:40
             %        plot(min(reshape(cMosaic.absorptions, sz,[])));
             %        title('absorptions')
             
-            save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%d.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen)),...
-                'absorptions', 'current', 'sparams', 'cparams');
+            save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%1.2f.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen)),...
+                'absorptions', 'sparams', 'cparams');
             
         end
     end

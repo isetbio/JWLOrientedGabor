@@ -3,5 +3,6 @@
 *.eps
 *.png
 *.jpg
+*.mat
 .DS_Store
 

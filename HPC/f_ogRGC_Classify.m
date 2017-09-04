@@ -33,16 +33,16 @@ end
 % contrastLevels = [0.01:0.01:0.09, 0.1:0.1:1.0];
 % polarAngles    = 0; % [0 90 180 270];
 % eyemovement    = {'110'};%{'000', '100', '010', '001'};
-usedEccentricities = 1:40;
+usedEccentricities = 2:40;
 
 P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(usedEccentricities));
 % svmMdl = cell(1, length(contrastLevels));
-for eccen = 1:length(usedEccentricities)
+for eccen = usedEccentricities
     for pa = polarAngles
         for c = contrastLevels
             for em = 1:length(eyemovement)
                 % Load dataset
-                load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%d.mat',c,pa,cell2mat(eyemovement(em)),eccen)));
+                load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f.mat',c,pa,cell2mat(eyemovement(em)),eccen)));
                 
                 % Get the trials and samples (should be the data for all data sets though
                 nTrials = size(absorptions.cw,1);
