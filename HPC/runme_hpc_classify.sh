@@ -17,7 +17,7 @@ cd /scratch/ek99/JWLOrientedGabor/
 # If the files you are running are not in the same folder as this script,
 # you can insert "addpath(genpath('/PATH/TO/FILES/'));" before the command
 # you want to run.
-matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); f_ogRGC_Classify([],0,{'110'},1,0); exit()"
+matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); f_ogRGC_Classify([],0,{'110'},1,0,6); exit()"
 
 exit
 

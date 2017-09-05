@@ -1,4 +1,4 @@
-function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag, phaseFlag)
+function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag, phaseFlag, usedEccentricities)
 
 % Function for HCP based on s_ogRGC_Classify
 
@@ -28,12 +28,16 @@ if ~exist('postFix','var') || isempty(postFix)
     postFix = '';
 end
 
+if ~exist('usedEccentricities','var') || isempty(usedEccentricities)
+usedEccentricities = 6;
+end
+
 %% Classify
 
 % contrastLevels = [0.01:0.01:0.09, 0.1:0.1:1.0];
 % polarAngles    = 0; % [0 90 180 270];
 % eyemovement    = {'110'};%{'000', '100', '010', '001'};
-usedEccentricities = 6; % 2:40;
+%usedEccentricities = 6; % 2:40;
 
 P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(usedEccentricities));
 % svmMdl = cell(1, length(contrastLevels));
@@ -42,7 +46,7 @@ for eccen = usedEccentricities
         for c = contrastLevels
             for em = 1:length(eyemovement)
                 % Load dataset
-                load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f.mat',c,pa,cell2mat(eyemovement(em)),eccen)));
+		       load(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f.mat',c,pa,cell2mat(eyemovement(em)),eccen)));
                 
                 % Get the trials and samples (should be the data for all data sets though
                 nTrials = size(absorptions.cw,1);
@@ -113,7 +117,7 @@ for eccen = usedEccentricities
                 
                 % Store performance for each polar angle, contrast level and
                 % eyemovement condition
-                P(pa==polarAngles,c==contrastLevels,em, eccen) = (1-classLoss) * 100;
+                P(pa==polarAngles,c==contrastLevels,em, eccen==usedEccentricities) = (1-classLoss) * 100;
                 
                 
             end
@@ -122,7 +126,7 @@ for eccen = usedEccentricities
 end
 
 disp(P);
-save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix)),'P')
+save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen%1.2f.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix,max(usedEccentricities))),'P')
 
 % Visualize
 % labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle: 270'};
