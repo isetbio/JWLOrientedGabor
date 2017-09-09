@@ -128,6 +128,10 @@ ogparams(3).ang      = oGabor.ang;
 P.sampleTimes       = tsamples;
 P.sceneParameters   = sparams;
 
+if isfield(p.Unmatched,'oi')
+    P.oi = p.Unmatched.oi;
+end
+
 % Blend uniform and ccw Gabor for temporal windowing
 P.testParameters    = ogparams([1 2]);
 [OG, scenes] = oisCreate('harmonic','blend', tseries, P);
