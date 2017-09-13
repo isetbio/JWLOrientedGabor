@@ -1,10 +1,19 @@
-function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag, phaseFlag, usedEccentricities, zernikeDefocus)
+function []=ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag, phaseFlag, ...
+                            usedEccentricities, zernikeDefocus, pcaFlag)
 
-% Function for HCP based on s_ogRGC_Classify
+% Function to classify absorption rate outputs from s_ogRGC.m
+%
+% We transform absorptions rates (originally in a ntrials x rows x cols x time)
+% for both clockwise (cw) and counter-clockwise (ccw) stimuli to a (space x
+% time) matrix. Then absorption rates are concatenated
+
+% We then take either the amplitudes of the
+
 
 % Examples:
-% f_ogRGC_Classify([],0,{'110'},0, 0, 6, [0 0.5 1 1.5 2])
-% f_ogRGC_Classify([], 0,{'000'},0, 0, 6, [])
+% ogRGC_Classify([],0,{'110'},0, 0, 6, [0 0.5 1 1.5 2])
+% ogRGC_Classify([], 0,{'110'},0, 0, 6, [])
+% ogRGC_Classify([], 0,{'110'},1, 0, 6, [])
 
 
 % Check inputs
@@ -21,7 +30,7 @@ if ~exist('eyemovement','var') || isempty(eyemovement)
 end
 
 if ~exist('FFTflag','var') || isempty(FFTflag)
-    FFTflag = true;
+    FFTflag = false;
 end
 
 if ~exist('phaseFlag','var') || isempty(phaseFlag)
@@ -38,7 +47,11 @@ if ~exist('usedEccentricities','var') || isempty(usedEccentricities)
 end
 
 if ~exist('zernikeDefocus','var') || isempty(zernikeDefocus)
-   zernikeDefocus = 0; % But could be [0:0.5:2];
+    zernikeDefocus = 0; % But could be [0:0.5:2];
+end
+
+if ~exist('pcaFlag','var') || isempty(pcaFlag)
+    pcaFlag = false; 
 end
 
 %% Classify
@@ -88,36 +101,43 @@ for eccen = usedEccentricities
                         
                     end
                     
-                    % Reformat the time series for the PCA analysis
-                    %
-                    % imgListX matrix contains the temporal response for a pixel in a
-                    % column. The rows represent time samples times number of trials.
-                    % These are the temporal responses across all trials and time
-                    % points. The columns represent the cells.
-                    % 4D array input
-                    imgListCW  = trial2Matrix(absorptions.cw);
-                    imgListCCW = trial2Matrix(absorptions.ccw);
-                    
-                    % Compute the imagebases of the two stimuli
-%                     imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
-                    
-                    % Concatenate the matrices of the two stimuli
-                    imgList = cat(1,imgListCW,imgListCCW);
-                    
-                    % Time series of weights
-                    weightSeries  = imgList;% * imageBasis;
-                    
-                    %% Start classification training
-                    %
-                    % Put the weights from each trial into the rows of a matrix
-                    % Each row is another trial
-                    nWeights = size(weightSeries,2);
-                    data = zeros(2*nTrials,nWeights*tSamples);
-                    for ii = 1 : (2*nTrials)
-                        start = (ii-1)*tSamples + 1;
-                        thisTrial = weightSeries(start:(start+tSamples - 1),:);
-                        data(ii,:) = thisTrial(:)';
+                    if PCAflag
+                        % Reformat the time series for the PCA analysis
+                        %
+                        % imgListX matrix contains the temporal response for a pixel in a
+                        % column. The rows represent time samples times number of trials.
+                        % These are the temporal responses across all trials and time
+                        % points. The columns represent the cells.
+                        % 4D array input
+                        imgListCW  = trial2Matrix(absorptions.cw);
+                        imgListCCW = trial2Matrix(absorptions.ccw);
+                        
+                        % Compute the imagebases of the two stimuli
+                        %                     imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
+                        
+                        % Concatenate the matrices of the two stimuli
+                        imgList = cat(1,imgListCW,imgListCCW);
+                        
+                        % Time series of weights
+                        weightSeries  = imgList;% * imageBasis;
+                        
+                        %% Start classification training
+                        %
+                        % Put the weights from each trial into the rows of a matrix
+                        % Each row is another trial
+                        nWeights = size(weightSeries,2);
+                        data = zeros(2*nTrials,nWeights*tSamples);
+                        for ii = 1 : (2*nTrials)
+                            start = (ii-1)*tSamples + 1;
+                            thisTrial = weightSeries(start:(start+tSamples - 1),:);
+                            data(ii,:) = thisTrial(:)';
+                        end
+                    else
+                        
+                        data = cat(1,absorptions.cw,absorptions.ccw);
+                        data = reshape(data,[size(data,1),size(data,2)*size(data,3)*size(data,4)]);
                     end
+                    
                     label = [ones(nTrials, 1); -ones(nTrials, 1)];
                     
                     % Fit the SVM model and cross validate
@@ -137,7 +157,7 @@ for eccen = usedEccentricities
 end
 
 disp(P);
-save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen%1.2f_defocus%1.2f_noPCA.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix,max(usedEccentricities),max(zernikeDefocus))),'P')
+save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen%1.2f_defocus%1.2f_pca%d.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix,max(usedEccentricities),max(zernikeDefocus),pcaFlag)),'P')
 
 % Visualize
 % labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle: 270'};
