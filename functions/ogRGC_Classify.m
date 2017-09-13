@@ -2,13 +2,14 @@ function []=f_ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag, pha
 
 % Function for HCP based on s_ogRGC_Classify
 
-% Example:
+% Examples:
 % f_ogRGC_Classify([],0,{'110'},0, 0, 6, [0 0.5 1 1.5 2])
+% f_ogRGC_Classify([], 0,{'000'},0, 0, 6, [])
 
 
 % Check inputs
 if ~exist('contrastLevels','var') || isempty(contrastLevels)
-    contrastLevels = [0.01:0.01:0.09, 0.1:0.1:1.0];
+    contrastLevels = [0 0.01:0.01:0.09, 0.1:0.1:1.0];
 end
 
 if ~exist('polarAngles','var') || isempty(polarAngles)
@@ -16,15 +17,15 @@ if ~exist('polarAngles','var') || isempty(polarAngles)
 end
 
 if ~exist('eyemovement','var') || isempty(eyemovement)
-    eyemovement = {'000'};
+    eyemovement = {'000','100','010','110'};
 end
 
 if ~exist('FFTflag','var') || isempty(FFTflag)
-    FFTflag = false;
+    FFTflag = true;
 end
 
 if ~exist('phaseFlag','var') || isempty(phaseFlag)
-    phaseFlag = false;
+    phaseFlag = true;
     postFix = '';
 end
 
@@ -33,11 +34,11 @@ if ~exist('postFix','var') || isempty(postFix)
 end
 
 if ~exist('usedEccentricities','var') || isempty(usedEccentricities)
-    usedEccentricities = 6;
+    usedEccentricities = 6; % But could be any integer
 end
 
 if ~exist('zernikeDefocus','var') || isempty(zernikeDefocus)
-   zernikeDefocus = [];
+   zernikeDefocus = 0; % But could be [0:0.5:2];
 end
 
 %% Classify
@@ -48,7 +49,7 @@ end
 %usedEccentricities = 6; % 2:40;
 
 P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(usedEccentricities),length(zernikeDefocus));
-% svmMdl = cell(1, length(contrastLevels));
+
 for eccen = usedEccentricities
     for pa = polarAngles
         for c = contrastLevels
@@ -98,13 +99,13 @@ for eccen = usedEccentricities
                     imgListCCW = trial2Matrix(absorptions.ccw);
                     
                     % Compute the imagebases of the two stimuli
-                    imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
+%                     imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
                     
                     % Concatenate the matrices of the two stimuli
                     imgList = cat(1,imgListCW,imgListCCW);
                     
                     % Time series of weights
-                    weightSeries  = imgList * imageBasis;
+                    weightSeries  = imgList;% * imageBasis;
                     
                     %% Start classification training
                     %
@@ -136,7 +137,7 @@ for eccen = usedEccentricities
 end
 
 disp(P);
-save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen%1.2f_defocus%1.2f.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix,max(usedEccentricities),max(zernikeDefocus))),'P')
+save(fullfile(ogRootPath,'figs',sprintf('contrastVSperformance_eye%s_pa%d_fft%d%s_eccen%1.2f_defocus%1.2f_noPCA.mat',cell2mat(eyemovement),polarAngles,FFTflag,postFix,max(usedEccentricities),max(zernikeDefocus))),'P')
 
 % Visualize
 % labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle: 270'};

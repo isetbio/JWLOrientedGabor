@@ -20,8 +20,23 @@ wvfP = wvfCreate('wave',wave,'zcoeffs',zCoefs,'name',sprintf('human-%d',pupilMM)
 wvfP = wvfSet(wvfP,'calc pupil size',pupilMM);
 wvfP = wvfSet(wvfP,'zcoeffs',defocus,{'defocus'});
 wvfP = wvfComputePSF(wvfP);
-% [u,p,f] = wvfPlot(wvfP,'2d psf space','um',550);
-% set(gca,'xlim',[-20 20],'ylim',[-20 20]);
+
+% Plot the PSF
+[u,p,f] = wvfPlot(wvfP,'2d psf space','um',550);
+set(gca,'xlim',[-20 20],'ylim',[-20 20], 'FontSize',16,'LineWidth',2);
+
+
+
+
+ % Get the support and OTF
+otfSupport = wvfGet(wvfP, 'otfSupport', 'mm',550);
+otf = wvfGet(wvfP,'otf');
+% set(gcf,'LineWidth',5)
+
+ % Plot observers OTF
+wvfPlot(wvfP,'2d OTF','mm',550);
+set(gca,'xlim',[-400 400] ,'ylim',[-400 400], 'zlim', [0 1.2],'FontSize',16,'LineWidth',2);
+
 
 oi = wvf2oi(wvfP);
 oi = oiSet(oi,'optics lens',Lens);

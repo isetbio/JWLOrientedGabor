@@ -86,14 +86,16 @@
 % Number of trials per stimulus condition
 nTrials  = 50;
 
+verbose = true;
 
 %% SCENE AND OPTICAL IMAGE SEQUENCE
-for eccen = 6%0:1:40
-    for c = [0.01:0.01:0.1, 0.2:0.1:1]%, 0.2:0.1:1]
-        
-        for pa = 0 % [0 90 180 270]
-            for defocus = [0 0.5 1 1.5 2];
-                fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
+
+for eccen = 6 % could be any integer between 0 and 90
+    for c = [0.01:0.01:0.1, 0.2:0.1:1] % could be any integer between 0 and 1 
+        for pa = 0 % but could be [0 90 180 270]
+            for defocus = 0 % but could be [0 0.5 1 1.5 2];
+                
+                fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n, defocus level %d', c, pa, eccen,defocus)
                 % ---- SCENE PARAMETERS ---------------------------------------------
                 % Gaussian temporal window for stimulus
                 tStep            = 0.002;                % Time step for optical image sequence (seconds)
@@ -126,15 +128,17 @@ for eccen = 6%0:1:40
                 % ---- MAKE SCENE AND OIS --------------------------------------------
                 [OG,scenes,tseries, fname] = ogStimuli(sparams);
                 
-                %             OG(1).visualize; % ccw
-                %             vcNewGraphWin;
-                %               plot(OG(1).timeAxis, OG(1).modulationFunction);
-                %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                %
-                %             OG(2).visualize; % cw
-                %             vcNewGraphWin;
-                %               plot(OG(1).timeAxis, OG(1).modulationFunction);
-                %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
+                if verbose % if requested, have a look
+                    OG(1).visualize; % ccw
+                    vcNewGraphWin;
+                    plot(OG(1).timeAxis, OG(1).modulationFunction);
+                    xlabel('Time (s)'); ylabel('Stimulus amplitude')
+                    
+                    OG(2).visualize; % cw
+                    vcNewGraphWin;
+                    plot(OG(1).timeAxis, OG(1).modulationFunction);
+                    xlabel('Time (s)'); ylabel('Stimulus amplitude')
+                end
                 
                 %% CONE MOSAIC
                 whichEye = 'left';
@@ -160,7 +164,7 @@ for eccen = 6%0:1:40
                 
                 % Add photon noise
                 cMosaic.noiseFlag = 'random';
-                
+                                
                 %% EYE MOVEMENTS
                 
                 % NOTE
@@ -199,18 +203,19 @@ for eccen = 6%0:1:40
                 [absorptions.cw, current.cw, interpFilters.cw, meanCur.cw] = cMosaic.compute(OG(2), 'currentFlag', true, ...
                     'emPaths', emPaths);
                 
-                % Have a look
-                % cMosaic.window;
-                
-                % plot the mean absorptions and current
-                %        sz = cMosaic.rows*cMosaic.cols;
-                %        figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on;
-                %        plot(min(reshape(cMosaic.current, sz,[])));
-                %        title('current')
-                
-                %        figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
-                %        plot(min(reshape(cMosaic.absorptions, sz,[])));
-                %        title('absorptions')
+                if verbose % Have a look
+                    cMosaic.window;
+                    
+                    % plot the mean absorptions and current
+                    sz = cMosaic.rows*cMosaic.cols;
+                    figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on;
+                    plot(min(reshape(cMosaic.current, sz,[])));
+                    title('current')
+                    
+                    figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
+                    plot(min(reshape(cMosaic.absorptions, sz,[])));
+                    title('absorptions')
+                end
                 
                 save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen, defocus)),...
                     'absorptions', 'sparams', 'cparams');
@@ -219,6 +224,8 @@ for eccen = 6%0:1:40
         end
     end
 end
+
+
 return
 
 
