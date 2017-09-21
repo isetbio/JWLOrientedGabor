@@ -86,16 +86,16 @@
 % Number of trials per stimulus condition
 nTrials  = 50;
 
-verbose = true;
+verbose = false;
 
 %% SCENE AND OPTICAL IMAGE SEQUENCE
 
-for eccen = 6 % could be any integer between 0 and 90
-    for c = [0.01:0.01:0.1, 0.2:0.1:1] % could be any integer between 0 and 1 
+for eccen = 6 %[1:1:40]; % could be any integer between 0 and 90
+    for c = [0:0.01:0.1, 0.2:0.1:1] % could be any integer between 0 and 1 
         for pa = 0 % but could be [0 90 180 270]
             for defocus = 0 % but could be [0 0.5 1 1.5 2];
                 
-                fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n, defocus level %d', c, pa, eccen,defocus)
+                fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f, defocus level %d\n', c, pa, eccen,defocus)
                 % ---- SCENE PARAMETERS ---------------------------------------------
                 % Gaussian temporal window for stimulus
                 tStep            = 0.002;                % Time step for optical image sequence (seconds)

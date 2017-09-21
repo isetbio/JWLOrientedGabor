@@ -11,9 +11,24 @@ function []=ogRGC_Classify(contrastLevels,polarAngles,eyemovement,FFTflag, phase
 
 
 % Examples:
+% Defocus
 % ogRGC_Classify([],0,{'110'},0, 0, 6, [0 0.5 1 1.5 2])
+
+% Default, no FFT
 % ogRGC_Classify([], 0,{'110'},0, 0, 6, [])
+
+% Default, with FFT
 % ogRGC_Classify([], 0,{'110'},1, 0, 6, [])
+
+% Eyemovements, no FFT
+% ogRGC_Classify([], 0,{'000','110','220','330'},0, 0, 6, [],0)
+
+% Eyemovements, with FFT
+% ogRGC_Classify([], 0,{'000','110','220','330'},1, 0, 6, [],0)
+
+% Density
+% ogRGC_Classify(0.05, 0,{'110'},0, 0, [1:1:40], [],0)
+% ogRGC_Classify(0.08, 0,{'110'},0, 0, [1:1:40], [],0)
 
 
 % Check inputs
@@ -59,7 +74,7 @@ end
 % contrastLevels = [0.01:0.01:0.09, 0.1:0.1:1.0];
 % polarAngles    = 0; % [0 90 180 270];
 % eyemovement    = {'110'};%{'000', '100', '010', '001'};
-%usedEccentricities = 6; % 2:40;
+% usedEccentricities = 6; % 2:40;
 
 P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(usedEccentricities),length(zernikeDefocus));
 
@@ -101,7 +116,7 @@ for eccen = usedEccentricities
                         
                     end
                     
-                    if PCAflag
+                    if pcaFlag
                         % Reformat the time series for the PCA analysis
                         %
                         % imgListX matrix contains the temporal response for a pixel in a
