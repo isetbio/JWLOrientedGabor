@@ -8,7 +8,11 @@ whatPlot = 'ConeDensity';
 
 switch whatPlot
     case 'default'
+<<<<<<< HEAD
         eyemovement         = {'000'}; % No eyemovement
+=======
+        eyemovement         = {'110'}; % No eyemovement
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         defocusZ            = 0;      % No defocus
         coneType            = {''};    % All LMS cones
         colors              = [0 0 0];
@@ -28,7 +32,7 @@ switch whatPlot
                                 'M cones','', ...
                                 'S cones',''};
         eccentricities      = 6;
-        contrastLevels      = [0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+        contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
         usedLabels          = contrastLevels;
         
         
@@ -43,7 +47,11 @@ switch whatPlot
                                 'Drift','', '',...
                                 'Tremor+Drift','',''};
         eccentricities      = 6;
+<<<<<<< HEAD
         contrastLevels      = [0 0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+=======
+        contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         usedLabels          = contrastLevels;
         
     case 'EyeMovementEnhanced'
@@ -56,7 +64,11 @@ switch whatPlot
                                 '2x Tremor + Drift','', '',...
                                 '3x Tremor + Drift','',''};
         eccentricities      = 6;
+<<<<<<< HEAD
         contrastLevels      = [0 0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+=======
+        contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         usedLabels          = contrastLevels;
         
     case 'ConeDensity'
@@ -93,16 +105,30 @@ switch whatPlot
             allDensity(eccen,:) = eccen2density(cMosaic, 'm');
         end
         
+<<<<<<< HEAD
         usedLabels          = 1:40;
+=======
+        usedLabels          = 1:eccentricities; % For now use eccentricities as labels, but we could plot it against cone density
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         
     case 'Defocus'
         eyemovement         = {'110'};
         defocusZ            = [0:0.5:2];
         coneType            = {''};
         colors              = copper(5);%{'k','r','g','b','c'};
+<<<<<<< HEAD
         labels              = {'0 Defocus','','','0.5 Defocus','','','1.0 Defocus','','','1.5 Defocus','','','2.0 Defocus','',''};
         eccentricities      = 6;
         contrastLevels      = [0 0.01:0.01:0.09, 0.1:0.1:1.0];
+=======
+        labels              = {'0 Defocus','','', ...
+                                '0.5 Defocus','','', ...
+                                '1.0 Defocus','','',...
+                                '1.5 Defocus','','',...
+                                '2.0 Defocus','',''};
+        eccentricities      = 6;
+        contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0];
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         usedLabels          = contrastLevels;
         
         
@@ -194,7 +220,6 @@ else xlabel('Contrast (Michelson)', 'FontSize',12); end
 
 title(sprintf('Linear SVM, Ecc %d, Polar Angle %d, 6cpd, FFT%d',max(eccentricities),polarAngles,FFTflag),'FontSize',12)
 legend(labels, 'Location','Best', 'box','off')
-
 
 box off
 

@@ -12,6 +12,8 @@
 % So far:
 %   Model cone, bipolar, RGC responses
 
+% A temporary offsheet of s_ogRGC for testing purposes. Merge or delete
+% when finished testing.
 
 %% ---------------------- Script outline ----------------------
 %
@@ -28,24 +30,9 @@
 %% ---------------------- Questions ----------------------
 %
 %       * Spatial and temporal pooling for cortex? (Contact Nicholas C!)
-%       * Repeated trials are handled awkwardly. For example, repeated
-%           trials are stored within separate cell arrays for inner retina
-%           mosaics (which is good), but are not stored at all within
-%           coneMosais or bipolar mosaics. As a result, we need to store
-%           the repeated trial data in separate variables, not attached to
-%           the data strucutres, which causes complications when passing
-%           one data structure (say a bp) into another (eg, innerretina).
-%       * (SOLVED) Why does inner retina allow multiple mosaics whereas bp does not?
-%       * (SOLVED) How to combine the bipolar responses into the RGC layer?
-%       * (SOLVED) How should we deal with the negative responses from off midget
-%       RGC that turn into no signal after rectification?
-%       * TODO: Oncorporate off-axis optical data from Pablo Artal
+%       * TODO: Incorporate off-axis optical data from Pablo Artal
 %               Example: Figure 5 from Jaeken and Artal, 2012
-%       * How is the denisty of cones, bipolars, and RGCs handled as a
-%               function of eccentricity?
 %           It appears that:
-%               Cone density is based on Curcio. (fine)
-%               Bipolar mosaic is exactly matched to the cone mosaic (fine)
 %               RGC density is cell-type dependent (e.g. Offs denser than
 %               Ons, which is good). The functions of position come from
 %               EJ. What abou Curcio? Watson (2014)? EJ, for example, has
@@ -84,31 +71,97 @@
 %% Specify experiment parameters
 
 % Number of trials per stimulus condition
-nTrials  = 50;
+nTrials  = 25;
 
-verbose = false;
+% Temporal properties of one trial
+tStep            = 0.002;                % Time step for optical image sequence (seconds)
+sparams.tsamples = (-0.200:tStep:0.200); % seconds
+sparams.timesd   = 0.100;                % sd of temporal Gaussian window
 
-%% SCENE AND OPTICAL IMAGE SEQUENCE
+% Scene field of view
+sparams.sceneFOV  = 2;   % scene field of view in degrees (diameter)
+sparams.freqCPD   = 6;   % Gabor spatial frequency (cpd)
+sparams.gausSDdeg = .25; % Gabor SD in degrees of visual angle
 
-for eccen = 6 %[1:1:40]; % could be any integer between 0 and 90
-    for c = [0:0.01:0.1, 0.2:0.1:1] % could be any integer between 0 and 1 
-        for pa = 0 % but could be [0 90 180 270]
-            for defocus = 0 % but could be [0 0.5 1 1.5 2];
+deg2fov = 1/sparams.sceneFOV;
+fov2deg = sparams.sceneFOV;
+
+%% Loop over conditions, generating cone absorptions for each condition
+
+% Eccentricity loop
+for eccen = 6%0:1:40
+    
+    % Polar angle loop
+    for pa = 0 % [0 90 180 270]
+        
+        % ----- CONE MOSAIC -----------------------------------------
+        % Make CONE MOSAIC for a given eccentricity and polar angle        
+        whichEye = 'left';
+        
+        deg2m = 1/3 * 0.001; % 3 deg per mm, .001 mm per meter
+        
+        % Specify retinal location where stimulus is presented
+        cparams.eccentricity = eccen;             % Visual angle of stimulus center, in deg
+        polarAngleDeg        = pa;
+        cparams.polarAngle   = deg2rad(polarAngleDeg);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        
+        % Cone mosaic field of view in degrees
+        cparams.cmFOV     = 2; % degrees
+        
+        % Compute x,y position in m of center of retinal patch from ecc and angle
+        [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
+        x = x * deg2m;  y = y * deg2m;
+        
+        cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
+        
+        % Set the field of view (degrees)
+        cMosaic.setSizeToFOV(cparams.cmFOV);
+        
+        % Add photon noise
+        cMosaic.noiseFlag = 'random'; % 'random' 'frozen' 'none'
+        
+        % Make a default Optical Image Sequence. We need some of the
+        % parameters from this. It will be overwritten as we change the
+        % contrast and/or optics.
+        sparams.gabor           = harmonicP;                   % Standard Gabor
+        sparams.gabor.ang       = (pi/180)* 20;                % Gabor orientation (radians) - question: what is 0??
+        sparams.gabor.freq      = fov2deg*sparams.freqCPD;     % Spatial frequency (cycles/FOV)
+        sparams.gabor.contrast  = 1;                           % Presumably michelson, [0 1]
+        sparams.gabor.GaborFlag = sparams.gausSDdeg*deg2fov;   % Gaussian window
+        OG = ogStimuli(sparams);
                 
-                fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f, defocus level %d\n', c, pa, eccen,defocus)
+        % ----- EYE MOVEMENTS -------------------------------------
+        % Make EYE MOVEMENTS for a given cone mosaic
+                
+        % We make sure that the number of time points in the eye movement sequence
+        % matches the number of time points in the optical image sequence
+        tSamples         = OG(1).length;
+        
+        % Not sure why these have to match, but there is a bug if they don't.
+        cMosaic.integrationTime = OG(1).timeStep;
+                        
+        % Include tremor, drift, microsaccades?
+        cparams.em        = emCreate;    
+        cparams.em.emFlag = [1 1 0]';    
+        cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * 2;        
+        cparams.em.drift.speed = cparams.em.drift.speed * 2;
+        cparams.em.drift.speedSD = cparams.em.drift.speedSD * 2;
+
+        % Generate the eye movement paths in units of cone samples
+        emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
+            'em', cparams.em); % path is in terms of cones shifted
+        
+        % Loop over contrasts and defocus
+        for c = (0:.1:1).^2%, 0.2:0.1:1]
+            
+            for defocus = 0 % [0 0.5 1 1.5 2]
+                                                               
+                fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
+                fname = sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f_noise-%s.mat',...
+                    c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen, defocus, cMosaic.noiseFlag);
+                fprintf('File will be saved as %s\n', fname);
                 % ---- SCENE PARAMETERS ---------------------------------------------
                 % Gaussian temporal window for stimulus
-                tStep            = 0.002;                % Time step for optical image sequence (seconds)
-                sparams.tsamples = (-0.200:tStep:0.200); % seconds
-                sparams.timesd   = 0.100;                % sd of temporal Gaussian window
-                
-                % Scene field of view
-                sparams.sceneFOV  = 2;   % scene field of view in degrees (diameter)
-                sparams.freqCPD   = 6;   % Gabor spatial frequency (cpd)
-                sparams.gausSDdeg = .25; % Gabor SD in degrees of visual angle
-                
-                deg2fov = 1/sparams.sceneFOV;
-                fov2deg = sparams.sceneFOV;
                 
                 % Make a Gabor with default parameters, then update parameters. Will need
                 %   to fit within sceneFOV
@@ -126,107 +179,45 @@ for eccen = 6 %[1:1:40]; % could be any integer between 0 and 90
                 sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
                 
                 % ---- MAKE SCENE AND OIS --------------------------------------------
-                [OG,scenes,tseries, fname] = ogStimuli(sparams);
+                [OG,scenes,tseries] = ogStimuli(sparams);
                 
-                if verbose % if requested, have a look
-                    OG(1).visualize; % ccw
-                    vcNewGraphWin;
-                    plot(OG(1).timeAxis, OG(1).modulationFunction);
-                    xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                    
-                    OG(2).visualize; % cw
-                    vcNewGraphWin;
-                    plot(OG(1).timeAxis, OG(1).modulationFunction);
-                    xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                end
-                
-                %% CONE MOSAIC
-                whichEye = 'left';
-                
-                deg2m = 1/3 * 0.001; % 3 deg per mm, .001 mm per meter
-                
-                % Specify retinal location where stimulus is presented
-                cparams.eccentricity = eccen;             % Visual angle of stimulus center, in deg
-                polarAngleDeg        = pa;
-                cparams.polarAngle   = deg2rad(polarAngleDeg);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-                
-                % Cone mosaic field of view in degrees
-                cparams.cmFOV     = 2; % degrees
-                
-                % Compute x,y position in m of center of retinal patch from ecc and angle
-                [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
-                x = x * deg2m;  y = y * deg2m;
-                
-                cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
-                
-                % Set the field of view (degrees)
-                cMosaic.setSizeToFOV(cparams.cmFOV);
-                
-                % Add photon noise
-                cMosaic.noiseFlag = 'random';
-                                
-                %% EYE MOVEMENTS
-                
-                % NOTE
-                %   Eye movements are currently specified in units of cones, not deg or m.
-                %   If cone density changes with visual field position, then we would
-                %   implicitly be assuming different size eye movements for different
-                %   visual field positions.
-                
-                % We make sure that the number of time points in the eye movement sequence
-                % matches the number of time points in the optical image sequence
-                tSamples         = OG(1).length;
-                
-                % Not sure why these have to match, but there is a bug if they don't.
-                cMosaic.integrationTime = OG(1).timeStep;
+                %             OG(1).visualize; % ccw
+                %             vcNewGraphWin;
+                %               plot(OG(1).timeAxis, OG(1).modulationFunction);
+                %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
+                %
+                %             OG(2).visualize; % cw
+                %             vcNewGraphWin;
+                %               plot(OG(1).timeAxis, OG(1).modulationFunction);
+                %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
                 
                 
-                % ----- EYE MOVEMENTS -----------------------------
-                cparams.em        = emCreate;    % eye movements: consider adjusting to
-                %   account for cone spacing and for data
-                %   from different stimulus conditions
-                cparams.em.emFlag = [1 1 0]';    % Include tremor, drift, microsaccades
                 
-                emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
-                    'em', cparams.em); % path is in terms of cones shifted
-                
-                
-                %% ABSORPTIONS
+                % ------- Compute ABSORPTIONS -----------------------------------
                 
                 % Compute absorptions for multiple trials
+                absorptions = zeros(nTrials,cMosaic.rows,cMosaic.cols, cMosaic.tSamples, length(OG));
+                current     = absorptions;
                 
-                % ccw Gabor
-                [absorptions.ccw, current.ccw, interpFilters.ccw, meanCur.ccw] = cMosaic.compute(OG(1), 'currentFlag', true, ...
-                    'emPaths', emPaths);
-                
-                % cw Gabor
-                [absorptions.cw, current.cw, interpFilters.cw, meanCur.cw] = cMosaic.compute(OG(2), 'currentFlag', true, ...
-                    'emPaths', emPaths);
-                
-                if verbose % Have a look
-                    cMosaic.window;
-                    
-                    % plot the mean absorptions and current
-                    sz = cMosaic.rows*cMosaic.cols;
-                    figure, plot(max(reshape(cMosaic.current, sz,[]))); hold on;
-                    plot(min(reshape(cMosaic.current, sz,[])));
-                    title('current')
-                    
-                    figure, plot(max(reshape(cMosaic.absorptions, sz,[]))); hold on;
-                    plot(min(reshape(cMosaic.absorptions, sz,[])));
-                    title('absorptions')
+                for s = 1:length(OG)
+                    % ccw Gabor
+                    [absorptions(:,:,:,:,s), current(:,:,:,:,s)] = cMosaic.compute(OG(s), 'currentFlag', true, ...
+                        'emPaths', emPaths);                                        
                 end
                 
-                save(fullfile(ogRootPath, 'data', sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f.mat',c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen, defocus)),...
-                    'absorptions', 'sparams', 'cparams');
+      
+                
+                save(fullfile(ogRootPath, 'data', fname), 'absorptions', 'sparams', 'cparams');
                 
             end
         end
     end
 end
 
-
 return
+
+
+
 
 
 
