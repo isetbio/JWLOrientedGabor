@@ -8,7 +8,7 @@ FFTflag = false;
 
 contrastLevels = flip((0:.1:1).^2);%[0.01:0.01:0.09, 0.1:0.1:1.0];
 polarAngles    = 0; % [0 90 180 270];
-eyemovement    = {'000'};%{'000', '100', '010', '001'};
+eyemovement    = {'110'};%{'000', '100', '010', '001'};
 noise          = 'random';
 eccen          = 6;
 defocus        = 0;
@@ -28,8 +28,8 @@ for pa = polarAngles
             
             fprintf('Loading and classifying %s\n', fname);
             % Get the trials and samples (should be the data for all data sets though
-            nTrials = size(absorptions.cw,1);
-            tSamples = size(absorptions.cw,4);
+            nTrials = size(absorptions,1) * size(absorptions,5)/2;
+            tSamples = size(absorptions,4);
             
             % If requested, fourier transform the cone array outputs
             if FFTflag
