@@ -109,7 +109,7 @@ sparams.distance = distance;    % Meters
 % Basic Gabor parameters for the oiSequence.  We make 3 for CW, CCW,
 % and blank. CW and CCW are for the 2 AFC. Blank is for mixing with the
 % Gabors for the temporal windowing.
-ogparams(1:3) = oGabor;
+ogparams(1:5) = oGabor;
 
 % Uniform field, no Gabor, just the background color
 ogparams(1).name     = 'uniform'; 
@@ -117,12 +117,20 @@ ogparams(1).contrast = 0;
 
 % CCW oriented Gabor on a zero background. The function which makes the
 % Gabors, harmonicP, treats 0 as vertical and clockwise as positive.
-ogparams(2).name     = 'ccwOG';  
+ogparams(2).name     = 'ccwOG_sin';  
 ogparams(2).ang      = -oGabor.ang;
 
+ogparams(3).name     = 'ccwOG_cos';
+ogparams(2).ang      = -oGabor.ang;
+ogparams(3).ph       = oGabor.ph + pi;
+
 % CW oriented Gabor on a zero background
-ogparams(3).name     = 'cwOG'; 
-ogparams(3).ang      = oGabor.ang;
+ogparams(4).name     = 'cwOG_sin'; 
+ogparams(4).ang      = oGabor.ang;
+
+ogparams(5).name     = 'cwOG_cos';
+ogparams(5).ang      = oGabor.ang;
+ogparams(5).ph      = oGabor.ph + pi;
 
 % Put test params and scene params into P for use with oisCreate
 P.sampleTimes       = tsamples;
@@ -132,22 +140,22 @@ if isfield(p.Unmatched,'oi')
     P.oi = p.Unmatched.oi;
 end
 
-% Blend uniform and ccw Gabor for temporal windowing
+    % Blend uniform and ccw Gabor for temporal windowing
 P.testParameters    = ogparams([1 2]);
 [OG, scenes] = oisCreate('harmonic','blend', tseries, P);
-% OG.visualize;
-% ieAddObject(OG.oiFixed); ieAddObject(OG.oiModulated); oiWindow;
-% ieAddObject(scenes{2}); sceneWindow;
 
-% Blend uniform and cw Gabor for temporal windowing
-P.testParameters = ogparams([1 3]);
-OG(2) = oisCreate('harmonic','blend', tseries, P);
-% OG(2).visualize;
-% ieAddObject(OG(2).oiFixed); ieAddObject(OG(2).oiModulated); oiWindow;
+for ii = 2:4
+
+    P.testParameters    = ogparams([1 ii+1]);
+    [OG(ii), scenes{ii}] = oisCreate('harmonic','blend', tseries, P);
+    % OG.visualize;
+    % ieAddObject(OG.oiFixed); ieAddObject(OG.oiModulated); oiWindow;
+    % ieAddObject(scenes{2}); sceneWindow;
+end
 
 
 %%
-save(fname,'OG','scenes','tseries','P');
+% save(fname,'OG','scenes','tseries','P');
 
 % Print out the offset in degrees of arc sec 
 % offsetDeg = sceneGet(scenes{1},'degrees per sample')*vparams(2).offset;

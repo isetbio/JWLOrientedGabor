@@ -142,17 +142,17 @@ for eccen = 6%0:1:40
                         
         % Include tremor, drift, microsaccades?
         cparams.em        = emCreate;    
-        cparams.em.emFlag = [1 1 0]';    
-        cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * 2;        
-        cparams.em.drift.speed = cparams.em.drift.speed * 2;
-        cparams.em.drift.speedSD = cparams.em.drift.speedSD * 2;
+        cparams.em.emFlag = [0 0 0]';    
+%         cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * 2;        
+%         cparams.em.drift.speed = cparams.em.drift.speed * 2;
+%         cparams.em.drift.speedSD = cparams.em.drift.speedSD * 2;
 
         % Generate the eye movement paths in units of cone samples
         emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
             'em', cparams.em); % path is in terms of cones shifted
         
         % Loop over contrasts and defocus
-        for c = (0:.1:1).^2%, 0.2:0.1:1]
+        for c = [0:0.01:0.1, 0.2:0.1:1]
             
             for defocus = 0 % [0 0.5 1 1.5 2]
                                                                
@@ -202,7 +202,7 @@ for eccen = 6%0:1:40
                 for s = 1:length(OG)
                     % ccw Gabor
                     [absorptions(:,:,:,:,s), current(:,:,:,:,s)] = cMosaic.compute(OG(s), 'currentFlag', true, ...
-                        'emPaths', emPaths);                                        
+                        'emPaths', emPaths); 
                 end
                 
       
