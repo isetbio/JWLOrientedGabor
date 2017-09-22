@@ -8,7 +8,11 @@ whatPlot = 'ConeDensity';
 
 switch whatPlot
     case 'default'
+<<<<<<< HEAD
+        eyemovement         = {'000'}; % No eyemovement
+=======
         eyemovement         = {'110'}; % No eyemovement
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         defocusZ            = 0;      % No defocus
         coneType            = {''};    % All LMS cones
         colors              = [0 0 0];
@@ -43,7 +47,11 @@ switch whatPlot
                                 'Drift','', '',...
                                 'Tremor+Drift','',''};
         eccentricities      = 6;
+<<<<<<< HEAD
+        contrastLevels      = [0 0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+=======
         contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         usedLabels          = contrastLevels;
         
     case 'EyeMovementEnhanced'
@@ -56,7 +64,11 @@ switch whatPlot
                                 '2x Tremor + Drift','', '',...
                                 '3x Tremor + Drift','',''};
         eccentricities      = 6;
+<<<<<<< HEAD
+        contrastLevels      = [0 0.01:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+=======
         contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         usedLabels          = contrastLevels;
         
     case 'ConeDensity'
@@ -93,13 +105,22 @@ switch whatPlot
             allDensity(eccen,:) = eccen2density(cMosaic, 'm');
         end
         
+<<<<<<< HEAD
+        usedLabels          = 1:40;
+=======
         usedLabels          = 1:eccentricities; % For now use eccentricities as labels, but we could plot it against cone density
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         
     case 'Defocus'
         eyemovement         = {'110'};
         defocusZ            = [0:0.5:2];
         coneType            = {''};
         colors              = copper(5);%{'k','r','g','b','c'};
+<<<<<<< HEAD
+        labels              = {'0 Defocus','','','0.5 Defocus','','','1.0 Defocus','','','1.5 Defocus','','','2.0 Defocus','',''};
+        eccentricities      = 6;
+        contrastLevels      = [0 0.01:0.01:0.09, 0.1:0.1:1.0];
+=======
         labels              = {'0 Defocus','','', ...
                                 '0.5 Defocus','','', ...
                                 '1.0 Defocus','','',...
@@ -107,6 +128,7 @@ switch whatPlot
                                 '2.0 Defocus','',''};
         eccentricities      = 6;
         contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0];
+>>>>>>> 8723303378da234edfd736e95317319491a54833
         usedLabels          = contrastLevels;
         
         
@@ -116,7 +138,7 @@ end
 
 %% 0. Set other parameters
 polarAngles = 0;
-FFTflag     = false;
+FFTflag     = true;
 
 % Where to find data
 dataPth     = fullfile(ogRootPath,'figs');
@@ -147,12 +169,15 @@ for em = 1:length(eyemovement)
                 
                 
                 accuracy = load(fullfile(dataPth, fName));
-                
+                accuracy.P = squeeze(accuracy.P);
+                if size(accuracy.P,1)<size(accuracy.P,2)
+                    accuracy.P = accuracy.P';
+                end
                 
                 %% 2. Fit Weibull
                 % Make a Weibull function first with contrast levels and then search for
                 % the best fit with the classifier data
-                fit.ctrvar{count} = fminsearch(@(x) ogFitWeibull(x, usedLabels, squeeze(accuracy.P), nTotal), fit.init);
+                fit.ctrvar{count} = fminsearch(@(x) ogFitWeibull(x, usedLabels, accuracy.P, nTotal), fit.init);
                 
                 % Then fit a Weibull function again, but now with the best fit parameters
                 % from the previous step.
@@ -180,14 +205,19 @@ figure(1); clf; set(gcf,'Color','w'); hold all;
 
 for ii = 1:length(fit.ctrpred)
     dataToFit = squeeze(fit.data{ii});
-    plot(usedLabels, fit.ctrpred{ii}*100, 'Color', colors(ii,:), 'LineWidth',2);
-    scatter(usedLabels, dataToFit, [], colors(ii,:));
-    plot(10.^-2.1,dataToFit(1),'o','Color',colors(ii,:))
+    if ~strcmp(whatPlot,'ConeDensity'); plot(usedLabels, fit.ctrpred{ii}*100, 'Color', colors(ii,:), 'LineWidth',2); end
+    scatter(usedLabels, dataToFit, 80, colors(ii,:), 'filled');
+    plot(10.^-2.1,dataToFit(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerFaceColor',colors(ii,:))
 end
 
 set(gca, 'XScale','log', 'XLim',[min(usedLabels) max(usedLabels)],'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',12, 'LineWidth',2);
+
 ylabel('Classifier Accuracy', 'FontSize',12)
-if strcmp(whatPlot,'ConeDensity'); xlabel('Eccentricity (deg)', 'FontSize',12); else xlabel('Contrast (Michelson)', 'FontSize',12); end
+if strcmp(whatPlot,'ConeDensity'); 
+    xlabel('Eccentricity (deg)', 'FontSize',12); 
+    set(gca,'XScale','linear')
+else xlabel('Contrast (Michelson)', 'FontSize',12); end
+
 title(sprintf('Linear SVM, Ecc %d, Polar Angle %d, 6cpd, FFT%d',max(eccentricities),polarAngles,FFTflag),'FontSize',12)
 legend(labels, 'Location','Best', 'box','off')
 
