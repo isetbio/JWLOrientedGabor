@@ -196,7 +196,7 @@ for eccen = 6 %[1:1:40]; % could be any integer between 0 and 90
                 % Compute absorptions for multiple trials
                 
                 % ccw Gabor
-                [absorptions.ccw, current.ccw, interpFilters.ccw, meanCur.ccw] = cMosaic.compute(OG(1), 'currentFlag', true, ...
+                [absorptions.ccw_sin, current.ccw_sin, interpFilters.ccw_sin, meanCur.ccw_sin] = cMosaic.compute(OG(1), 'currentFlag', true, ...
                     'emPaths', emPaths);
                 
                 % cw Gabor

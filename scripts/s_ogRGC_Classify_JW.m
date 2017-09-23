@@ -3,7 +3,7 @@
 % Script with first attempt to classify oriented gabors simulated at
 % 7 different contrast levels, 4 polar angles.
 
-FFTflag = false;
+FFTflag = true;
 %% Classify
 
 contrastLevels = flip((0:.1:1).^2);%[0.01:0.01:0.09, 0.1:0.1:1.0];
@@ -28,54 +28,46 @@ for pa = polarAngles
             
             fprintf('Loading and classifying %s\n', fname);
             % Get the trials and samples (should be the data for all data sets though
-            nTrials = size(absorptions,1) * size(absorptions,5)/2;
+            nStimuli = size(absorptions,5);
+            nTrials = size(absorptions,1) * nStimuli/2;
             tSamples = size(absorptions,4);
+            nrows = size(absorptions,2);
+            ncols = size(absorptions,3);
             
+            % absorptions is trials x rows x cols x time points x stimuli            
+            disp(size(absorptions));
+
+            %   permute to trials x stimuli x rows x cols x time points
+            absorptions = permute(absorptions, [1 5 2:4]);
+            disp(size(absorptions));
+ 
+            %   reshape to (trials x stimuli) x rows x cols x time points                         
+            absorptions = reshape(absorptions, [], nrows, ncols, tSamples);
+            disp(size(absorptions));
+            
+            % permute to rows x cols x (trials x stimuli) x time points
+            absorptions  = permute(absorptions, [2 3 1 4]);
+            disp(size(absorptions));
+                        
             % If requested, fourier transform the cone array outputs
-            if FFTflag
-                absorptions.cwF  = abs(fft2(permute(absorptions.cw, [2 3 1 4])));
-                absorptions.ccwF = abs(fft2(permute(absorptions.ccw, [2 3 1 4])));
+            if FFTflag, absorptions  = abs(fft2(absorptions)); end
                 
-                imgListCW  = trial2Matrix(permute(absorptions.cwF, [3 1 2 4]));
-                imgListCCW = trial2Matrix(permute(absorptions.ccwF, [3 1 2 4]));
-                
-            else
-                % Reformat the time series for the PCA analysis
-                %
-                % imgListX matrix contains the temporal response for a pixel in a
-                % column. The rows represent time samples times number of trials.
-                % These are the temporal responses across all trials and time
-                % points. The columns represent the cells.
-                % 4D array input
-                imgListCW  = trial2Matrix(absorptions.cw);
-                imgListCCW = trial2Matrix(absorptions.ccw);
-            end
+            % reshape to trials x everything else for classification
+            absorptions = permute(absorptions, [3 1 2 4]);
+            disp(size(absorptions));
+
+            absorptions = reshape(absorptions, nTrials*2, []);
+            disp(size(absorptions));
+
+            % permute the trial order within each of the two classes
+            idx = [randperm(nTrials) randperm(nTrials)+nTrials];
             
-            % Concatenate the matrices of the two stimuli
-            imgList = cat(1,imgListCW,imgListCCW);
-            
-            %             % compute the imagebases of the two stimuli
-            %             imageBasis = ogPCA(cat(1,absorptions.cw,absorptions.ccw));
-            %
-            %             % Time series of weights
-            %             weightSeries  = imgList * imageBasis;
-            weightSeries = imgList;
-            
-            %% Start classification training
-            %
-            % Put the weights from each trial into the rows of a matrix
-            % Each row is another trial
-            nWeights = size(weightSeries,2);
-            data = zeros(2*nTrials,nWeights*tSamples);
-            for ii = 1 : (2*nTrials)
-                start = (ii-1)*tSamples + 1;
-                thisTrial = weightSeries(start:(start+tSamples - 1),:);
-                data(ii,:) = thisTrial(:)';
-            end
+            absorptions = absorptions(idx, :);
+
             label = [ones(nTrials, 1); -ones(nTrials, 1)];
                                   
             % Fit the SVM model.
-            mdl = fitcsvm(data, label, 'KernelFunction', 'linear');
+            mdl = fitcsvm(absorptions, label, 'KernelFunction', 'linear');
             
             cvmdl = crossval(mdl);
             
