@@ -74,28 +74,44 @@
 nTrials  = 25;
 
 % Temporal properties of one trial
-tStep            = 0.002;                % Time step for optical image sequence (seconds)
-sparams.tsamples = (-0.200:tStep:0.200); % seconds
-sparams.timesd   = 0.100;                % sd of temporal Gaussian window
+tStep            = 0.001;                % Time step for optical image sequence (seconds)
+sparams.tsamples = (-0.027:tStep:0.027); % seconds
+sparams.timesd   = 1000.00;                % sd of temporal Gaussian window
 
 % Scene field of view
 sparams.sceneFOV  = 2;   % scene field of view in degrees (diameter)
-sparams.freqCPD   = 6;   % Gabor spatial frequency (cpd)
+sparams.freqCPD   = 4;   % Gabor spatial frequency (cpd)
 sparams.gausSDdeg = .25; % Gabor SD in degrees of visual angle
 
 deg2fov = 1/sparams.sceneFOV;
 fov2deg = sparams.sceneFOV;
 
+% Gabor parameters
+sparams.gabor           = harmonicP;                   % Standard Gabor
+sparams.gabor.ang       = (pi/180)* 15;                % Gabor orientation (radians) - question: what is 0??
+sparams.gabor.freq      = fov2deg*sparams.freqCPD;     % Spatial frequency (cycles/FOV)
+sparams.gabor.contrast  = 1;                           % Presumably michelson, [0 1]
+sparams.gabor.GaborFlag = sparams.gausSDdeg*deg2fov;   % Gaussian window
+
+% Make a default Optical Image Sequence. We need some of the
+% parameters from this. It will be overwritten as we change the
+% contrast and/or optics.
+OG = ogStimuli(sparams);
+
+% We make sure that the number of time points in the eye movement sequence
+% matches the number of time points in the optical image sequence
+tSamples         = OG(1).length;
+
 %% Loop over conditions, generating cone absorptions for each condition
 
 % Eccentricity loop
-for eccen = 6%0:1:40
+for eccen = 4.5%0:1:40
     
     % Polar angle loop
     for pa = 0 % [0 90 180 270]
         
         % ----- CONE MOSAIC -----------------------------------------
-        % Make CONE MOSAIC for a given eccentricity and polar angle        
+        % Make CONE MOSAIC for a given eccentricity and polar angle
         whichEye = 'left';
         
         deg2m = 1/3 * 0.001; % 3 deg per mm, .001 mm per meter
@@ -120,65 +136,45 @@ for eccen = 6%0:1:40
         % Add photon noise
         cMosaic.noiseFlag = 'random'; % 'random' 'frozen' 'none'
         
-        % Make a default Optical Image Sequence. We need some of the
-        % parameters from this. It will be overwritten as we change the
-        % contrast and/or optics.
-        sparams.gabor           = harmonicP;                   % Standard Gabor
-        sparams.gabor.ang       = (pi/180)* 20;                % Gabor orientation (radians) - question: what is 0??
-        sparams.gabor.freq      = fov2deg*sparams.freqCPD;     % Spatial frequency (cycles/FOV)
-        sparams.gabor.contrast  = 1;                           % Presumably michelson, [0 1]
-        sparams.gabor.GaborFlag = sparams.gausSDdeg*deg2fov;   % Gaussian window
-        OG = ogStimuli(sparams);
-                
         % ----- EYE MOVEMENTS -------------------------------------
         % Make EYE MOVEMENTS for a given cone mosaic
-                
-        % We make sure that the number of time points in the eye movement sequence
-        % matches the number of time points in the optical image sequence
-        tSamples         = OG(1).length;
+        
         
         % Not sure why these have to match, but there is a bug if they don't.
         cMosaic.integrationTime = OG(1).timeStep;
-                        
+        
         % Include tremor, drift, microsaccades?
-        cparams.em        = emCreate;    
-        cparams.em.emFlag = [0 0 0]';    
-%         cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * 2;        
-%         cparams.em.drift.speed = cparams.em.drift.speed * 2;
-%         cparams.em.drift.speedSD = cparams.em.drift.speedSD * 2;
-
+        cparams.em        = emCreate;
+        cparams.em.emFlag = [1 1 0]';
+        %         cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * 2;
+        %         cparams.em.drift.speed = cparams.em.drift.speed * 2;
+        %         cparams.em.drift.speedSD = cparams.em.drift.speedSD * 2;
+        
         % Generate the eye movement paths in units of cone samples
         emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
             'em', cparams.em); % path is in terms of cones shifted
         
-        % Loop over contrasts and defocus
-        for c = [0:0.01:0.1, 0.2:0.1:1]
+        
+        for defocus = 0 % [0 0.5 1 1.5 2]
             
-            for defocus = 0 % [0 0.5 1 1.5 2]
-                                                               
+            % ---- Add optics blur or defocus if requested
+            sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
+            
+            % Loop over contrasts and defocus
+            for c = [0:0.01:0.1, 0.2:0.1:1]
+                
+                
                 fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
                 fname = sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f_noise-%s.mat',...
                     c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen, defocus, cMosaic.noiseFlag);
                 fprintf('File will be saved as %s\n', fname);
-                % ---- SCENE PARAMETERS ---------------------------------------------
-                % Gaussian temporal window for stimulus
                 
-                % Make a Gabor with default parameters, then update parameters. Will need
-                %   to fit within sceneFOV
-                %
-                % Note that the angle convention for harmonics is different that spatial
-                % position for the cone mosaic. For the harmonic, 0 is vertical, pi/4 is 4
-                % deg up and right.
-                sparams.gabor           = harmonicP;                   % Standard Gabor
-                sparams.gabor.ang       = (pi/180)* 20;                % Gabor orientation (radians) - question: what is 0??
-                sparams.gabor.freq      = fov2deg*sparams.freqCPD;     % Spatial frequency (cycles/FOV)
-                sparams.gabor.contrast  = c;                           % Presumably michelson, [0 1]
-                sparams.gabor.GaborFlag = sparams.gausSDdeg*deg2fov;   % Gaussian window
+                % Update the stimulus contrast
+                sparams.gabor.contrast  = c;  % Presumably michelson, [0 1]
                 
-                % ---- Add optics blur or defocus if requested
-                sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
                 
                 % ---- MAKE SCENE AND OIS --------------------------------------------
+                disp('recomputing scene')
                 [OG,scenes,tseries] = ogStimuli(sparams);
                 
                 %             OG(1).visualize; % ccw
@@ -197,15 +193,14 @@ for eccen = 6%0:1:40
                 
                 % Compute absorptions for multiple trials
                 absorptions = zeros(nTrials,cMosaic.rows,cMosaic.cols, cMosaic.tSamples, length(OG));
-                current     = absorptions;
+                %current     = absorptions;
                 
                 for s = 1:length(OG)
-                    % ccw Gabor
-                    [absorptions(:,:,:,:,s), current(:,:,:,:,s)] = cMosaic.compute(OG(s), 'currentFlag', true, ...
-                        'emPaths', emPaths); 
+                    absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
+                        'emPaths', emPaths);
                 end
                 
-      
+                
                 
                 save(fullfile(ogRootPath, 'data', fname), 'absorptions', 'sparams', 'cparams');
                 

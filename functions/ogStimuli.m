@@ -97,7 +97,7 @@ bgColor   = p.Results.bgColor;
 %% Build Gaussian time series (soft window for stimulus in time)
 
 tseries = exp(-(tsamples/timesd).^2);
-tseries = ieScale(tseries,0,1);
+% tseries = ieScale(tseries,0,1);
 
 %%  Scene parameters in general
 sparams.fov      = sceneFOV;    % degrees
@@ -122,14 +122,14 @@ ogparams(2).ang      = -oGabor.ang;
 
 ogparams(3).name     = 'ccw_cos_OG';  
 ogparams(3).ang      = -oGabor.ang;
-ogparams(3).ph      =  oGabor.ph - pi/2;
+ogparams(3).ph      =  oGabor.ph - pi;
 
 
 % CW oriented Gabor on a zero background
 ogparams(4).name     = 'cw_sin_0OG'; 
 
 ogparams(5).name     = 'cw_cos_0OG'; 
-ogparams(5).ph      =  oGabor.ph - pi/2;
+ogparams(5).ph      =  oGabor.ph - pi;
 
 
 % Put test params and scene params into P for use with oisCreate

@@ -10,7 +10,7 @@ contrastLevels = [0:0.01:0.09, 0.1:0.1:1.0]; %flip((0:.1:1).^2);%
 polarAngles    = 0; % [0 90 180 270];
 eyemovement    = {'110'};%{'000', '100', '010', '001'};
 noise          = 'random';
-eccen          = 6;
+eccen          = 4.5;
 defocus        = 0;
 P = nan(length(polarAngles),length(contrastLevels),length(eyemovement));
 
@@ -71,7 +71,7 @@ for pa = polarAngles
             % predict the data not in the training set.
             classLoss = kfoldLoss(cvmdl);
             
-            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
+            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100
             
             
         end
