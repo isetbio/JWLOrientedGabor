@@ -1,0 +1,5 @@
+# gitignore: do not add data files to git repository
+
+*.mat
+*DS_Store
+*.xlsx
