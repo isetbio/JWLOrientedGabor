@@ -6,14 +6,13 @@
 FFTflag = true;
 %% Classify
 
-contrastLevels = flip((0:.1:1).^2);%[0.01:0.01:0.09, 0.1:0.1:1.0];
+contrastLevels = [0:0.01:0.09, 0.1:0.1:1.0]; %flip((0:.1:1).^2);%
 polarAngles    = 0; % [0 90 180 270];
 eyemovement    = {'110'};%{'000', '100', '010', '001'};
 noise          = 'random';
 eccen          = 6;
 defocus        = 0;
 P = nan(length(polarAngles),length(contrastLevels),length(eyemovement));
-% svmMdl = cell(1, length(contrastLevels));
 
 for pa = polarAngles
     for c = contrastLevels
@@ -32,8 +31,7 @@ for pa = polarAngles
             nTrials = size(absorptions,1) * nStimuli/2;
             tSamples = size(absorptions,4);
             nrows = size(absorptions,2);
-            ncols = size(absorptions,3);
-            
+            ncols = size(absorptions,3);            
             % absorptions is trials x rows x cols x time points x stimuli            
             disp(size(absorptions));
 
@@ -51,7 +49,6 @@ for pa = polarAngles
                         
             % If requested, fourier transform the cone array outputs
             if FFTflag, absorptions  = abs(fft2(absorptions)); end
-                
             % reshape to trials x everything else for classification
             absorptions = permute(absorptions, [3 1 2 4]);
             disp(size(absorptions));
@@ -74,7 +71,7 @@ for pa = polarAngles
             % predict the data not in the training set.
             classLoss = kfoldLoss(cvmdl);
             
-            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100
+            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
             
             
         end
@@ -95,8 +92,10 @@ ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
 fname = sprintf(...
-                'Classify_coneOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s',...
+                'Classify_coneOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_phasescrambled_fft0',...
                     c,pa,eyemovement{em},  eccen, defocus, noise);
+save(fullfile(ogRootPath, 'figs', sprintf('%s.mat', fname)),'P')
+                
 savefig(fullfile(ogRootPath, 'figs', sprintf('%s.fig', fname)))
 hgexport(gcf,fullfile(ogRootPath, 'figs', sprintf('%s.eps', fname)))
 

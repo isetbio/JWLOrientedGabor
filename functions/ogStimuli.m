@@ -131,6 +131,7 @@ ogparams(4).name     = 'cw_sin_0OG';
 ogparams(5).name     = 'cw_cos_0OG'; 
 ogparams(5).ph      =  oGabor.ph - pi/2;
 
+
 % Put test params and scene params into P for use with oisCreate
 P.sampleTimes       = tsamples;
 P.sceneParameters   = sparams;
@@ -150,10 +151,7 @@ for ii = 1:4
 
 end
 
-
-
-%
-%save(fname,'OG','scenes','tseries','P');
+save(fname,'OG','scenes','tseries','P');
 
 % Print out the offset in degrees of arc sec 
 % offsetDeg = sceneGet(scenes{1},'degrees per sample')*vparams(2).offset;
