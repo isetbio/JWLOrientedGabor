@@ -37,11 +37,11 @@ for pa = polarAngles
                 absorptions = [];
                 
                 % Permute so that nTrials and diff phase conditions are last
-                absorptionsPh = permute(absorptionsPh,[2 3 4 1 5]);
+                absorptionsPh = permute(absorptionsPh,[2 3 4 5 1]);
 
                 % Reshape to get all trials together 
-                absorptions.ccw = reshape(absorptionsPh(:,:,:,:,1:2),[sz, sz, tSamples, nTrials]);
-                absorptions.cw = reshape(absorptionsPh(:,:,:,:,3:4),[sz, sz, tSamples, nTrials]);
+                absorptions.ccw = reshape(absorptionsPh(:,:,:,1:2,:),[sz, sz, tSamples, nTrials]);
+                absorptions.cw = reshape(absorptionsPh(:,:,:,3:4,:),[sz, sz, tSamples, nTrials]);
 
                 absorptions.ccw = absorptions.ccw(:,:,:,randperm(nTrials,nTrials));
                 absorptions.cw = absorptions.cw(:,:,:,randperm(nTrials,nTrials)); 
@@ -101,7 +101,7 @@ for pa = polarAngles
             % predict the data not in the training set.
             classLoss = kfoldLoss(cvmdl);
             
-            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100
+            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
             
             
         end
@@ -122,8 +122,10 @@ ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
 fname = sprintf(...
-                'Classify_coneOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_phasescrambled',...
+                'Classify_coneOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_phasescrambled_fft0',...
                     c,pa,eyemovement{em},  eccen, defocus, noise);
+save(fullfile(ogRootPath, 'figs', sprintf('%s.mat', fname)),'P')
+                
 savefig(fullfile(ogRootPath, 'figs', sprintf('%s.fig', fname)))
 hgexport(gcf,fullfile(ogRootPath, 'figs', sprintf('%s.eps', fname)))
 
