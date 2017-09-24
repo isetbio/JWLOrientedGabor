@@ -69,19 +69,24 @@
 
 
 %% Specify experiment parameters
-
-% Number of trials per stimulus condition
-nTrials  = 25;
+% ----- These can be changed. 
+nTrials         = 25;        % Number of trials per stimulus condition
+contrast_levels = ([1:6 10])/100; % Contrast levels
+eyemovement     = [1 1 0]';  % Which type of eye movments
+eccentricities  = 4.5;
+polarangles     = 0;
+defocuslevels   = 0;         % units??  [0 0.5 1 1.5 2]
+verbose         = true; 
 
 % Temporal properties of one trial
-tStep            = 0.001;                % Time step for optical image sequence (seconds)
-sparams.tsamples = (-0.027:tStep:0.027); % seconds
-sparams.timesd   = 1000.00;                % sd of temporal Gaussian window
+tStep            = 0.002;                % Time step for optical image sequence (seconds)
+sparams.tsamples = (0:tStep:0.054);      % seconds
+sparams.timesd   = 1000.00;              % sd of temporal Gaussian window
 
 % Scene field of view
 sparams.sceneFOV  = 2;   % scene field of view in degrees (diameter)
 sparams.freqCPD   = 4;   % Gabor spatial frequency (cpd)
-sparams.gausSDdeg = .25; % Gabor SD in degrees of visual angle
+sparams.gausSDdeg = sparams.sceneFOV/4; % Gabor SD in degrees of visual angle
 
 deg2fov = 1/sparams.sceneFOV;
 fov2deg = sparams.sceneFOV;
@@ -105,10 +110,10 @@ tSamples         = OG(1).length;
 %% Loop over conditions, generating cone absorptions for each condition
 
 % Eccentricity loop
-for eccen = 4.5%0:1:40
+for eccen = eccentricities
     
     % Polar angle loop
-    for pa = 0 % [0 90 180 270]
+    for pa = polarangles 
         
         % ----- CONE MOSAIC -----------------------------------------
         % Make CONE MOSAIC for a given eccentricity and polar angle
@@ -122,7 +127,7 @@ for eccen = 4.5%0:1:40
         cparams.polarAngle   = deg2rad(polarAngleDeg);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         
         % Cone mosaic field of view in degrees
-        cparams.cmFOV     = 2; % degrees
+        cparams.cmFOV     = sparams.sceneFOV; % degrees
         
         % Compute x,y position in m of center of retinal patch from ecc and angle
         [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
@@ -138,30 +143,43 @@ for eccen = 4.5%0:1:40
         
         % ----- EYE MOVEMENTS -------------------------------------
         % Make EYE MOVEMENTS for a given cone mosaic
-        
-        
+                
         % Not sure why these have to match, but there is a bug if they don't.
         cMosaic.integrationTime = OG(1).timeStep;
         
         % Include tremor, drift, microsaccades?
         cparams.em        = emCreate;
-        cparams.em.emFlag = [1 1 0]';
+        cparams.em.emFlag = eyemovement;
         %         cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * 2;
         %         cparams.em.drift.speed = cparams.em.drift.speed * 2;
         %         cparams.em.drift.speedSD = cparams.em.drift.speedSD * 2;
         
-        % Generate the eye movement paths in units of cone samples
-        emPaths  = cMosaic.emGenSequence(tSamples, 'nTrials', nTrials, ...
+        % Generate the eye movement paths in units of cone samples. Set the
+        % time sample to 2x the actual time, so that the eye does not
+        % always start at 0,0. We will then clip after generating the eye
+        % movements.
+        emPaths  = cMosaic.emGenSequence(tSamples*2, 'nTrials', nTrials, ...
             'em', cparams.em); % path is in terms of cones shifted
+        emPaths = emPaths(:, end/2+1:end,:);
+        cMosaic.emPositions = squeeze(emPaths(1,:,:));
         
+        if verbose
+            %plot eye movements
+            figure,
+            subplot(211)
+            plot(sparams.tsamples, emPaths(:,:,1)')
+            
+            subplot(212)
+            plot(sparams.tsamples, emPaths(:,:,2)')
+        end
         
-        for defocus = 0 % [0 0.5 1 1.5 2]
+        for defocus = defocuslevels
             
             % ---- Add optics blur or defocus if requested
             sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
             
             % Loop over contrasts and defocus
-            for c = [0:0.01:0.1, 0.2:0.1:1]
+            for c = contrast_levels
                 
                 
                 fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
@@ -174,7 +192,7 @@ for eccen = 4.5%0:1:40
                 
                 
                 % ---- MAKE SCENE AND OIS --------------------------------------------
-                disp('recomputing scene')
+                disp('recomputing scene')                                
                 [OG,scenes,tseries] = ogStimuli(sparams);
                 
                 %             OG(1).visualize; % ccw
@@ -186,7 +204,6 @@ for eccen = 4.5%0:1:40
                 %             vcNewGraphWin;
                 %               plot(OG(1).timeAxis, OG(1).modulationFunction);
                 %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                
                 
                 
                 % ------- Compute ABSORPTIONS -----------------------------------

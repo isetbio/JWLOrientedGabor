@@ -6,7 +6,7 @@
 FFTflag = true;
 %% Classify
 
-contrastLevels = [0:0.01:0.09, 0.1:0.1:1.0]; %flip((0:.1:1).^2);%
+contrastLevels = flip(([1:6 10])/100);% flip(0.01:0.01:0.1); % [0:0.01:0.09, 0.1:0.1:1.0]; %flip((0:.1:1).^2);%
 polarAngles    = 0; % [0 90 180 270];
 eyemovement    = {'110'};%{'000', '100', '010', '001'};
 noise          = 'random';
@@ -28,33 +28,38 @@ for pa = polarAngles
             fprintf('Loading and classifying %s\n', fname);
             % Get the trials and samples (should be the data for all data sets though
             nStimuli = size(absorptions,5);
-            nTrials = size(absorptions,1) * nStimuli/2;
+            nTrials  = size(absorptions,1) * nStimuli/2;
             tSamples = size(absorptions,4);
-            nrows = size(absorptions,2);
-            ncols = size(absorptions,3);            
+            nrows    = size(absorptions,2);
+            ncols    = size(absorptions,3);            
             % absorptions is trials x rows x cols x time points x stimuli            
-            disp(size(absorptions));
-
             %   permute to trials x stimuli x rows x cols x time points
             absorptions = permute(absorptions, [1 5 2:4]);
-            disp(size(absorptions));
  
             %   reshape to (trials x stimuli) x rows x cols x time points                         
             absorptions = reshape(absorptions, [], nrows, ncols, tSamples);
-            disp(size(absorptions));
             
             % permute to rows x cols x (trials x stimuli) x time points
             absorptions  = permute(absorptions, [2 3 1 4]);
-            disp(size(absorptions));
                         
             % If requested, fourier transform the cone array outputs
             if FFTflag, absorptions  = abs(fft2(absorptions)); end
+
+            
+            %             s_known = absorptions(39,5,:,:) + ...
+            %                 absorptions(2,36,:,:) - ...
+            %                 absorptions(2,5,:,:) - ...
+            %                 absorptions(39,36,:,:) ;
+            %             s_known = squeeze(s_known);
+            %
+            %             s_known(end/2+1:end,:) = s_known(end/2+1:end,:) * -1;
+            %             snr(pa==polarAngles,c==contrastLevels,em) = mean(s_known(:))/std(s_known(:));
+            %             disp(snr)
+                        
             % reshape to trials x everything else for classification
             absorptions = permute(absorptions, [3 1 2 4]);
-            disp(size(absorptions));
 
             absorptions = reshape(absorptions, nTrials*2, []);
-            disp(size(absorptions));
 
             % permute the trial order within each of the two classes
             idx = [randperm(nTrials) randperm(nTrials)+nTrials];
@@ -85,9 +90,10 @@ end
 labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle: 270'};
 
 colors = lines(length(eyemovement));
-figure(1); clf; set(gcf,'Color','w'); hold all;
+figure; clf; set(gcf,'Color','w'); hold all;
 plot(contrastLevels, squeeze(P),'o-', 'Color', 'k', 'LineWidth',2);
-set(gca, 'XScale','log', 'YLim', [0 100], 'TickDir','out','TickLength',[.015 .015]);
+set(gca, 'XScale','log', 'XLim', [.008 .06], 'XTick', (1:6)/100, ...
+    'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015]);
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 

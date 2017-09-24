@@ -4,7 +4,10 @@ defocusZ = 0:0.5:2; % zernike coeffs for Defocus
 
 thresh = [0.0600,0.0900,0.0700,0.1000,0.1000];  % stim contrast thresholds at ~80% for each defocus condition
 
-M = 4*pi*sqrt(3) * defocusZ / (pi* 1.5^2); % convert to diopters
+% Where does this formula come from? Polans et al? 
+%   see here for starters: https://www.researchgate.net/post/How_can_I_convert_Zernike_modes_in_micrometer_to_Diopter
+pupilRadiusMM = 1.5; % mm
+M = 4*pi*sqrt(3) * defocusZ / (pi* pupilRadiusMM^2); % convert to diopters
 
 lm = fitlm(M,thresh);
 
