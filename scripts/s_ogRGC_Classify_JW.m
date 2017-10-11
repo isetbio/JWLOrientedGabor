@@ -6,21 +6,24 @@
 FFTflag = true;
 %% Classify
 
-contrastLevels = flip(([1:6 10])/100);% flip(0.01:0.01:0.1); % [0:0.01:0.09, 0.1:0.1:1.0]; %flip((0:.1:1).^2);%
+contrastLevels = [0:0.01:0.1];% flip(0.01:0.01:0.1); % [0:0.01:0.09, 0.1:0.1:1.0]; %flip((0:.1:1).^2);%
 polarAngles    = 0; % [0 90 180 270];
 eyemovement    = {'110'};%{'000', '100', '010', '001'};
 noise          = 'random';
-eccen          = 4.5;
+eccen          = 0;%40;% 2 5 10 20 40];
 defocus        = 0;
-P = nan(length(polarAngles),length(contrastLevels),length(eyemovement));
+spatFreq       = [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26];
+P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(spatFreq));
 
 for pa = polarAngles
     for c = contrastLevels
         for em = 1:length(eyemovement)
+            for sf = spatFreq
+ 
             % Load dataset
             fname = sprintf(...
-                'OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s.mat',...
-                    c,pa,eyemovement{em},  eccen, defocus, noise);                                
+                'OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
+                    c,pa,eyemovement{em},  eccen, defocus, noise, sf);                                
             pth = fullfile(ogRootPath, 'data', fname);
             if ~exist(pth, 'file'), error('The file %s is not found', fname); end   
             load(pth);
@@ -76,9 +79,9 @@ for pa = polarAngles
             % predict the data not in the training set.
             classLoss = kfoldLoss(cvmdl);
             
-            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100
+            P(pa==polarAngles,c==contrastLevels,em,sf==spatFreq) = (1-classLoss) * 100;
             
-            
+            end
         end
     end
 end
@@ -91,15 +94,15 @@ labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle:
 
 colors = lines(length(eyemovement));
 figure; clf; set(gcf,'Color','w'); hold all;
-plot(contrastLevels, squeeze(P),'o-', 'Color', 'k', 'LineWidth',2);
+plot(contrastLevels, squeeze(P),'o-', 'LineWidth',2);
 set(gca, 'XScale','log', 'XLim', [.008 .06], 'XTick', (1:6)/100, ...
     'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015]);
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
 fname = sprintf(...
-                'Classify_coneOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_phasescrambled_fft0',...
-                    c,pa,eyemovement{em},  eccen, defocus, noise);
+                'Classify_coneOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_phasescrambled_fft%d',...
+                    c,pa,eyemovement{em},  eccen, defocus, noise, FFTflag);
 save(fullfile(ogRootPath, 'figs', sprintf('%s.mat', fname)),'P')
                 
 savefig(fullfile(ogRootPath, 'figs', sprintf('%s.fig', fname)))

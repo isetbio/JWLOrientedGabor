@@ -69,14 +69,15 @@
 
 
 %% Specify experiment parameters
-% ----- These can be changed. 
+% ----- These can be changed.
 nTrials         = 25;        % Number of trials per stimulus condition
-contrast_levels = ([1:6 10])/100; % Contrast levels
+contrast_levels = [0:0.01:0.1];% 0.2:0.1:1];%([1:6 10])/100; % Contrast levels
 eyemovement     = [1 1 0]';  % Which type of eye movments
-eccentricities  = 4.5;
+eccentricities  = [0 2 5 10 20 40]; %4.5;
+spatFreq        = [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26];
 polarangles     = 0;
 defocuslevels   = 0;         % units??  [0 0.5 1 1.5 2]
-verbose         = true; 
+verbose         = true;
 
 % Temporal properties of one trial
 tStep            = 0.002;                % Time step for optical image sequence (seconds)
@@ -113,7 +114,7 @@ tSamples         = OG(1).length;
 for eccen = eccentricities
     
     % Polar angle loop
-    for pa = polarangles 
+    for pa = polarangles
         
         % ----- CONE MOSAIC -----------------------------------------
         % Make CONE MOSAIC for a given eccentricity and polar angle
@@ -143,7 +144,7 @@ for eccen = eccentricities
         
         % ----- EYE MOVEMENTS -------------------------------------
         % Make EYE MOVEMENTS for a given cone mosaic
-                
+        
         % Not sure why these have to match, but there is a bug if they don't.
         cMosaic.integrationTime = OG(1).timeStep;
         
@@ -181,46 +182,48 @@ for eccen = eccentricities
             % Loop over contrasts and defocus
             for c = contrast_levels
                 
-                
-                fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
-                fname = sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f_noise-%s.mat',...
-                    c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen, defocus, cMosaic.noiseFlag);
-                fprintf('File will be saved as %s\n', fname);
-                
-                % Update the stimulus contrast
-                sparams.gabor.contrast  = c;  % Presumably michelson, [0 1]
-                
-                
-                % ---- MAKE SCENE AND OIS --------------------------------------------
-                disp('recomputing scene')                                
-                [OG,scenes,tseries] = ogStimuli(sparams);
-                
-                %             OG(1).visualize; % ccw
-                %             vcNewGraphWin;
-                %               plot(OG(1).timeAxis, OG(1).modulationFunction);
-                %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                %
-                %             OG(2).visualize; % cw
-                %             vcNewGraphWin;
-                %               plot(OG(1).timeAxis, OG(1).modulationFunction);
-                %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                
-                
-                % ------- Compute ABSORPTIONS -----------------------------------
-                
-                % Compute absorptions for multiple trials
-                absorptions = zeros(nTrials,cMosaic.rows,cMosaic.cols, cMosaic.tSamples, length(OG));
-                %current     = absorptions;
-                
-                for s = 1:length(OG)
-                    absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
-                        'emPaths', emPaths);
+                for sf = spatFreq
+                    
+                    fprintf('Computing absorptions for stimulus contrast %4.2f, polar angle %d, eccen %1.2f\n', c, pa, eccen)
+                    fname = sprintf('OGconeOutputs_contrast%1.2f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
+                        c,pa,cparams.em.emFlag(1),cparams.em.emFlag(2),cparams.em.emFlag(3), eccen, defocus, cMosaic.noiseFlag,sf);
+                    fprintf('File will be saved as %s\n', fname);
+                    
+                    % Update the stimulus contrast & spatial frequency
+                    sparams.gabor.contrast  = c;  % Presumably michelson, [0 1]
+                    sparams.freqCPD = sf;
+                    
+                    % ---- MAKE SCENE AND OIS --------------------------------------------
+                    disp('recomputing scene')
+                    [OG,scenes,tseries] = ogStimuli(sparams);
+                    
+                    %             OG(1).visualize; % ccw
+                    %             vcNewGraphWin;
+                    %               plot(OG(1).timeAxis, OG(1).modulationFunction);
+                    %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
+                    %
+                    %             OG(2).visualize; % cw
+                    %             vcNewGraphWin;
+                    %               plot(OG(1).timeAxis, OG(1).modulationFunction);
+                    %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
+                    
+                    
+                    % ------- Compute ABSORPTIONS -----------------------------------
+                    
+                    % Compute absorptions for multiple trials
+                    absorptions = zeros(nTrials,cMosaic.rows,cMosaic.cols, cMosaic.tSamples, length(OG));
+                    %current     = absorptions;
+                    
+                    for s = 1:length(OG)
+                        absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
+                            'emPaths', emPaths);
+                    end
+                    
+                    
+                    
+                    save(fullfile(ogRootPath, 'data', fname), 'absorptions', 'sparams', 'cparams');
+                    
                 end
-                
-                
-                
-                save(fullfile(ogRootPath, 'data', fname), 'absorptions', 'sparams', 'cparams');
-                
             end
         end
     end
