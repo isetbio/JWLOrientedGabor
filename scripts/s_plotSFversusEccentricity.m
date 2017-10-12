@@ -105,8 +105,13 @@ for eccen = eccentricities
     legend(labels, 'Location','bestoutside'); legend boxoff
     title(sprintf('Eccentricity: %1.2f',eccen))
     
+    savefig(fullfile(dataPth,sprintf('BANKS91_REPLICATION_ClassifierAccuracy_SF_Eccen%1.2f.fig',eccen)))
+    hgexport(gcf,fullfile(dataPth,sprintf('BANKS91_REPLICATION_ClassifierAccuracy_SF_Eccen%1.2f.eps',eccen)))
     
 end
+
+
+%%
 
 
 figure; hold on;
@@ -124,6 +129,6 @@ ylabel('Contrast sensitivity (1/threshold)','FontSize',17)
 
 
 
-%
-% savefig(fullfile(dataPth,sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_%s_noPCA',polarAngles,FFTflag,whatPlot)))
-% hgexport(gcf,fullfile(dataPth,sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_%s_noPCA.eps',polarAngles,FFTflag,whatPlot)))
+
+savefig(fullfile(dataPth,sprintf('BANKS91_REPLICATION_SpatFreqVersusContrastSensitivity_Eccen')))
+hgexport(gcf,fullfile(dataPth,sprintf('BANKS91_REPLICATION_SpatFreqVersusContrastSensitivity_Eccen')))

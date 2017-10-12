@@ -123,8 +123,10 @@ end
 polarAngles = 0;
 FFTflag     = true;
 
-% Where to find data
-dataPth     = fullfile(ogRootPath,'figs');
+% Where to find data and save figures
+dataPth     = fullfile(ogRootPath,'data','classification');
+figurePth     = fullfile(ogRootPath,'figs');
+
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = 100;
@@ -151,7 +153,7 @@ for em = 1:length(eyemovement)
                     polarAngles,cell2mat(eyemovement(em)),eccen,defocusZ(df),FFTflag);
                 
                 
-                accuracy = load(fullfile(dataPth, fName));
+                accuracy = load(fullfile(dataPth, whatPlot, fName));
                 accuracy.P = squeeze(accuracy.P);
                 if size(accuracy.P,1)<size(accuracy.P,2)
                     accuracy.P = accuracy.P';
@@ -197,15 +199,11 @@ set(gca, 'XScale','log', 'XLim',[min(usedLabels) max(usedLabels)],'YLim', [min(d
 set(gca, 'XTick', [0.01,0.03,0.05, 0.1], 'XTickLabel',{'1','3','5','10'})
 
 ylabel('Classifier Accuracy (% Correct)', 'FontSize',17)
-% if strcmp(whatPlot,'ConeDensity')
-%     xlabel('Eccentricity (deg)', 'FontSize',17); 
-%     set(gca,'XScale','linear')
 xlabel('Stimulus Contrast (%)', 'FontSize',17);
 
-% title(sprintf('Linear SVM, Ecc %d, Polar Angle %d, 6cpd, FFT%d',max(eccentricities),polarAngles,FFTflag),'FontSize',12)
 legend(labels, 'Location','bestoutside'); legend boxoff
 
 
-savefig(fullfile(dataPth,sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_%s_noPCA',polarAngles,FFTflag,whatPlot)))
-hgexport(gcf,fullfile(dataPth,sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_%s_noPCA.eps',polarAngles,FFTflag,whatPlot)))
+savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_%s_noPCA',polarAngles,FFTflag,whatPlot)))
+hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_all_pa%d_fft%d_%s_noPCA.eps',polarAngles,FFTflag,whatPlot)))
 
