@@ -11,10 +11,10 @@ eyemovement    = {'110'};%{'000', '100', '010', '001'};
 noise          = 'random';
 eccen          = 0; %2 5 10 20 40];
 defocus        = 0;
-spatFreq       = [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26];
+spatFreq       = 4;%[0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26];
 
 % Predefine matrix for predictions
-P = nan(length(polarAngles),length(contrastLevels),length(eyemovement),length(spatFreq));
+P = nan(length(polarAngles),length(contrastLevels),length(eyemovement));
 
 for pa = polarAngles
     for c = contrastLevels
@@ -23,8 +23,8 @@ for pa = polarAngles
  
             % Load dataset
             fname = sprintf(...
-                'OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
-                    c,pa,eyemovement{em},  eccen, defocus, noise, sf);                                
+                'OGconeOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s.mat',...
+                    c,pa,eyemovement{em},  eccen, defocus, noise);                                
             pth = fullfile(ogRootPath, 'data', fname);
             if ~exist(pth, 'file'), error('The file %s is not found', fname); end   
             load(pth);
@@ -69,7 +69,7 @@ for pa = polarAngles
             % predict the data not in the training set.
             classLoss = kfoldLoss(cvmdl);
             
-            P(pa==polarAngles,c==contrastLevels,em,sf==spatFreq) = (1-classLoss) * 100;
+            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
             
             end
         end
@@ -92,10 +92,10 @@ xlabel('Contrast level (Michelson)')
 fname = sprintf(...
                 'Classify_coneOutputs_contrast%1.2f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_phasescrambled',...
                     c,pa,eyemovement{em},  eccen, defocus, noise);
-save(fullfile(ogRootPath, 'data', sprintf('%s.mat', fname)),'P')
+save(fullfile(ogRootPath, 'data', 'classification',sprintf('%s.mat', fname)),'P')
                 
-savefig(fullfile(ogRootPath, 'data', sprintf('%s.fig', fname)))
-hgexport(gcf,fullfile(ogRootPath, 'data', sprintf('%s.eps', fname)))
+savefig(fullfile(ogRootPath, 'data', 'classification', sprintf('%s.fig', fname)))
+hgexport(gcf,fullfile(ogRootPath, 'data', 'classification', sprintf('%s.eps', fname)))
 
 
 %% visualize multiple classifier accuracy's
