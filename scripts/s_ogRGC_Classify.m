@@ -70,7 +70,7 @@ for pa = polarAngles
             %             % predict the data not in the training set.
             %             classLoss = kfoldLoss(cvmdl);
             
-            mdl = fitclinear(absorptions, label, 'KFold', 5);
+            mdl = fitclinear(absorptions, label, 'KFold', 10);
             classLoss = kfoldLoss(mdl);
 
             
