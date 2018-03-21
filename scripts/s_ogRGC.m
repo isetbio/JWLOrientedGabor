@@ -71,9 +71,9 @@
 %% Specify experiment parameters
 % ----- These can be changed.
 nTrials         = 25;        % Number of trials per stimulus condition
-contrast_levels = 1;%[0:0.01:0.1];% 0.2:0.1:1];%([1:6 10])/100; % Contrast levels
+contrast_levels = [0:0.01:0.1];% 0.2:0.1:1];%([1:6 10])/100; % Contrast levels
 eyemovement     = [1 1 0]';  % Which type of eye movments
-eccentricities  = 10;% [0 2 5 10 20 40]; %4.5;
+eccentricities  = 4.5;% [0 2 5 10 20 40]; %4.5;
 spatFreq        = 4; % [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26];
 polarangles     = 0;
 defocuslevels   = 0;         % units??  [0 0.5 1 1.5 2]

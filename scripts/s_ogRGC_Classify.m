@@ -5,16 +5,16 @@
 
 %% Classify
 
-contrastLevels = 1; % 0:0.01:0.1; 
+contrastLevels = 0.1;[0:0.01:0.1]; % 0:0.01:0.1; 
 polarAngles    = 0; % [0 90 180 270];
 eyemovement    = {'110'};%{'000', '100', '010', '001'};
 noise          = 'random';
-eccen          = 10; %2 5 10 20 40];
+eccen          = 4.5;%[2 5 10 20 40];
 defocus        = 0;
 spatFreq       = 4;%[0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26];
 
 % Predefine matrix for predictions
-P = nan(length(polarAngles),length(contrastLevels),length(eyemovement));
+P = nan(length(polarAngles),length(contrastLevels),length(eyemovement), length(spatFreq));
 
 for pa = polarAngles
     for c = contrastLevels
@@ -70,11 +70,20 @@ for pa = polarAngles
             %             % predict the data not in the training set.
             %             classLoss = kfoldLoss(cvmdl);
             
-            mdl = fitclinear(absorptions, label, 'KFold', 10);
+            mdl = fitclinear(absorptions', label,  'KFold', 10, 'ObservationsIn', 'columns');
             classLoss = kfoldLoss(mdl);
-
             
-            P(pa==polarAngles,c==contrastLevels,em) = (1-classLoss) * 100;
+            theseAbsorptions = reshape(absorptions, [nTrials*2, nrows, ncols, tSamples]);
+            theseBetas = reshape(mdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
+            
+            figure; 
+            subplot(311); imagesc(ifftshift(theseBetas(:,:,14)-mean(theseBetas,3))); colormap gray
+            title('IFFT Shift Betas of one timepoint (demeaned)') 
+            subplot(312); imagesc(mean(theseBetas,3));
+            title('Mean of Betas across timepoints') 
+            subplot(313); imagesc(squeeze(mean(theseAbsorptions(idx<26,:,:,14),1)));
+            title('Mean of absorptions across timepoints, trial 1') 
+            P(pa==polarAngles,c==contrastLevels,em,sf) = (1-classLoss) * 100;
             
             end
         end
@@ -89,7 +98,7 @@ labels = {'Polar Angle: 0'};%,'Polar Angle: 90','Polar Angle: 180','Polar Angle:
 colors = lines(length(eyemovement));
 figure; clf; set(gcf,'Color','w'); hold all;
 plot(contrastLevels, squeeze(P),'o-', 'LineWidth',2);
-set(gca, 'XScale','log', 'XLim', [.008 .06], 'XTick', (1:6)/100, ...
+set(gca, 'XScale','log', 'XLim', [.008 .1], 'XTick', (1:6)/100, ...
     'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015]);
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
