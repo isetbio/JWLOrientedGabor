@@ -4,7 +4,8 @@
 % Script to compute psychometric functions based on the computational
 % observer model
 
-whatPlot = 'ConeDensity';
+whatPlot = 'EyeMovement';
+currentFlag = false;
 
 switch whatPlot
     case 'default'
@@ -34,16 +35,17 @@ switch whatPlot
         
         
     case 'EyeMovement'
-        eyemovement         = {'000','100','010','110'}; % No, Drift, tremor, Drift + tremor
+        eyemovement         = {'000', '100', '010', '001','110'}; % No, Drift, tremor, Drift + tremor, Drift + tremor + MS
         defocusZ            = 0;
         coneType            = {''};
         colors              = copper(5); %{'k', 'r','g','b'};
         labels              = {'Fixed','','', ...
                                 'Tremor','','', ...
                                 'Drift','', '',...
+                                'MicroSaccades','', '',...
                                 'Tremor+Drift','',''};
-        eccentricities      = 6;
-        contrastLevels      = [0:0.01:0.09, 0.1:0.1:1.0]; % Contrast levels of stimulus used in simulation
+        eccentricities      = 4.5;
+        contrastLevels      = [0:0.01:0.1 0.2]; % Contrast levels of stimulus used in simulation
         usedLabels          = contrastLevels;
         
     case 'EyeMovementEnhanced'
@@ -147,11 +149,13 @@ for em = 1:length(eyemovement)
     for ct = 1:length(coneType)
         for eccen = eccentricities
             for df = 1:length(defocusZ)
+                
                                 
                 %% 1. Load results
-                fName   = sprintf('Classify_coneOutputs_contrast0.10_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_phasescrambled_fft%d.mat', ...
-                    polarAngles,cell2mat(eyemovement(em)),eccen,defocusZ(df),FFTflag);
-                
+               
+                fName   = sprintf('Classify_coneOutputs_contrast0.20_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_phasescrambled.mat', ...
+                    polarAngles,cell2mat(eyemovement(em)),eccen,defocusZ(df));
+                 if currentFlag; fName = ['current_' fName]; end;
                 
                 accuracy = load(fullfile(dataPth, whatPlot, fName));
                 accuracy.P = squeeze(accuracy.P);

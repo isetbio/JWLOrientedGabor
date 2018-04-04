@@ -71,8 +71,8 @@
 %% Specify experiment parameters
 % ----- These can be changed.
 nTrials         = 25;        % Number of trials per stimulus condition
-contrast_levels = 1; %[0:0.01:0.1 0.2];%[0:0.01:0.1];%[0:0.01:0.1];% 0.2:0.1:1];%([1:6 10])/100; % Contrast levels
-eyemovement     = [0 0 0]';  % Which type of eye movments
+contrast_levels = .1;%[0:0.01:0.1];%[0:0.01:0.1];% 0.2:0.1:1];%([1:6 10])/100; % Contrast levels
+eyemovement     = [1 1 0]';  % Which type of eye movments
 eccentricities  = 4.5;% [0 2 5 10 20 40]; %4.5;
 spatFreq        = 4; % [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26];
 polarangles     = 0;
@@ -142,7 +142,6 @@ for eccen = eccentricities
         % Add photon noise
         cMosaic.noiseFlag = 'random'; % 'random' 'frozen' 'none'
         
-        % CURRENT: Set outer segment to be computed with linear filters
         cMosaic.os = osLinear;
         
         % ----- EYE MOVEMENTS -------------------------------------
@@ -154,7 +153,6 @@ for eccen = eccentricities
         % Include tremor, drift, microsaccades?
         cparams.em        = emCreate;
         cparams.em.emFlag = eyemovement;
-        
         %         cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * 2;
         %         cparams.em.drift.speed = cparams.em.drift.speed * 2;
         %         cparams.em.drift.speedSD = cparams.em.drift.speedSD * 2;
@@ -221,8 +219,8 @@ for eccen = eccentricities
                     for s = 1:length(OG)
                         [absorptions(:,:,:,:,s), current(:,:,:,:,s), interpFilters, meanCur] = cMosaic.compute(OG(s), 'currentFlag', true, ...
                             'emPaths', emPaths);
-%                         absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
-%                             'emPaths', emPaths);
+%                         [absorptions(:,:,:,:,s), current(:,:,:,:,s)] = cMosaic.computeForOISequence(OG(s), 'currentFlag', true, ...
+%                             'emPaths', emPaths, 'os', 'osBioPhys');
                     end
                     
                     
@@ -233,5 +231,103 @@ for eccen = eccentricities
         end
     end
 end
+
+return
+
+
+
+
+
+
+%% BIPOLAR LAYER
+
+% Create a bipolar layer
+bpL = bipolarLayer(cMosaic, 'nTrials', nTrials);
+
+% Now make each type of bipolar mosaics.
+bpCellTypes = {'on diffuse','off diffuse','on midget','off midget','on SBC'};
+
+bpMosaicParams.rectifyType = 1;
+
+% Store the multi-trial time series here (number of cell types x 2 stimuli)
+bpNTrials = cell(length(bpCellTypes), 2);
+
+for idx = 1:length(bpCellTypes)
+    
+    fprintf('Computing bipolar responses for cell type %s\n', ...
+        bpCellTypes{idx});
+    
+    % How should we define this??
+    %     bpMosaicParams.spread  = 2;  % RF diameter w.r.t. input samples
+    %     bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
+    
+    % Add the current cell type as a new bipolar mosaic
+    bpL.mosaic{idx} = bipolarMosaic(cMosaic, bpCellTypes{idx}, bpMosaicParams);
+    
+    % Set and compute are not yet implemented in the bipolarLayer
+    %     bpL.mosaic{bpCellTypeInd}.set('sRFcenter',1);
+    %     bpL.mosaic{bpCellTypeInd}.set('sRFsurround',1); % Do we want the surround to be 1?
+    
+    bpNTrials{idx,1} = bpL.mosaic{idx}.compute('coneTrials',current.cw);
+    bpNTrials{idx,2} = bpL.mosaic{idx}.compute('coneTrials',current.ccw);
+end
+
+% Have a look
+bpL.window;
+
+% bpFilter = bipolarFilter(bp{1}, cMosaic,'graph',true);
+% vcNewGraphWin; plot(cMosaic.timeAxis,bpFilter,'o-');
+
+
+%% Retinal ganglion cell model
+
+% We need to think about RGC sampling in two senses: RF size and RGC
+% density
+
+% Create retina ganglion cell layer object based on bipolar layer
+rgcL = rgcLayer(bpL);
+
+% Choose cell types
+rgcCellTypes = {'on parasol','off parasol','on midget','off midget'};
+
+diameters = round([10 10 2 2 20]); % In cones. % Should we have to manually set this?
+
+%diameters = round([
+rgcParams.name = 'macaque inner retina 1'; % ?? Not sure about this: Do we want macaque or human retina?
+rgcParams.eyeSide = whichEye;
+
+% Do we want to use these parameters?
+rgcParams.centerNoise = 0.2;
+rgcParams.ellipseParams = [1 .8 0];  % Principle, minor and theta
+rgcParams.axisVariance = .1;
+
+% Loop over celltypes to create RGC mosaics in the rgc layer
+for idx = 1:length(rgcCellTypes)
+    rgcParams.rfDiameter = diameters(idx);
+    rgcL.mosaic{idx} = rgcLNP(rgcL, bpL.mosaic{idx},rgcCellTypes{idx},rgcParams);
+    
+end
+
+% Set nr of trials / repeats of the same stimulus
+rgcL.set('numberTrials',nTrials);
+
+
+%% Compute the inner retina response and visualize
+
+% Number of trials refers to number of repeats of the same stimulus
+disp('Computing rgc responses');
+% rgcL = rgcL.compute;
+nTrialsSpikes = rgcL.compute('bipolarScale',50,'bipolarContrast',0.2,'bipolarTrials',bpNTrials,'coupling',false);
+
+%
+% [rgcL, nTrialsSpikes] = rgcL.compute('bipolarTrials',bpNTrials,'coupling',false);
+% % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{idx},'bipolarTrials',bpNTrials,'coupling',false);
+% % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic{1},'bipolarTrials',bpNTrials,'coupling',false,'bipolarScale',50,'bipolarContrast',0.2);
+% % [rgcL, nTrialsSpikes] = rgcL.compute(bpL.mosaic,'bipolarTrials',bpNTrials,'bipolarScale',50,'bipolarContrast',0.2);
+
+
+% Have a look
+rgcL.window;
+
 
 return
