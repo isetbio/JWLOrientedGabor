@@ -71,7 +71,7 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'eyemov';
+expName = 'coneDensity';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
@@ -118,9 +118,8 @@ for eccen = expParams.eccentricities
     whichEye = 'left';
     
     % Specify retinal location where stimulus is presented
-    cparams.eccentricity = eccen;             % Visual angle of stimulus center, in deg
-    polarAngleDeg        = expParams.polarAngle;
-    cparams.polarAngle   = deg2rad(polarAngleDeg);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+    cparams.eccentricity      = eccen;             % Visual angle of stimulus center, in deg
+    cparams.polarAngle        = expParams.polarAngle; % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
     
     % Cone mosaic field of view in degrees
     cparams.cmFOV        = sparams.sceneFOV; % degrees
