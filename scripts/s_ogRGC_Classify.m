@@ -6,7 +6,7 @@
 %% Classify
 
 % Load experiment parameters
-expName = 'eyemov';
+expName = 'coneDensity';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -24,7 +24,7 @@ nrDefocusLevels  = length(expParams.defocusLevels);
 
 P = nan(nrContrasts,1);
 
-savePth = fullfile(ogRootPath, 'data', 'classification'); 
+savePth = fullfile(ogRootPath, 'data', 'classification', expName); 
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
 % Init figure
@@ -36,7 +36,7 @@ xlabel('Contrast level (Michelson)')
 
 for eccen = expParams.eccentricities
     for df = 1:nrDefocusLevels
-        for em = max(nrEyemovTypes)
+        for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
                 for c = expParams.contrastLevels
                     
