@@ -23,7 +23,7 @@ whichEye          = 'left';
 cparams.cmFOV     =  1; % use 1 degree of FOV for labels
 
 % Convertion deg to m
-deg2m  = 1/3 * 0.001; % 3 deg per mm, .001 mm per meter
+deg2m  = .3 * 0.001; % 3 deg per mm, .001 mm per meter
 
 % Predefine density vector
 allDensity = nan(length(eccentricities),1);
