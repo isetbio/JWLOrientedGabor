@@ -234,8 +234,8 @@ for eccen = expParams.eccentricities
                     
                     if expParams.verbose; fprintf('Saving data..\n'); end
                     
-                    save(fullfile(ogRootPath, 'data', fname), 'absorptions', 'sparams', 'cparams', 'expParams');
-                    if currentFlag; save(fullfile(ogRootPath, 'data', ['current_' fname]), 'current', 'sparams', 'cparams', 'expParams'); end
+                    save(fullfile(ogRootPath, 'data', fname), 'absorptions', 'sparams', 'cparams', 'expParams', 'emPaths');
+                    if currentFlag; save(fullfile(ogRootPath, 'data', ['current_' fname]), 'current', 'sparams', 'cparams', 'expParams', 'emPaths'); end
                 end % sf
             end % contrast
         end % defocus

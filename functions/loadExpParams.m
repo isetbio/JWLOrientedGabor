@@ -65,7 +65,7 @@ switch expName
       case 'coneDensityNoEyeMov'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1];     % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [0 0 0]';         % Type of eye movements
-        expParams.eccentricities  = [0 2 4.5 5 10 20 40]; % Eccentricity (deg);
+        expParams.eccentricities  = [0 0.5 1 2 4.5 5 10 20 40]; % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
