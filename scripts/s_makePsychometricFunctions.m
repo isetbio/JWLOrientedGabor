@@ -94,8 +94,8 @@ switch lower(expName)
         
         for ec = expParams.eccentricities
             % Specify retinal location where stimulus is presented
-            cparams.eccentricity = ec;             % Visual angle of stimulus center, in deg
-            cparams.polarAngle   = deg2rad(0);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+            cparams.eccentricity = ec;                     % Visual angle of stimulus center, in deg
+            cparams.polarAngle   = expParams.polarAngle;   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
             
             % Compute x,y position in m of center of retinal patch from ecc and angle
             [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
@@ -113,15 +113,18 @@ switch lower(expName)
         
         
     case 'defocus'
+        
+        for df = expParams.defocusLevels
+            
+            % compute defocus
+            pupilRadiusMM = 1.5; % mm
+            M(df==expParams.defocusLevels) = 4*pi*sqrt(3) * df / (pi* pupilRadiusMM^2); % convert to diopters
+            labels{df==expParams.defocusLevels} = sprintf('%2.2f Diopters of Defocus',M(df==expParams.defocusLevels));
+        end
+        
         colors              = copper(length(expParams.defocusLevels));
-        labels              = {'0 Diopters of Defocus', ...
-            '1.5 Diopters of Defocus', ...
-            '3.1 Diopters of Defocus', ...
-            '4.6 Diopters of Defocus', ...
-            '6.2 Diopters of Defocus'};
         xUnits              = expParams.contrastLevels;
-        
-        
+ 
 end
 
 
@@ -232,4 +235,18 @@ if all(ismember('coneDensity',expName))
     xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
     set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [-0.01 0.08]),
     legend off; title('Contrast threshold versus Cone density')
+    
+elseif strcmp(expName,'defocus')
+    
+     thresh = cell2mat(fit.ctrthresh);    
+     lm = fitlm(M,thresh);
+     
+     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
+        plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
+        set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
+        xlabel('Defocus (diopters)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
+%         set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [-0.01 0.08]),
+        legend off; title('Contrast threshold versus Defocus')
+
+    
 end
