@@ -4,9 +4,8 @@
 % Script to compute psychometric functions based on the computational
 % observer model
 
-
 %% 0. Set general experiment parameters
-expName = 'default';
+expName = 'defocus';
 expParams = loadExpParams(expName, false);
 
 % Units on x axis
@@ -19,8 +18,8 @@ polarAngles = 0;
 FFTflag     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','classification',expName);
-figurePth   = fullfile(ogRootPath,'figs');
+dataPth     = fullfile(ogRootPath,'data','classification','HPC',expName);
+figurePth   = fullfile(ogRootPath,'figs','HPC');
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials*4;
@@ -28,12 +27,12 @@ nTotal      = expParams.nTrials*4;
 
 %% Get appropiate colors and labels
 
-switch expName
+switch lower(expName)
     case 'default'
         colors              = [0 0 0];
         labels              = {'Fit','data'};
         
-    case 'ConeTypes'
+    case 'conetypes'
         colors              = {'k','r','g','b'};
         labels              = {'LMS cones','', ...
             'L cones','', ...
@@ -60,7 +59,7 @@ switch expName
         end
         xUnits          = expParams.contrastLevels;
         
-    case 'eyemovEnhanced'
+    case 'eyemovenhanced'
         colors              = copper(size(expParams.eyemovement,2));
         labels              = cell(1,length(colors));
         for emIdx = 1:length(colors)
@@ -78,7 +77,7 @@ switch expName
             end
         end
         
-    case {'coneDensity','coneDensityNoEyeMov'}
+    case {'conedensity','coneDensitynoeyemov'}
       
         colors              = jet(length(expParams.eccentricities));
         
@@ -113,7 +112,7 @@ switch expName
         xUnits              = expParams.contrastLevels; % For now use eccentricities as labels, but we could plot it against cone density
         
         
-    case 'Defocus'
+    case 'defocus'
         colors              = copper(length(expParams.defocusLevels));
         labels              = {'0 Diopters of Defocus', ...
             '1.5 Diopters of Defocus', ...
@@ -214,7 +213,7 @@ xlabel('Stimulus Contrast (%)', 'FontSize',17);
 h = findobj(gca,'Type','line');
 legend([h(end:-2:2)],labels, 'Location','bestoutside'); legend boxoff
 
-
+if ~exist(figurePth,'dir'); mkdir(figurePth); end
 savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s',FFTflag,expName)))
 hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s.eps',FFTflag,expName)))
 
