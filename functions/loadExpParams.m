@@ -29,7 +29,7 @@ end
 
 expParams          = struct;
 expParams.name     = expName;
-expParams.nTrials  = 100;               % Number of trials per stimulus condition
+expParams.nTrials  = 50;               % Number of trials per stimulus condition
 expParams.verbose  = true;             % Print out images for debugging, or not
 
 
