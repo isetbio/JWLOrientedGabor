@@ -62,7 +62,7 @@ switch lower(expName)
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.verbose         = true;
         
-      case 'conedensitydoeyemov'
+      case 'conedensitynoeyemov'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1];     % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [0 0 0]';         % Type of eye movements
         expParams.eccentricities  = [0 0.5 1 2 4.5 5 10 20 40]; % Eccentricity (deg);
