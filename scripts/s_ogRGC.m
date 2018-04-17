@@ -197,7 +197,7 @@ for eccen = expParams.eccentricities
             
             
             % Loop over contrasts and defocus
-            for c = expParams.contrastLevels(end)
+            for c = expParams.contrastLevels
                 
                 for sf = expParams.spatFreq
                     

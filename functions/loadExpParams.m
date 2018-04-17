@@ -33,7 +33,7 @@ expParams.nTrials  = 25;               % Number of trials per stimulus condition
 expParams.verbose  = true;             % Print out images for debugging, or not
 
 
-switch expName
+switch lower(expName)
 
     case 'default'  
         expParams.contrastLevels = [0:0.005:0.04, 0.05:0.01:0.1]; % Stimulus contrast levels (Michelson)
@@ -53,7 +53,7 @@ switch expName
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.verbose         = true;             % Print out images for debugging, or not
      
-      case 'coneDensity'
+      case 'conedensity'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:0.1];     % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [1 1 0]';         % Type of eye movements
         expParams.eccentricities  = [0 0.5 1 2 4.5 5 10 20 40]; % Eccentricity (deg);
@@ -62,7 +62,7 @@ switch expName
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.verbose         = true;
         
-      case 'coneDensityNoEyeMov'
+      case 'conedensitydoeyemov'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1];     % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [0 0 0]';         % Type of eye movements
         expParams.eccentricities  = [0 0.5 1 2 4.5 5 10 20 40]; % Eccentricity (deg);
@@ -71,7 +71,7 @@ switch expName
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.verbose         = true;
         
-    case 'eyemovEnhanced'
+    case 'eyemovenhanced'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [0 0 0; 2 0 0; 0 2 0; 2 2 0]';  % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
         expParams.eccentricities  = 4.5;              % Eccentricity (deg);
@@ -89,7 +89,7 @@ switch expName
         expParams.defocusLevels   = [0 0.5 1 1.5 2];  % Value of first Zernike coeff (= defocus in units of ??)  
         expParams.verbose         = true;             % Print out images for debugging, or not
         
-     case 'coneTypes'
+     case 'conetypes'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [1 1 0]';         % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
         expParams.eccentricities  = 4.5;              % Eccentricity (deg);
@@ -98,7 +98,7 @@ switch expName
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??)  
         expParams.cparams.spatialDensity = [0 0.6 0.3 0.1; 0 1 0 0; 0 0 1 0; 0 0 0 1]; % Blank, L, M, S cone probabilities; Using default, or only one cone time at a time        
 
-    case 'eccBasedConeSpacing'
+    case 'eccbasedconespacing'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [1 1 0]';         % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
         expParams.eccentricities  = [2.5, 10, 40];%[0, 2.5, 5, 10, 20, 40];              % Eccentricity (deg);
