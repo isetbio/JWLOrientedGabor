@@ -5,7 +5,7 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName = 'defocus';
+expName = 'coneDensityNoEyeMov';
 expParams = loadExpParams(expName, false);
 
 % Units on x axis
@@ -18,8 +18,8 @@ polarAngles = 0;
 FFTflag     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','classification','HPC',expName);
-figurePth   = fullfile(ogRootPath,'figs','HPC');
+dataPth     = fullfile(ogRootPath,'data','classification',expName);
+figurePth   = fullfile(ogRootPath,'figs');
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials*4;
@@ -31,6 +31,7 @@ switch lower(expName)
     case 'default'
         colors              = [0 0 0];
         labels              = {'Fit','data'};
+        xUnits          = expParams.contrastLevels;
         
     case 'conetypes'
         colors              = {'k','r','g','b'};
@@ -55,7 +56,7 @@ switch lower(expName)
                 labels{:,emIdx} = 'Tremor+Drift';
             elseif  all(thisCondition == [0 0 1])
                 labels{:,emIdx} = 'Microsaccades';
-            end 
+            end
         end
         xUnits          = expParams.contrastLevels;
         
@@ -77,8 +78,8 @@ switch lower(expName)
             end
         end
         
-    case {'conedensity','coneDensitynoeyemov'}
-      
+    case {'conedensity','conedensitynoeyemov'}
+        
         colors              = jet(length(expParams.eccentricities));
         
         % Change x labels to density
@@ -108,7 +109,7 @@ switch lower(expName)
             
             labels{ec==expParams.eccentricities} = sprintf('%1.3f x10^5 cells/mm2', allDensity(ec==expParams.eccentricities)./10.^5);
         end
-          
+        
         xUnits              = expParams.contrastLevels; % For now use eccentricities as labels, but we could plot it against cone density
         
         
@@ -124,7 +125,7 @@ switch lower(expName)
         
         colors              = copper(length(expParams.defocusLevels));
         xUnits              = expParams.contrastLevels;
- 
+        
 end
 
 
@@ -227,8 +228,8 @@ if all(ismember('coneDensity',expName))
     thresh = cell2mat(fit.ctrthresh);
     M  = allDensity/11.111; % Convert mm2 to deg2
     lm = fitlm(log10(M),thresh);
-
-
+    
+    
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
     set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
@@ -236,17 +237,25 @@ if all(ismember('coneDensity',expName))
     set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [-0.01 0.08]),
     legend off; title('Contrast threshold versus Cone density')
     
+    if ~exist(figurePth,'dir'); mkdir(figurePth); end
+    savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d',expName,FFTflag)))
+    hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d',expName,FFTflag)))
+    
 elseif strcmp(expName,'defocus')
     
-     thresh = cell2mat(fit.ctrthresh);    
-     lm = fitlm(M,thresh);
-     
-     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
-        plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
-        set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
-        xlabel('Defocus (diopters)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
-%         set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [-0.01 0.08]),
-        legend off; title('Contrast threshold versus Defocus')
-
+    thresh = cell2mat(fit.ctrthresh);
+    lm = fitlm(M,thresh);
+    
+    figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
+    plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
+    set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
+    xlabel('Defocus (diopters)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
+    %         set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [-0.01 0.08]),
+    legend off; title('Contrast threshold versus Defocus')
+    
+    if ~exist(figurePth,'dir'); mkdir(figurePth); end
+    savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d',expName,FFTflag)))
+    hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d',expName,FFTflag)))
+    
     
 end
