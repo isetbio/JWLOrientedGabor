@@ -71,7 +71,7 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'coneDensity';
+expName = 'eccBasedConeSpacing';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
@@ -139,6 +139,16 @@ for eccen = expParams.eccentricities
     
     % CURRENT: Set outer segment to be computed with linear filters
     cMosaic.os = osLinear;
+    
+    % Change cone spacing based on eccentricity
+    if strcmp(expName,'eccBasedConeSpacing')
+        spacing = getBanks1991ConeSpacing(eccen, 'unit', 'm');
+        cMosaic.pigment.pdWidth  = spacing;
+        cMosaic.pigment.pdHeight = spacing;
+    end
+    
+    
+    
     
     % ----- EYE MOVEMENTS -------------------------------------
     % Make EYE MOVEMENTS for a given cone mosaic
