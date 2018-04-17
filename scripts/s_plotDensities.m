@@ -24,21 +24,51 @@ angNames = {'Nasal (HM)','Superior (LVM)','Temporal (HM)', 'Inferior (UVM)'};
 figure('Color','w'); cmap = lines(4);
 for ii = 1:length(ang)
     
-    coneDensity = coneDensityReadData('eccentricity',ecc,'angle',ones(size(ecc))*ang(ii),'whichEye','left');
-
-    subplot(211); hold all;
-    plot([-flip(ecc) ecc]*m2deg, [flip(coneDensity) coneDensity], 'Color', cmap(ii,:), 'LineWidth', 2)
+    for jj = 1:length(ecc)
+        [spacing(:,jj), aperture(:,jj), density(:,jj), params(:,jj), comment(:,jj)] = coneSizeReadData('eccentricity',ecc(jj),'angle',ang(ii),'eccentriticyUnits', 'm','whichEye','left');
+    end
+    
+    subplot(411); hold all;
+    plot([-flip(ecc) ecc]*m2deg, [flip(density) density], 'Color', cmap(ii,:), 'LineWidth', 2)
     xlabel('Eccentricity (deg)'); ylabel('Density (count/mm^2)')
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
     
-    subplot(212); hold all;
-    plot(ecc*m2deg, coneDensity, 'Color', cmap(ii,:),  'LineWidth', 2);
+    
+    subplot(412); hold all;
+    plot(ecc*m2deg, density, 'Color', cmap(ii,:),  'LineWidth', 2);
     set(gca,'XScale', 'log', 'YScale', 'log');
     xlabel('Eccentricity (deg)'); ylabel('Density (count/mm^2)')
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
+   
+    
+    subplot(413); hold all;
+    plot(ecc*m2deg, spacing, 'Color', cmap(ii,:),  'LineWidth', 2);
+    set(gca,'XScale', 'log', 'YScale', 'log');
+    xlabel('Eccentricity (deg)'); ylabel('Cone spacing (m)')
+    set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
+   
+    
+    subplot(414); hold all;
+    plot(ecc*m2deg, aperture, 'Color', cmap(ii,:),  'LineWidth', 2);
+    set(gca,'XScale', 'log', 'YScale', 'log');
+    xlabel('Eccentricity (deg)'); ylabel('Cone aperture (m)')
+    set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off')
+    
 
 end
-subplot(211), axis tight; legend(angNames, 'Location', 'Best')
-subplot(212), axis tight; legend(angNames, 'Location', 'Best')
 
-% Plot RGC densities
+
+subplot(411); axis tight; legend(angNames, 'Location', 'Best')
+subplot(412); axis tight; legend(angNames, 'Location', 'Best')
+subplot(413); axis tight; legend(angNames, 'Location', 'Best')
+subplot(414); axis tight; legend(angNames, 'Location', 'Best')
+
+% See where Banks data points fall
+eccen = [0, 2.5, 5, 10, 20, 40];
+for ii = 1:length(eccen)
+    out(ii,:) = getBanks1991ConeSpacing(eccen(ii), 'unitOut', 'm');  
+end
+
+subplot(413); scatter(0.09, out(1), 80,'k'); scatter(eccen(2:end), out(2:end), 80, 'k');
+subplot(414); scatter(0.09, out(1), 80,'k'); scatter(eccen(2:end), out(2:end), 80, 'k');
+
