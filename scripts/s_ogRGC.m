@@ -140,59 +140,68 @@ for eccen = expParams.eccentricities
     % CURRENT: Set outer segment to be computed with linear filters
     cMosaic.os = osLinear;
     
-    % ----- EYE MOVEMENTS -------------------------------------
-    % Make EYE MOVEMENTS for a given cone mosaic
-    
-    % Not sure why these have to match, but there is a bug if they don't.
-    cMosaic.integrationTime = OG(1).timeStep;
-    
-    for emIdx = 1:size(expParams.eyemovement,2)
-        if expParams.verbose; fprintf('Defining eyemovements as %s (=tremor, drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
-        % Include tremor, drift, microsaccades?
-        cparams.em        = emCreate;
-        cparams.em.emFlag = expParams.eyemovement(:,emIdx);
+    for defocus = expParams.defocusLevels
         
-        if find(cparams.em.emFlag > 1) == 1
-            cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * cparams.em.emFlag(1);
-            cparams.em.emFlag = [expParams.eyemovement./cparams.em.emFlag(1)]'; % set emFlag back to 1
-            warning('(s_ogRGC: tremor amplitude enhanced')
-        elseif find(cparams.em.emFlag > 1) == 2
-            cparams.em.drift.speed = cparams.em.drift.speed * cparams.em.emFlag(2);
-            cparams.em.drift.speedSD = cparams.em.drift.speedSD * cparams.em.emFlag(2);
-            cparams.em.emFlag = [expParams.eyemovement./cparams.em.emFlag(2)]'; % set emFlag back to 1
-            warning('(s_ogRGC: drift speed enhanced')
+        % ---- Add optics blur or defocus if requested
+        sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
+        
+        % Change cone spacing based on eccentricity
+        if strcmp(expName,'eccBasedConeSpacing')
+            aperture = getBanks1991ConeSpacing(eccen, 'focalLength', sparams.oi.optics.focalLength, 'unit', 'm');
+            cMosaic.pigment.pdWidth  = aperture;
+            cMosaic.pigment.pdHeight = aperture;
         end
         
-        % Generate the eye movement paths in units of cone samples. Set the
-        % time sample to 2x the actual time, so that the eye does not
-        % always start at 0,0. We will then clip after generating the eye
-        % movements.
-        emPaths  = cMosaic.emGenSequence(tSamples*2, 'nTrials', expParams.nTrials, ...
-            'em', cparams.em); % path is in terms of cones shifted
-        emPaths = emPaths(:, end-tSamples+1:end,:);
-        cMosaic.emPositions = squeeze(emPaths(1,:,:));
+        % ----- EYE MOVEMENTS -------------------------------------
+        % Make EYE MOVEMENTS for a given cone mosaic
         
-        if expParams.verbose
-            %plot eye movements
-            figure,
-            subplot(211)
-            plot(sparams.tsamples, emPaths(:,:,1)')
-            
-            subplot(212)
-            plot(sparams.tsamples, emPaths(:,:,2)')
-        end
+        % Not sure why these have to match, but there is a bug if they don't.
+        cMosaic.integrationTime = OG(1).timeStep;
         
-        for defocus = expParams.defocusLevels
+        for emIdx = 1:size(expParams.eyemovement,2)
+            if expParams.verbose; fprintf('Defining eyemovements as %s (=tremor, drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
+            % Include tremor, drift, microsaccades?
+            cparams.em        = emCreate;
+            cparams.em.emFlag = expParams.eyemovement(:,emIdx);
             
-            % ---- Add optics blur or defocus if requested
-            sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
+            if find(cparams.em.emFlag > 1) == 1
+                cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * cparams.em.emFlag(1);
+                cparams.em.emFlag = [expParams.eyemovement./cparams.em.emFlag(1)]'; % set emFlag back to 1
+                warning('(s_ogRGC: tremor amplitude enhanced')
+            elseif find(cparams.em.emFlag > 1) == 2
+                cparams.em.drift.speed = cparams.em.drift.speed * cparams.em.emFlag(2);
+                cparams.em.drift.speedSD = cparams.em.drift.speedSD * cparams.em.emFlag(2);
+                cparams.em.emFlag = [expParams.eyemovement./cparams.em.emFlag(2)]'; % set emFlag back to 1
+                warning('(s_ogRGC: drift speed enhanced')
+            end
+            
+            % Generate the eye movement paths in units of cone samples. Set the
+            % time sample to 2x the actual time, so that the eye does not
+            % always start at 0,0. We will then clip after generating the eye
+            % movements.
+            emPaths  = cMosaic.emGenSequence(tSamples*2, 'nTrials', expParams.nTrials, ...
+                'em', cparams.em); % path is in terms of cones shifted
+            emPaths = emPaths(:, end-tSamples+1:end,:);
+            cMosaic.emPositions = squeeze(emPaths(1,:,:));
+            
+            if expParams.verbose
+                %plot eye movements
+                figure,
+                subplot(211)
+                plot(sparams.tsamples, emPaths(:,:,1)')
+                
+                subplot(212)
+                plot(sparams.tsamples, emPaths(:,:,2)')
+            end
+            
+            
             
             % Loop over contrasts and defocus
             for c = expParams.contrastLevels
                 
                 for sf = expParams.spatFreq
                     
-                    if expParams.verbose; fprintf('Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f\n', c, expParams.polarAngle, eccen); end  
+                    if expParams.verbose; fprintf('Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f\n', c, expParams.polarAngle, eccen); end
                     fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
                         c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx),expParams.eyemovement(3,emIdx), eccen, defocus, cMosaic.noiseFlag, sf);
                     if expParams.verbose;  fprintf('File will be saved as %s\n', fname); end
