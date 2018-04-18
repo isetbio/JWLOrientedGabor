@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=4
 #SBATCH --time 20:00:00 # time (D-HH:MM)
 #SBATCH --mem=125GB # memory pool for all cores
 #SBATCH --job-name=s_ogRGC_classify
