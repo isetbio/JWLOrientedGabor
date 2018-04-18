@@ -22,7 +22,6 @@ nrEccen          = length(expParams.eccentricities);
 nrSpatFreq       = length(expParams.spatFreq);
 nrDefocusLevels  = length(expParams.defocusLevels);
 
-P = nan(nrContrasts,1);
 
 savePth = fullfile(ogRootPath, 'data', 'classification', expName); 
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
@@ -34,10 +33,12 @@ set(gca, 'XScale','log', 'XLim', [.005 max(expParams.contrastLevels)], 'XTick', 
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-for eccen = expParams.eccentricities
+parfor eccen = expParams.eccentricities 
     for df = 1:nrDefocusLevels
         for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
+                
+                P = nan(nrContrasts,1);
                 for c = expParams.contrastLevels
                     
                     
@@ -127,7 +128,7 @@ for eccen = expParams.eccentricities
                     'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
                         c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), eccen, expParams.defocusLevels(df), sf);
                 if currentFlag; fname = ['current_' fname]; end               
-                save(fullfile(savePth, sprintf('%s.mat', fname)),'P')
+                parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                 
                 
                 % Visualize                
