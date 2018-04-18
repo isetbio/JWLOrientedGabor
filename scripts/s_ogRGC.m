@@ -156,7 +156,7 @@ for eccen = expParams.eccentricities
         % Make EYE MOVEMENTS for a given cone mosaic
         
         % Not sure why these have to match, but there is a bug if they don't.
-        cMosaic.integrationTime = timeStep;
+        cMosaic.integrationTime = OG(1).timeStep;
         
         for emIdx = 1:size(expParams.eyemovement,2)
             if expParams.verbose; fprintf('Defining eyemovements as %s (=tremor, drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
