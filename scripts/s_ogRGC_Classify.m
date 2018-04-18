@@ -51,7 +51,7 @@ parfor eccen = expParams.eccentricities
                         fname = ['current_' fname];
                     end
                     
-                    pth = fullfile(ogRootPath, 'data', fname);
+                    pth = fullfile(ogRootPath, 'data', expName, fname);
                     if ~exist(pth, 'file'), error('The file %s is not found', fname); end
                     
                     tmp = load(pth);

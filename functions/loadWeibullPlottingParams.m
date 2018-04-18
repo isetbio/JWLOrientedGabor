@@ -74,7 +74,7 @@ switch lower(expName)
             end
         end
         
-    case {'conedensity','conedensitynoeyemov'}
+    case {'conedensity','conedensitynoeyemov','eccbasedcoverage'}
         
         colors              = jet(length(expParams.eccentricities));
         

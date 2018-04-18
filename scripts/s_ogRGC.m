@@ -71,7 +71,7 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'coneDensity';
+expName = 'eccbasedcoverage';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
@@ -146,10 +146,11 @@ for eccen = expParams.eccentricities
         sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
         
         % Change cone spacing based on eccentricity
-        if strcmp(expName,'eccBasedConeSpacing')
-            aperture = getBanks1991ConeSpacing(eccen, 'focalLength', sparams.oi.optics.focalLength, 'unit', 'm');
-            cMosaic.pigment.pdWidth  = aperture;
-            cMosaic.pigment.pdHeight = aperture;
+        if strcmp(expName,'eccbasedcoverage')
+            propCovered = getBanks1991ConeCoverage(eccen);
+
+            cMosaic.pigment.pdWidth  = cMosaic.pigment.width*propCovered;
+            cMosaic.pigment.pdHeight = cMosaic.pigment.height*propCovered;
         end
         
         % ----- EYE MOVEMENTS -------------------------------------
@@ -242,9 +243,9 @@ for eccen = expParams.eccentricities
                     end
                     
                     if expParams.verbose; fprintf('Saving data..\n'); end
-                    
-                    parsave(fullfile(ogRootPath, 'data', fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
-                    if currentFlag; parsave(fullfile(ogRootPath, 'data', ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
+                    savePth = fullfile(ogRootPath, 'data', expName); if ~exist(savePth,'dir'); mkdir(savePth); end;   
+                    parsave(fullfile(savePth, fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
+                    if currentFlag; parsave(fullfile(savePth, ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
                 end % sf
             end % contrast
         end % defocus
