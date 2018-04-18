@@ -156,7 +156,7 @@ for eccen = expParams.eccentricities
         % Make EYE MOVEMENTS for a given cone mosaic
         
         % Not sure why these have to match, but there is a bug if they don't.
-        cMosaic.integrationTime = OG(1).timeStep;
+        cMosaic.integrationTime = timeStep;
         
         for emIdx = 1:size(expParams.eyemovement,2)
             if expParams.verbose; fprintf('Defining eyemovements as %s (=tremor, drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
@@ -231,7 +231,7 @@ for eccen = expParams.eccentricities
                     absorptions = zeros(expParams.nTrials,cMosaic.rows,cMosaic.cols, cMosaic.tSamples, length(OG));
                     current     = absorptions;
                     
-                    for s = 1:length(OG)
+                    parfor s = 1:length(OG)
                         if currentFlag
                             [absorptions(:,:,:,:,s), current(:,:,:,:,s), interpFilters, meanCur] = cMosaic.compute(OG(s), 'currentFlag', currentFlag, ...
                                 'emPaths', emPaths);
@@ -243,8 +243,8 @@ for eccen = expParams.eccentricities
                     
                     if expParams.verbose; fprintf('Saving data..\n'); end
                     
-                    save(fullfile(ogRootPath, 'data', fname), 'absorptions', 'sparams', 'cparams', 'expParams', 'emPaths', '-v7.3');
-                    if currentFlag; save(fullfile(ogRootPath, 'data', ['current_' fname]), 'current', 'sparams', 'cparams', 'expParams', 'emPaths', '-v7.3'); end
+                    parsave(fullfile(ogRootPath, 'data', fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
+                    if currentFlag; parsave(fullfile(ogRootPath, 'data', ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
                 end % sf
             end % contrast
         end % defocus
