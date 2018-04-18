@@ -42,7 +42,6 @@ switch lower(expName)
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-        expParams.verbose         = true;             % Print out images for debugging, or not
 
      case 'eyemov'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:0.1]; % Stimulus contrast levels (Michelson)
@@ -51,7 +50,6 @@ switch lower(expName)
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-        expParams.verbose         = true;             % Print out images for debugging, or not
      
       case 'conedensity'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:0.1];     % Stimulus contrast levels (Michelson)
@@ -60,7 +58,6 @@ switch lower(expName)
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-        expParams.verbose         = true;
         
       case 'conedensitynoeyemov'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1];     % Stimulus contrast levels (Michelson)
@@ -69,7 +66,6 @@ switch lower(expName)
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-        expParams.verbose         = true;
         
     case 'eyemovenhanced'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
@@ -78,7 +74,6 @@ switch lower(expName)
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??)  
-        expParams.verbose         = true;             % Print out images for debugging, or not
      
     case 'defocus'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
@@ -87,7 +82,6 @@ switch lower(expName)
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = [0 0.5 1 1.5 2];  % Value of first Zernike coeff (= defocus in units of ??)  
-        expParams.verbose         = true;             % Print out images for debugging, or not
         
      case 'conetypes'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
@@ -98,7 +92,7 @@ switch lower(expName)
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??)  
         expParams.cparams.spatialDensity = [0 0.6 0.3 0.1; 0 1 0 0; 0 0 1 0; 0 0 0 1]; % Blank, L, M, S cone probabilities; Using default, or only one cone time at a time        
 
-    case 'eccbasedconespacing'
+    case 'eccbasedcoverage'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [1 1 0]';         % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
         expParams.eccentricities  = [0 0.5 1 2 4.5 5 10 20 40]; % Eccentricity (deg);
