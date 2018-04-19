@@ -33,14 +33,13 @@ set(gca, 'XScale','log', 'XLim', [.005 max(expParams.contrastLevels)], 'XTick', 
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-parfor eccen = 1:nrEccen
+for eccen = 1%:nrEccen
     for df = 1:nrDefocusLevels
         for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
                 
-                P = nan(nrContrasts,1);
-                for c = expParams.contrastLevels
-                    
+%                 P = nan(nrContrasts,1);
+                parfor c = expParams.contrastLevels
                     
                     % Load dataset
                     fname = sprintf(...
@@ -108,7 +107,9 @@ parfor eccen = 1:nrEccen
                     %             mdl = fitclinear(data', label,  'KFold', 10, 'ObservationsIn', 'columns');
                     %             classLoss = kfoldLoss(mdl);
                     
-                    P(c==expParams.contrastLevels) = (1-classLoss) * 100;
+%                     P(c==expParams.contrastLevels) = (1-classLoss) * 100;
+                    P = (1-classLoss) * 100;
+
                     
                     % visualize beta's
 %                     betas(em, :,:,:) = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
@@ -119,7 +120,7 @@ parfor eccen = 1:nrEccen
 %                     set(gca,'CLim', 4*10^-5*[-1 1]);
 
 
-                end
+%                 end
                 
                 disp(P);
                 
@@ -132,8 +133,8 @@ parfor eccen = 1:nrEccen
                 
                 
                 % Visualize                
-                plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
-
+%                 plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
+                end
             end
         end
     end
