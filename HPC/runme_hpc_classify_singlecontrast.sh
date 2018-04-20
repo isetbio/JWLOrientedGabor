@@ -10,6 +10,7 @@
 #SBATCH -o slurm.%N.%j_%A_%a.out
 #SBATCH -e slurm.%N.%j_%A_%a.err
 
+module purge
 module load matlab/2016b
 
 cd /scratch/ek99/JWLOrientedGabor/
@@ -17,7 +18,7 @@ cd /scratch/ek99/JWLOrientedGabor/
 # If the files you are running are not in the same folder as this script,
 # you can insert "addpath(genpath('/PATH/TO/FILES/'));" before the command
 # you want to run.
-matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); s_ogRGC_Classify_HPC(SLURM_ARRAY_TASK_ID); exit()"
+matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); s_ogRGC_Classify_HPC($SLURM_ARRAY_TASK_ID); exit()"
 
 exit
 
