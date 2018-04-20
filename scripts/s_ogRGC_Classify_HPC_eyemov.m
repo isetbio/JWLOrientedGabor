@@ -6,7 +6,7 @@
 %% Classify
 
 % Load experiment parameters
-expName = 'defocus';
+expName = 'eyemov';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -34,10 +34,12 @@ ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
 for eccen = 1:nrEccen
-    parfor df = 1:nrDefocusLevels
-        P = nan(nrContrasts,1);
+    for df = 1:nrDefocusLevels
+%         P = nan(nrContrasts,1);
         
-        for em = 1:max(nrEyemovTypes)
+        parfor em = 1:max(nrEyemovTypes)
+            P = nan(nrContrasts,1);
+
             for sf = expParams.spatFreq
                 
                 for c = expParams.contrastLevels(idx)
