@@ -40,7 +40,7 @@ for eccen = 1:nrEccen
         for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
                 
-                for c = expParams.contrastLevels(idx)
+                for c = expParams.contrastLevels
                     
                     % Load dataset
                     fname = sprintf(...
