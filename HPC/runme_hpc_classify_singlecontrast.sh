@@ -10,7 +10,6 @@
 #SBATCH -o slurm.%N.%j_%A_%a.out
 #SBATCH -e slurm.%N.%j_%A_%a.err
 
-module purge
 module load matlab/2016b
 
 cd /scratch/ek99/JWLOrientedGabor/

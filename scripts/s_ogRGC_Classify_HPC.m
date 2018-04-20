@@ -1,4 +1,4 @@
-function s_ogRGC_Classify_HPC(c)
+function s_ogRGC_Classify_HPC(idx)
 
 % Script with first attempt to classify oriented gabors simulated at
 % 7 different contrast levels, 4 polar angles.
@@ -38,8 +38,8 @@ for eccen = 1%:nrEccen
         for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
                 
-%                 P = nan(nrContrasts,1);
-%                 for c = 1:nrContrasts
+% %                 P = nan(nrContrasts,1);
+                    c = expParams.contrastLevels(idx);
                     
                     % Load dataset
                     fname = sprintf(...
