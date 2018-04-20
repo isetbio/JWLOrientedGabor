@@ -1,4 +1,4 @@
-%% s_ogRGC_Classify
+%% s_ogRGC_Classify_HPC_blur
 
 % Script with first attempt to classify oriented gabors simulated at
 % 7 different contrast levels, 4 polar angles.
@@ -22,9 +22,8 @@ nrEccen          = length(expParams.eccentricities);
 nrSpatFreq       = length(expParams.spatFreq);
 nrDefocusLevels  = length(expParams.defocusLevels);
 
-P = nan(nrContrasts,1);
 
-savePth = fullfile(ogRootPath, 'data', 'classification', expName); 
+savePth = fullfile(ogRootPath, 'data', 'classification', expName);
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
 % Init figure
@@ -35,15 +34,18 @@ ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
 for eccen = 1:nrEccen
-    for df = 1:nrDefocusLevels
+    parfor df = 1:nrDefocusLevels
+        P = nan(nrContrasts,1);
+        
         for em = 1:max(nrEyemovTypes)
-            for sf = expParams.spatFreq                
-                for c = 1:nrContrasts
+            for sf = expParams.spatFreq
+                
+                for c = expParams.contrastLevels(idx)
                     
                     % Load dataset
                     fname = sprintf(...
                         'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
-                            expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                        c,expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
                     
                     if currentFlag
                         fname = ['current_' fname];
@@ -60,7 +62,7 @@ for eccen = 1:nrEccen
                         data = getfield(tmp,'absorptions');
                     end
                     
-
+                    
                     fprintf('Loading and classifying %s\n', fname);
                     % Get the trials and samples (should be the data for all data sets though
                     nStimuli = size(data,5);
@@ -83,7 +85,7 @@ for eccen = 1:nrEccen
                     if fftFlag; data  = abs(fft2(data)); end
                     
                     % reshape to all trials x [rows x colums x time] for classification
-                    data = permute(data, [3 1 2 4]); 
+                    data = permute(data, [3 1 2 4]);
                     data = reshape(data, nTrials*2, []);
                     
                     % permute the trial order within each of the two classes
@@ -106,41 +108,41 @@ for eccen = 1:nrEccen
                     %             mdl = fitclinear(data', label,  'KFold', 10, 'ObservationsIn', 'columns');
                     %             classLoss = kfoldLoss(mdl);
                     
-%                     P(c==expParams.contrastLevels) = (1-classLoss) * 100;
+                    %                     P(c==expParams.contrastLevels) = (1-classLoss) * 100;
                     P = (1-classLoss) * 100;
-
+                    
                     
                     % visualize beta's
-%                     betas(em, :,:,:) = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
-%                     mn_betas = squeeze(mean(betas(em,:,:,:),4));
-%                     subplot(length(eyemovement),1,em); imagesc(mn_betas);
-%                     
-%                     title(sprintf('Condition %s - FFT at input freq: %1.3f x10^6', eyemovement{em}, mn_betas(8,3)*10^6));
-%                     set(gca,'CLim', 4*10^-5*[-1 1]);
-
-
-                 end
+                    %                     betas(em, :,:,:) = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
+                    %                     mn_betas = squeeze(mean(betas(em,:,:,:),4));
+                    %                     subplot(length(eyemovement),1,em); imagesc(mn_betas);
+                    %
+                    %                     title(sprintf('Condition %s - FFT at input freq: %1.3f x10^6', eyemovement{em}, mn_betas(8,3)*10^6));
+                    %                     set(gca,'CLim', 4*10^-5*[-1 1]);
+                    
+                    
+                end
                 
                 disp(P);
                 
                 % Save classifier accuracy
                 fname = sprintf(...
                     'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
-                        expParams.contrastLevels(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
-                if currentFlag; fname = ['current_' fname]; end               
+                    c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                if currentFlag; fname = ['current_' fname]; end
                 parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                 
                 
-                % Visualize                
-                 plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
-                end
+                % Visualize
+                %                 plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
             end
         end
     end
+end
 
 
 
-
+return
 
 
 % Save figure?
@@ -167,7 +169,7 @@ for eccen = 1:nrEccen
 
 
 
-return
+
 
 
 
