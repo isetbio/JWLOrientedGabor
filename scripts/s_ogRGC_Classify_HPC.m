@@ -44,7 +44,7 @@ for eccen = 1%:nrEccen
                     % Load dataset
                     fname = sprintf(...
                         'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
-                            expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                            c,expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
                     
                     if currentFlag
                         fname = ['current_' fname];
@@ -127,7 +127,7 @@ for eccen = 1%:nrEccen
                 % Save classifier accuracy
                 fname = sprintf(...
                     'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
-                        expParams.contrastLevels(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                        c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
                 if currentFlag; fname = ['current_' fname]; end               
                 parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                 
