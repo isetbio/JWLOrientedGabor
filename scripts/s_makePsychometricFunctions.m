@@ -80,7 +80,8 @@ for em = 1:nrEyemovTypes
             %% 3. Find contrast threshold
             diff   = abs(fit.ctrpred{count} - fit.thresh);
             minval = find(diff == min(diff));
-            fit.ctrthresh{count} = xUnits(minval(1));
+            %fit.ctrthresh{count} = xUnits(minval(1));
+            fit.ctrthresh{count} = fit.ctrvar{count}.t;
             fit.data{count} = accuracy.P;
             
             count = count +1;
