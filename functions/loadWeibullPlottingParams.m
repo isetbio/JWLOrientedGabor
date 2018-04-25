@@ -1,4 +1,4 @@
-function [xUnits, colors, labels] = loadWeibullPlottingParams(expName)
+function [xUnits, colors, labels, allDensity] = loadWeibullPlottingParams(expName)
 
 % Define Weibull plotting parameters for a specific experiment
 
@@ -21,6 +21,7 @@ end
 
 % Get general condition parameters
 expParams                = loadExpParams(expName, false);
+allDensity               = [];
 
 % Define plotting parameters
 switch lower(expName)

@@ -5,9 +5,9 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'coneDensity';
+expName                  = 'defocus';
 expParams                = loadExpParams(expName, false);
-[xUnits, colors, labels] = loadWeibullPlottingParams(expName);
+[xUnits, colors, labels, allDensity] = loadWeibullPlottingParams(expName);
 
 % Use cone current (flag = true) or cone absorptions (flag = false)
 currentFlag = false;
@@ -16,11 +16,11 @@ FFTflag     = true;
 saveFig     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','classification','HPC',expName,'50trials');
+dataPth     = fullfile(ogRootPath,'data','classification','HPC',expName,'100trials');
 figurePth   = fullfile(ogRootPath,'figs','HPC');
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
-nTotal      = expParams.nTrials*4;
+nTotal      = 100;%expParams.nTrials*4;
 
 %% 1. Set Weibull fitting parameters
 
@@ -117,7 +117,7 @@ if saveFig
 end
 
 %% Plot density thresholds
-if all(ismember('coneDensity',expName))
+if all(ismember('coneDensity',expName)) || strcmp('eccbasedcoverage',expName)
     
     thresh = cell2mat(fit.ctrthresh);
     M  = allDensity/11.111; % Convert mm2 to deg2
@@ -127,13 +127,13 @@ if all(ismember('coneDensity',expName))
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
     set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
     xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
-    set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [-0.01 0.08]),
+    set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [0 0.04]),
     legend off; title('Contrast threshold versus Cone density')
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_50trials',expName,FFTflag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_50trials',expName,FFTflag)))
+        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
     end
     
 elseif strcmp(expName,'defocus')
@@ -150,8 +150,8 @@ elseif strcmp(expName,'defocus')
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d',expName,FFTflag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d',expName,FFTflag)))
+        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
     end
     
 end
