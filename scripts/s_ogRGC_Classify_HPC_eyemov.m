@@ -37,7 +37,7 @@ xlabel('Contrast level (Michelson)')
 %     for df = 1:nrDefocusLevels
 %         P = nan(nrContrasts,1);
         
-        parfor em = 1:max(nrEyemovTypes)
+        parfor em = 1:nrEyemovTypes
             P = nan(nrContrasts,1);
 
 %             for sf = expParams.spatFreq
