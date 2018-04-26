@@ -1,8 +1,8 @@
 function y = ogWeibull(vals,x)
-%y = Weibull(p,x)
+%y = Weibull(vals,x)
 %
-%Parameters:  p.b slope
-%             p.t threshold yeilding ~80% correct
+%Parameters:  vals.b slope
+%             vals.t threshold yeilding ~80% correct
 %             x   intensity values.
 
 %% Examples

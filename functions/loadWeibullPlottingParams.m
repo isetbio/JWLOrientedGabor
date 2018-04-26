@@ -102,12 +102,12 @@ switch lower(expName)
             
             % Set the field of view (degrees)
             cMosaic.setSizeToFOV(cparams.cmFOV);
-            allDensity(ec==expParams.eccentricities,:) = eccen2density(cMosaic, 'mm');
+            allDensity(ec==expParams.eccentricities,:) = eccen2density(cMosaic, 'deg');
             
-            labels{ec==expParams.eccentricities} = sprintf('%1.3f x10^5 cells/mm2', allDensity(ec==expParams.eccentricities)./10.^5);
+            labels{ec==expParams.eccentricities} = sprintf('%1.2f x10^4 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^4);
         end
         
-        xUnits              = expParams.contrastLevels; % For now use eccentricities as labels, but we could plot it against cone density
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
         
         
     case 'defocus'

@@ -71,16 +71,17 @@ for em = 1:nrEyemovTypes
             %% 3. Fit Weibull
             % Make a Weibull function first with contrast levels and then search for
             % the best fit with the classifier data
-            fit.ctrvar{count} = fminsearch(@(x) ogFitWeibull(x, xUnits, accuracy.P, nTotal), fit.init);
+            fit.ctrvar{count} = fminsearch(@(x) ogFitWeibull(x, expParams.contrastLevels, accuracy.P, nTotal), fit.init);
             
             % Then fit a Weibull function again, but now with the best fit parameters
             % from the previous step.
             fit.ctrpred{count} = ogWeibull(fit.ctrvar{count}, xUnits);
             
             %% 3. Find contrast threshold
-            diff   = abs(fit.ctrpred{count} - fit.thresh);
-            minval = find(diff == min(diff));
-            fit.ctrthresh{count} = xUnits(minval(1));
+%             diff   = abs(fit.ctrpred{count} - fit.thresh);
+%             minval = find(diff == min(diff));
+%             fit.ctrthresh{count} = xUnits(minval(1));
+            fit.ctrthresh{count} = fit.ctrvar{count}(2);
             fit.data{count} = accuracy.P;
             
             count = count +1;
@@ -97,12 +98,12 @@ figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488]); hold a
 for ii = 1:length(fit.ctrpred)
     dataToFit = fit.data{ii};
     plot(xUnits(2:end), fit.ctrpred{ii}(2:end)*100, 'Color', colors(ii,:), 'LineWidth',2);
-    scatter(xUnits(2:end), dataToFit(2:end), 80, colors(ii,:), 'filled');
+    scatter(expParams.contrastLevels(2:end), dataToFit(2:end), 80, colors(ii,:), 'filled');
     plot(3e-3,dataToFit(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerFaceColor',colors(ii,:))
 end
 
-set(gca, 'XScale','log','XLim',[3e-3, max(xUnits)],'YLim', [min(dataToFit)-10 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
-set(gca, 'XTick', [3e-3, xUnits(2:2:end)], 'XTickLabel',sprintfc('%1.1f',[0 xUnits(2:2:end)]*100))
+set(gca, 'XScale','log','XLim',[3e-3, max(expParams.contrastLevels)],'YLim', [min(dataToFit)-10 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
+set(gca, 'XTick', [3e-3, expParams.contrastLevels(2:2:end)], 'XTickLabel',sprintfc('%1.1f',[0 expParams.contrastLevels(2:2:end)]*100))
 
 ylabel('Classifier Accuracy (% Correct)', 'FontSize',17)
 xlabel('Stimulus Contrast (%)', 'FontSize',17);
@@ -112,15 +113,16 @@ legend([h(end:-2:2)],labels, 'Location','bestoutside'); legend boxoff
 
 if saveFig
     if ~exist(figurePth,'dir'); mkdir(figurePth); end
-    savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_50trials',FFTflag,expName)))
-    hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_50trials.eps',FFTflag,expName)))
+    savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_100trials',FFTflag,expName)))
+    hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_100trials.eps',FFTflag,expName)))
 end
 
 %% Plot density thresholds
 if all(ismember('coneDensity',expName)) || strcmp('eccbasedcoverage',expName)
     
     thresh = cell2mat(fit.ctrthresh);
-    M  = allDensity/11.111; % Convert mm2 to deg2
+%     M  = allDensity/11.111; % Convert mm2 to deg2 [Note: not needed
+%     anymore, weibull fit will be on cones/deg2 data]
     lm = fitlm(log10(M),thresh);
     
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
