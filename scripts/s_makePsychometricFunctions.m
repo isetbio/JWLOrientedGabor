@@ -141,7 +141,7 @@ if all(ismember('coneDensity',expName)) || strcmp('eccbasedcoverage',expName)
 elseif strcmp(expName,'defocus')
     
     thresh = cell2mat(fit.ctrthresh);
-    lm = fitlm(M,thresh);
+    lm = fitlm(expParams.defocusLevels,thresh);
     
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
