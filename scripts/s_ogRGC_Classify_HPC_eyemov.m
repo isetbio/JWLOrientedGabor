@@ -110,8 +110,8 @@ for eccen = 1:nrEccen
                     %             mdl = fitclinear(data', label,  'KFold', 10, 'ObservationsIn', 'columns');
                     %             classLoss = kfoldLoss(mdl);
                     
-                    %                     P(c==expParams.contrastLevels) = (1-classLoss) * 100;
-                    P = (1-classLoss) * 100;
+                    P(c==expParams.contrastLevels) = (1-classLoss) * 100;
+%                     P = (1-classLoss) * 100;
                     
                     
                     % visualize beta's
