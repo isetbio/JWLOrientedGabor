@@ -5,9 +5,9 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'defocus';
+expName                  = 'eccbasedcoverage';
 expParams                = loadExpParams(expName, false);
-[xUnits, colors, labels, allDensity] = loadWeibullPlottingParams(expName);
+[xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
 % Use cone current (flag = true) or cone absorptions (flag = false)
 currentFlag = false;
@@ -16,7 +16,7 @@ FFTflag     = true;
 saveFig     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','classification','HPC',expName,'100trials');
+dataPth     = fullfile(ogRootPath,'data','classification','HPC',expName,'100trials_3');
 figurePth   = fullfile(ogRootPath,'figs','HPC');
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
@@ -121,7 +121,7 @@ end
 if all(ismember('coneDensity',expName)) || strcmp('eccbasedcoverage',expName)
     
     thresh = cell2mat(fit.ctrthresh);
-%     M  = allDensity/11.111; % Convert mm2 to deg2 [Note: not needed
+%     M  = M/11.111; % Convert mm2 to deg2 [Note: not needed
 %     anymore, weibull fit will be on cones/deg2 data]
     lm = fitlm(log10(M),thresh);
     
@@ -141,7 +141,7 @@ if all(ismember('coneDensity',expName)) || strcmp('eccbasedcoverage',expName)
 elseif strcmp(expName,'defocus')
     
     thresh = cell2mat(fit.ctrthresh);
-    lm = fitlm(expParams.defocusLevels,thresh);
+    lm = fitlm(M,thresh);
     
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
