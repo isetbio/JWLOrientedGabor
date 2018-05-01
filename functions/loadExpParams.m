@@ -95,12 +95,19 @@ switch lower(expName)
     case 'eccbasedcoverage'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [1 1 0]';         % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
-        expParams.eccentricities  = [0 0.5 1 2 4.5 5 10 20 40]; % Eccentricity (deg);
+        expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40]; % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??)         
         
-        
+    case 'conetypeseccen'   
+        expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
+        expParams.eyemovement     = [1 1 0]';         % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
+        expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40];              % Eccentricity (deg);
+        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.cparams.spatialDensity = [0 1 0 0; 0 0 1 0; 0 0 0 1];
         
         % NOT READY YET
 %     case 'spatFreq' 
