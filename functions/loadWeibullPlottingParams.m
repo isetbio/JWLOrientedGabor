@@ -1,8 +1,8 @@
-function [xUnits, colors, labels, allDensity] = loadWeibullPlottingParams(expName)
+function [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName)
 
 % Define Weibull plotting parameters for a specific experiment
 
-%       [xUnits, colors, labels] = loadWeibullPlottingParams(expName)
+%       [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName)
 
 % INPUTS: 
 %   expName        : String defining which type of experiment parameters to use. 
@@ -21,7 +21,7 @@ end
 
 % Get general condition parameters
 expParams                = loadExpParams(expName, false);
-allDensity               = [];
+M                        = [];
 
 % Define plotting parameters
 switch lower(expName)
@@ -108,7 +108,7 @@ switch lower(expName)
         end
         
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
-        
+        M = allDensity;
         
     case 'defocus'
         
@@ -121,7 +121,6 @@ switch lower(expName)
         end
         
         colors              = copper(length(expParams.defocusLevels));
-        xUnits              = expParams.contrastLevels;
-        
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
 end
 
