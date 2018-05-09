@@ -81,7 +81,7 @@ switch lower(expName)
         expParams.eccentricities  = 4.5;              % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = [0 0.5 1 1.5 2];  % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.defocusLevels   = [0 0.5 1 1.5 2];  % Value of first Zernike coeff (= defocus in units of um)  
         
      case 'conetypes'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
