@@ -6,7 +6,7 @@
 %% Classify
 
 % Load experiment parameters
-expName = 'coneDensity';
+expName = 'eccbasedcoverage';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -35,109 +35,107 @@ xlabel('Contrast level (Michelson)')
 
 parfor eccen = 2:nrEccen
     P = nan(nrContrasts,1);
-    for df = 1:nrDefocusLevels
-        for em = 1:max(nrEyemovTypes)
-            for sf = expParams.spatFreq
-                % %
-                for c = expParams.contrastLevels
-                    
-                    % Load dataset
-                    fname = sprintf(...
-                        'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
-                        c,expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
-                    
-                    if currentFlag
-                        fname = ['current_' fname];
-                    end
-                    
-                    pth = fullfile(ogRootPath, 'data', expName, fname);
-                    if ~exist(pth, 'file'), error('The file %s is not found', fname); end
-                    
-                    tmp = load(pth);
-                    
-                    if currentFlag
-                        data = getfield(tmp,'current');
-                    else
-                        data = getfield(tmp,'absorptions');
-                    end
-                    
-                    
-                    fprintf('Loading and classifying %s\n', fname);
-                    % Get the trials and samples (should be the data for all data sets though
-                    nStimuli = size(data,5);
-                    nTrials  = size(data,1) * nStimuli/2;
-                    tSamples = size(data,4);
-                    nrows    = size(data,2);
-                    ncols    = size(data,3);
-                    % absorptions is trials x rows x cols x time points x stimuli
-                    
-                    %   permute to trials x stimuli x rows x cols x time points
-                    data = permute(data, [1 5 2:4]);
-                    
-                    %   reshape to (trials x stimuli) x rows x cols x time points
-                    data = reshape(data, [], nrows, ncols, tSamples);
-                    
-                    % permute to rows x cols x (trials x stimuli) x time points
-                    data  = permute(data, [2 3 1 4]);
-                    
-                    % Compute fourier transform the cone array outputs
-                    if fftFlag; data  = abs(fft2(data)); end
-                    
-                    % reshape to all trials x [rows x colums x time] for classification
-                    data = permute(data, [3 1 2 4]);
-                    data = reshape(data, nTrials*2, []);
-                    
-                    % permute the trial order within each of the two classes
-                    idx = [randperm(nTrials) randperm(nTrials)+nTrials];
-                    
-                    data = data(idx, :);
-                    
-                    label = [ones(nTrials, 1); -ones(nTrials, 1)];
-                    
-                    % Fit the SVM model.
-                    cvmdl = fitcsvm(data, label, 'Standardize', true, 'KernelFunction', 'linear', 'kFold', 10);
-                    
-                    %             cvmdl = crossval(mdl);
-                    
-                    % predict the data not in the training set.
-                    classLoss = kfoldLoss(cvmdl);
-                    
-                    % Different type of linear classifier (faster, but less
-                    % accurate)
-                    %             mdl = fitclinear(data', label,  'KFold', 10, 'ObservationsIn', 'columns');
-                    %             classLoss = kfoldLoss(mdl);
-                    
-                    %                     P(c==expParams.contrastLevels) = (1-classLoss) * 100;
-                    P = (1-classLoss) * 100;
-                    
-                    
-                    % visualize beta's
-                    %                     betas(em, :,:,:) = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
-                    %                     mn_betas = squeeze(mean(betas(em,:,:,:),4));
-                    %                     subplot(length(eyemovement),1,em); imagesc(mn_betas);
-                    %
-                    %                     title(sprintf('Condition %s - FFT at input freq: %1.3f x10^6', eyemovement{em}, mn_betas(8,3)*10^6));
-                    %                     set(gca,'CLim', 4*10^-5*[-1 1]);
-                    
-                    
-                end
-                
-                disp(P);
-                
-                % Save classifier accuracy
-                fname = sprintf(...
-                    'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
-                    c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
-                if currentFlag; fname = ['current_' fname]; end
-                parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
-                
-                
-                % Visualize
-                %                 plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
-            end
+    df = 1
+    em = 1
+    sf = expParams.spatFreq
+    % %
+    for c = expParams.contrastLevels
+        
+        % Load dataset
+        fname = sprintf(...
+            'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
+            c,expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+        
+        if currentFlag
+            fname = ['current_' fname];
         end
+        
+        pth = fullfile(ogRootPath, 'data', expName, fname);
+        if ~exist(pth, 'file'), error('The file %s is not found', fname); end
+        
+        tmp = load(pth);
+        
+        if currentFlag
+            data = getfield(tmp,'current');
+        else
+            data = getfield(tmp,'absorptions');
+        end
+        
+        
+        fprintf('Loading and classifying %s\n', fname);
+        % Get the trials and samples (should be the data for all data sets though
+        nStimuli = size(data,5);
+        nTrials  = size(data,1) * nStimuli/2;
+        tSamples = size(data,4);
+        nrows    = size(data,2);
+        ncols    = size(data,3);
+        % absorptions is trials x rows x cols x time points x stimuli
+        
+        %   permute to trials x stimuli x rows x cols x time points
+        data = permute(data, [1 5 2:4]);
+        
+        %   reshape to (trials x stimuli) x rows x cols x time points
+        data = reshape(data, [], nrows, ncols, tSamples);
+        
+        % permute to rows x cols x (trials x stimuli) x time points
+        data  = permute(data, [2 3 1 4]);
+        
+        % Compute fourier transform the cone array outputs
+        if fftFlag; data  = abs(fft2(data)); end
+        
+        % reshape to all trials x [rows x colums x time] for classification
+        data = permute(data, [3 1 2 4]);
+        data = reshape(data, nTrials*2, []);
+        
+        % permute the trial order within each of the two classes
+        idx = [randperm(nTrials) randperm(nTrials)+nTrials];
+        
+        data = data(idx, :);
+        
+        label = [ones(nTrials, 1); -ones(nTrials, 1)];
+        
+        % Fit the SVM model.
+        cvmdl = fitcsvm(data, label, 'Standardize', true, 'KernelFunction', 'linear', 'kFold', 10);
+        
+        %             cvmdl = crossval(mdl);
+        
+        % predict the data not in the training set.
+        classLoss = kfoldLoss(cvmdl);
+        
+        % Different type of linear classifier (faster, but less
+        % accurate)
+        %             mdl = fitclinear(data', label,  'KFold', 10, 'ObservationsIn', 'columns');
+        %             classLoss = kfoldLoss(mdl);
+        
+        P(c==expParams.contrastLevels) = (1-classLoss) * 100;
+        %                     P = (1-classLoss) * 100;
+        
+        
+        % visualize beta's
+        %                     betas(em, :,:,:) = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
+        %                     mn_betas = squeeze(mean(betas(em,:,:,:),4));
+        %                     subplot(length(eyemovement),1,em); imagesc(mn_betas);
+        %
+        %                     title(sprintf('Condition %s - FFT at input freq: %1.3f x10^6', eyemovement{em}, mn_betas(8,3)*10^6));
+        %                     set(gca,'CLim', 4*10^-5*[-1 1]);
+        
+        
     end
+    
+    disp(P);
+    
+    % Save classifier accuracy
+    fname = sprintf(...
+        'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
+        c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+    if currentFlag; fname = ['current_' fname]; end
+    parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
+    
+    
+    % Visualize
+    %                 plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
 end
+
 
 
 

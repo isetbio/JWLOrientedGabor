@@ -1,8 +1,8 @@
-function [xUnits, colors, labels, allDensity] = loadWeibullPlottingParams(expName)
+function [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName)
 
 % Define Weibull plotting parameters for a specific experiment
 
-%       [xUnits, colors, labels] = loadWeibullPlottingParams(expName)
+%       [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName)
 
 % INPUTS: 
 %   expName        : String defining which type of experiment parameters to use. 
@@ -21,22 +21,19 @@ end
 
 % Get general condition parameters
 expParams                = loadExpParams(expName, false);
-allDensity               = [];
+M                        = [];
 
 % Define plotting parameters
 switch lower(expName)
     case 'default'
         colors              = [0 0 0];
         labels              = {'Fit','data'};
-        xUnits          = expParams.contrastLevels;
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'conetypes'
-        colors              = {'k','r','g','b'};
-        labels              = {'LMS cones','', ...
-            'L cones','', ...
-            'M cones','', ...
-            'S cones',''};
-        xUnits          = expParams.contrastLevels;
+        colors              = copper(size(expParams.cparams.spatialDensity,2));
+        labels              = {'LMS cone array','L cone array','M cone array','S cone arry'};
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'eyemov'
         colors              = copper(size(expParams.eyemovement,2));
@@ -55,7 +52,7 @@ switch lower(expName)
                 labels{:,emIdx} = 'Microsaccades';
             end
         end
-        xUnits          = expParams.contrastLevels;
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'eyemovenhanced'
         colors              = copper(size(expParams.eyemovement,2));
@@ -74,6 +71,8 @@ switch lower(expName)
                 labels{:,emIdx} = '2xMicrosaccades';
             end
         end
+        
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case {'conedensity','conedensitynoeyemov','eccbasedcoverage'}
         
@@ -102,13 +101,13 @@ switch lower(expName)
             
             % Set the field of view (degrees)
             cMosaic.setSizeToFOV(cparams.cmFOV);
-            allDensity(ec==expParams.eccentricities,:) = eccen2density(cMosaic, 'mm');
+            allDensity(ec==expParams.eccentricities,:) = eccen2density(cMosaic, 'deg');
             
-            labels{ec==expParams.eccentricities} = sprintf('%1.3f x10^5 cells/mm2', allDensity(ec==expParams.eccentricities)./10.^5);
+            labels{ec==expParams.eccentricities} = sprintf('%1.2f x10^4 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^4);
         end
         
-        xUnits              = expParams.contrastLevels; % For now use eccentricities as labels, but we could plot it against cone density
-        
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
+        M = allDensity;
         
     case 'defocus'
         
@@ -116,12 +115,48 @@ switch lower(expName)
             
             % compute defocus
             pupilRadiusMM = 1.5; % mm
-            M(df==expParams.defocusLevels) = 4*pi*sqrt(3) * df / (pi* pupilRadiusMM^2); % convert to diopters
+            M(df==expParams.defocusLevels) = wvfDefocusMicronsToDiopters(df,pupilRadiusMM*2); % convert to diopters
             labels{df==expParams.defocusLevels} = sprintf('%2.2f Diopters of Defocus',M(df==expParams.defocusLevels));
         end
         
         colors              = copper(length(expParams.defocusLevels));
-        xUnits              = expParams.contrastLevels;
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
+        
+        
+    case 'conetypeseccen'
+        
+        colors              = jet(length(expParams.eccentricities));
+        
+        % Change x labels to density
+        whichEye          = 'left';
+        cparams.cmFOV     =  1; % degrees
+        
+        % Convertion deg to m
+        deg2m  = 0.3 * 0.001; % .3 deg per mm, .001 mm per meter
+        
+        % Predefine density vector
+        allDensity = nan(length(expParams.eccentricities),1);
+        labels = cell(length(expParams.eccentricities),1);
+        
+        for ec = expParams.eccentricities
+            % Specify retinal location where stimulus is presented
+            cparams.eccentricity = ec;                     % Visual angle of stimulus center, in deg
+            cparams.polarAngle   = expParams.polarAngle;   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+            
+            % Compute x,y position in m of center of retinal patch from ecc and angle
+            [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
+            x = x * deg2m;  y = y * deg2m;
+            cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
+            
+            % Set the field of view (degrees)
+            cMosaic.setSizeToFOV(cparams.cmFOV);
+            allDensity(ec==expParams.eccentricities,:) = eccen2density(cMosaic, 'deg');
+            
+            labels{ec==expParams.eccentricities} = sprintf('%1.2f x10^4 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^4);
+        end
+        
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
+        M = allDensity;
         
 end
 

@@ -33,11 +33,11 @@ set(gca, 'XScale','log', 'XLim', [.005 max(expParams.contrastLevels)], 'XTick', 
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-for eccen = 1:nrEccen
-    for df = 1:nrDefocusLevels
+% for eccen = 1:nrEccen
+%     for df = 1:nrDefocusLevels
 %         P = nan(nrContrasts,1);
         
-        parfor em = 1:max(nrEyemovTypes)
+        parfor em = 1:nrEyemovTypes
             P = nan(nrContrasts,1);
 
 %             for sf = expParams.spatFreq
@@ -47,7 +47,7 @@ for eccen = 1:nrEccen
                     % Load dataset
                     fname = sprintf(...
                         'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
-                        c,expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                        c,expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(1), expParams.defocusLevels(1), expParams.spatFreq(1));
                     
                     if currentFlag
                         fname = ['current_' fname];
@@ -110,8 +110,8 @@ for eccen = 1:nrEccen
                     %             mdl = fitclinear(data', label,  'KFold', 10, 'ObservationsIn', 'columns');
                     %             classLoss = kfoldLoss(mdl);
                     
-                    %                     P(c==expParams.contrastLevels) = (1-classLoss) * 100;
-                    P = (1-classLoss) * 100;
+                    P(c==expParams.contrastLevels) = (1-classLoss) * 100;
+%                     P = (1-classLoss) * 100;
                     
                     
                     % visualize beta's
@@ -130,7 +130,7 @@ for eccen = 1:nrEccen
                 % Save classifier accuracy
                 fname = sprintf(...
                     'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
-                    c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                    c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(1), expParams.defocusLevels(1), expParams.spatFreq);
                 if currentFlag; fname = ['current_' fname]; end
                 parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                 
@@ -139,8 +139,8 @@ for eccen = 1:nrEccen
                 %                 plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
             end
 %         end
-    end
-end
+%     end
+% end
 
 
 

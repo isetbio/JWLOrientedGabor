@@ -29,4 +29,8 @@ if strcmp(unit,'mm')
      density = density*10.^-6;
 end
 
+if strcmp(unit,'deg')
+     density = (density*10.^-6)./11.111;
+end
+
 return
