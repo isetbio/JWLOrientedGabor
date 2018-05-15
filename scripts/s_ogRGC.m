@@ -165,15 +165,16 @@ for eccen = expParams.eccentricities
             cparams.em        = emCreate;
             cparams.em.emFlag = expParams.eyemovement(:,emIdx);
             
-            if find(cparams.em.emFlag > 1) == 1
+            if cparams.em.emFlag(1) == 2
                 cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * cparams.em.emFlag(1);
-                cparams.em.emFlag = [expParams.eyemovement./cparams.em.emFlag(1)]'; % set emFlag back to 1
-                warning('(s_ogRGC: tremor amplitude enhanced')
-            elseif find(cparams.em.emFlag > 1) == 2
+                cparams.em.emFlag(1) = [cparams.em.emFlag(1)./cparams.em.emFlag(1)]'; % set emFlag back to 1
+                warning('(s_ogRGC: tremor amplitude enhanced)')
+            end
+            if cparams.em.emFlag(2) == 2
                 cparams.em.drift.speed = cparams.em.drift.speed * cparams.em.emFlag(2);
                 cparams.em.drift.speedSD = cparams.em.drift.speedSD * cparams.em.emFlag(2);
-                cparams.em.emFlag = [expParams.eyemovement./cparams.em.emFlag(2)]'; % set emFlag back to 1
-                warning('(s_ogRGC: drift speed enhanced')
+                cparams.em.emFlag(2) = [cparams.em.emFlag(2)./cparams.em.emFlag(2)]'; % set emFlag back to 1
+                warning('(s_ogRGC: drift speed enhanced)')
             end
             
             % Generate the eye movement paths in units of cone samples. Set the
@@ -232,7 +233,7 @@ for eccen = expParams.eccentricities
                     absorptions = zeros(expParams.nTrials,cMosaic.rows,cMosaic.cols, cMosaic.tSamples, length(OG));
                     current     = absorptions;
                     
-                    parfor s = 1:length(OG)
+                    for s = 1:length(OG)
                         if currentFlag
                             [absorptions(:,:,:,:,s), current(:,:,:,:,s), interpFilters, meanCur] = cMosaic.compute(OG(s), 'currentFlag', currentFlag, ...
                                 'emPaths', emPaths);
