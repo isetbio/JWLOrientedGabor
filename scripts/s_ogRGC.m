@@ -106,7 +106,7 @@ OG = ogStimuli(sparams);
 tSamples         = OG(1).length;
 
 % Set if we want to compute cone current from cone absorptions
-currentFlag = false;
+currentFlag = true;
 
 %% Loop over conditions, generating cone absorptions for each condition
 
@@ -156,34 +156,35 @@ for eccen = expParams.eccentricities
         % ----- EYE MOVEMENTS -------------------------------------
         % Make EYE MOVEMENTS for a given cone mosaic
         
-        % Not sure why these have to match, but there is a bug if they don't.
-        cMosaic.integrationTime = OG(1).timeStep;
+        % Integration time can be defined independently from OIS time step.
+        % Prefered to be 5 ms or lower (1 or 2 ms preferred)
+        cMosaic.integrationTime = 0.002; %OG(1).timeStep;
         
-        for emIdx = 1:size(expParams.eyemovement,2)
-            if expParams.verbose; fprintf('Defining eyemovements as %s (=tremor, drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
+%         for emIdx = 1:size(expParams.eyemovement,2)
+%             if expParams.verbose; fprintf('Defining eyemovements as %s (=tremor, drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
             % Include tremor, drift, microsaccades?
-            cparams.em        = emCreate;
-            cparams.em.emFlag = expParams.eyemovement(:,emIdx);
+%             cparams.em        = emCreate;
+%             cparams.em.emFlag = expParams.eyemovement(:,emIdx);
             
-            if cparams.em.emFlag(1) == 2
-                cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * cparams.em.emFlag(1);
-                cparams.em.emFlag(1) = [cparams.em.emFlag(1)./cparams.em.emFlag(1)]'; % set emFlag back to 1
-                warning('(s_ogRGC: tremor amplitude enhanced)')
-            end
-            if cparams.em.emFlag(2) == 2
-                cparams.em.drift.speed = cparams.em.drift.speed * cparams.em.emFlag(2);
-                cparams.em.drift.speedSD = cparams.em.drift.speedSD * cparams.em.emFlag(2);
-                cparams.em.emFlag(2) = [cparams.em.emFlag(2)./cparams.em.emFlag(2)]'; % set emFlag back to 1
-                warning('(s_ogRGC: drift speed enhanced)')
-            end
+%             if cparams.em.emFlag(1) == 2
+%                 cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * cparams.em.emFlag(1);
+%                 cparams.em.emFlag(1) = [cparams.em.emFlag(1)./cparams.em.emFlag(1)]'; % set emFlag back to 1
+%                 warning('(s_ogRGC: tremor amplitude enhanced)')
+%             end
+%             if cparams.em.emFlag(2) == 2
+%                 cparams.em.drift.speed = cparams.em.drift.speed * cparams.em.emFlag(2);
+%                 cparams.em.drift.speedSD = cparams.em.drift.speedSD * cparams.em.emFlag(2);
+%                 cparams.em.emFlag(2) = [cparams.em.emFlag(2)./cparams.em.emFlag(2)]'; % set emFlag back to 1
+%                 warning('(s_ogRGC: drift speed enhanced)')
+%             end
             
             % Generate the eye movement paths in units of cone samples. Set the
             % time sample to 2x the actual time, so that the eye does not
             % always start at 0,0. We will then clip after generating the eye
             % movements.
-            emPaths  = cMosaic.emGenSequence(tSamples*2, 'nTrials', expParams.nTrials, ...
-                'em', cparams.em); % path is in terms of cones shifted
-            emPaths = emPaths(:, end-tSamples+1:end,:);
+            maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integrationTime);
+            emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials); % path is in terms of cones shifted
+            emPaths = emPaths(:, end-maxEyeMovementsNum+1:end,:);
             cMosaic.emPositions = squeeze(emPaths(1,:,:));
             
             if expParams.verbose
@@ -204,8 +205,8 @@ for eccen = expParams.eccentricities
                 for sf = expParams.spatFreq
                     
                     if expParams.verbose; fprintf('Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f\n', c, expParams.polarAngle, eccen); end
-                    fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
-                        c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx),expParams.eyemovement(3,emIdx), eccen, defocus, cMosaic.noiseFlag, sf);
+                    fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
+                        c,expParams.polarAngle,expParams.eyemovement(1,1),expParams.eyemovement(2,1), eccen, defocus, cMosaic.noiseFlag, sf);
                     if expParams.verbose;  fprintf('File will be saved as %s\n', fname); end
                     
                     % Update the stimulus contrast & spatial frequency
@@ -250,7 +251,7 @@ for eccen = expParams.eccentricities
                 end % sf
             end % contrast
         end % defocus
-    end % eyemovements
+%     end % eyemovements
 end % eccentricities
 
 return
