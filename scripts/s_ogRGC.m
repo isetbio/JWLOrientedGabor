@@ -71,7 +71,7 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'eccbasedcoverage';
+expName = 'defocus';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial

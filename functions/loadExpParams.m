@@ -77,11 +77,11 @@ switch lower(expName)
      
     case 'defocus'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
-        expParams.eyemovement     = [1 1 0]';         % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
+        expParams.eyemovement     = [1 1 0]';           % Which type of eye movments, drift and microsaccades
         expParams.eccentricities  = 4.5;              % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = [0 0.5 1 1.5 2];  % Value of first Zernike coeff (= defocus in units of um)  
+        expParams.defocusLevels   = [0:0.25:2];  % Value of first Zernike coeff (= defocus in units of um)  
         
      case 'conetypes'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
@@ -94,7 +94,7 @@ switch lower(expName)
 
     case 'eccbasedcoverage'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
-        expParams.eyemovement     = [1 1]';           % Which type of eye movements, drift and microsaccades
+        expParams.eyemovement     = [1 1 0]';           % Which type of eye movements, drift and microsaccades
         expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40]; % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior

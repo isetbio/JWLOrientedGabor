@@ -34,11 +34,11 @@ set(gca, 'XScale','log', 'XLim', [.005 max(expParams.contrastLevels)], 'XTick', 
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-for eccen = 1; %1:nrEccen
-    for df = 1;%nrDefocusLevels(end)
+for eccen = 1:nrEccen
+    for df = 1:nrDefocusLevels
         for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
-                for c = 15%:nrContrasts
+                for c = 1:nrContrasts
                     
                     % Load dataset
                     fname = sprintf(...
