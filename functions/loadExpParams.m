@@ -77,7 +77,7 @@ switch lower(expName)
      
     case 'defocus'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
-        expParams.eyemovement     = [1 1 0]';           % Which type of eye movments, drift and microsaccades
+        expParams.eyemovement     = [1 1]';           % Which type of eye movments, drift and microsaccades
         expParams.eccentricities  = 4.5;              % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
