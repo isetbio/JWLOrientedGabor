@@ -71,13 +71,13 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'defocus';
+expName = 'eccbasedcoverage';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
 tStep             = 0.002;                % Time step for optical image sequence (seconds)
-sparams.tsamples  = (0:tStep:0.054);      % seconds
-sparams.timesd    = 1000.00;              % sd of temporal Gaussian window
+sparams.tsamples  = (0:tStep:(0.054*4));      % seconds
+% sparams.timesd    = 1000.00;              % sd of temporal Gaussian window
 
 % Scene field of view
 sparams.sceneFOV  = 2;   % scene field of view in degrees (diameter)
@@ -245,7 +245,7 @@ for eccen = expParams.eccentricities
                     end
                     
                     if expParams.verbose; fprintf('Saving data..\n'); end
-                    savePth = fullfile(ogRootPath, 'data', expName); if ~exist(savePth,'dir'); mkdir(savePth); end;   
+                    savePth = fullfile(ogRootPath, 'data', expName, 'paddedStim'); if ~exist(savePth,'dir'); mkdir(savePth); end;   
                     parsave(fullfile(savePth, fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
                     if currentFlag; parsave(fullfile(savePth, ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
                 end % sf

@@ -96,7 +96,9 @@ bgColor   = p.Results.bgColor;
 
 %% Build Gaussian time series (soft window for stimulus in time)
 
-tseries = exp(-(tsamples/timesd).^2);
+tseries = single(tsamples <= 0.054);
+
+% tseries = exp(-(tsamples/timesd).^2);
 % tseries = ieScale(tseries,0,1);
 
 %%  Scene parameters in general
