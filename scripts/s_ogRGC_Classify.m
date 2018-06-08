@@ -6,7 +6,9 @@
 %% Classify
 
 % Load experiment parameters
-expName = 'defocus';
+expName = 'eccbasedcoverage';
+subFolderName_toLoad = 'paddedStim';
+subFolderName_toSave = '100trials'; 
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -24,7 +26,7 @@ nrDefocusLevels  = length(expParams.defocusLevels);
 
 P = nan(nrContrasts,1);
 
-savePth = fullfile(ogRootPath, 'data', 'classification', 'HPC', expName, '100trials_3');
+savePth = fullfile(ogRootPath, 'data', 'classification', expName, subFolderName_toSave);
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
 % Init figure
@@ -49,7 +51,7 @@ for eccen = 1:nrEccen
                         fname = ['current_' fname];
                     end
                     
-                    pth = fullfile(ogRootPath, 'data', expName, fname);
+                    pth = fullfile(ogRootPath, 'data', expName, subFolderName_toLoad, fname);
                     if ~exist(pth, 'file'), error('The file %s is not found', fname); end
                     
                     tmp = load(pth);

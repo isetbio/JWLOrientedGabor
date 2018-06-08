@@ -7,6 +7,8 @@
 
 % Load experiment parameters
 expName = 'defocus';
+subFolderName_toSave = '100trials_paddedStim';
+subFolderName_toLoad = 'paddedStim';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -23,7 +25,7 @@ nrSpatFreq       = length(expParams.spatFreq);
 nrDefocusLevels  = length(expParams.defocusLevels);
 
 
-savePth = fullfile(ogRootPath, 'data', 'classification', expName);
+savePth = fullfile(ogRootPath, 'data', 'classification', expName, subFolderName_toSave);
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
 % Init figure
@@ -51,7 +53,7 @@ for eccen = 1:nrEccen
                         fname = ['current_' fname];
                     end
                     
-                    pth = fullfile(ogRootPath, 'data', expName, fname);
+                    pth = fullfile(ogRootPath, 'data', expName, subFolderName_toLoad, fname);
                     if ~exist(pth, 'file'), error('The file %s is not found', fname); end
                     
                     tmp = load(pth);

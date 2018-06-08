@@ -1,4 +1,4 @@
-function [data, nTrials] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag)
+function [data, nTrials] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad)
 
 
 % Load dataset
@@ -10,7 +10,7 @@ if currentFlag
     fname = ['current_' fname];
 end
 
-pth = fullfile(ogRootPath, 'data', expParams.name, fname);
+pth = fullfile(ogRootPath, 'data', expParams.name, subFolderName_toLoad, fname);
 if ~exist(pth, 'file'), error('The file %s is not found', fname); end
 
 tmp = load(pth);

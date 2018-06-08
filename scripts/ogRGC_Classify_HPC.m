@@ -1,12 +1,11 @@
-function s_ogRGC_Classify_HPC(idx)
+function ogRGC_Classify_HPC(expName, subFolderName_toLoad, subFolderName_toSave)
 
 % Script with first attempt to classify oriented gabors simulated at
-% 7 different contrast levels, 4 polar angles.
+% 15 different contrast levels
 
 %% Classify
 
 % Load experiment parameters
-expName = 'coneDensity';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -23,7 +22,7 @@ nrSpatFreq       = length(expParams.spatFreq);
 nrDefocusLevels  = length(expParams.defocusLevels);
 
 
-savePth = fullfile(ogRootPath, 'data', 'classification', expName); 
+savePth = fullfile(ogRootPath, 'data', 'classification', expName, subFolderName_toSave); 
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
 % Init figure
@@ -33,25 +32,24 @@ set(gca, 'XScale','log', 'XLim', [.005 max(expParams.contrastLevels)], 'XTick', 
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-ct = idx;
-parfor eccen = 1:nrEccen
+for eccen = 1:nrEccen
     for df = 1:nrDefocusLevels
         for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
-                    P = nan(nrContrasts,1);
-                    for c = 1:nrContrasts
                     
+                    P = nan(nrContrasts,1);
+                    parfor c = 1:nrContrasts
                     
                     % Load dataset
                     fname = sprintf(...
-                        'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_coneType%d.mat',...
-                            expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf,ct);
+                        'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
+                            expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
                     
                     if currentFlag
                         fname = ['current_' fname];
                     end
                     
-                    pth = fullfile(ogRootPath, 'data', expName, fname);
+                    pth = fullfile(ogRootPath, 'data', expName, subFolderName_toLoad, fname);
                     if ~exist(pth, 'file'), error('The file %s is not found', fname); end
                     
                     tmp = load(pth);
@@ -127,8 +125,8 @@ parfor eccen = 1:nrEccen
                 
                 % Save classifier accuracy
                 fname = sprintf(...
-                    'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_coneType%d',...
-                        expParams.contrastLevels(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf, ct);
+                    'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
+                        expParams.contrastLevels(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
                 if currentFlag; fname = ['current_' fname]; end               
                 parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                 

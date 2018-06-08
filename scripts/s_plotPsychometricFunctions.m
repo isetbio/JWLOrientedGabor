@@ -5,7 +5,7 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'defocus';
+expName                  = 'eccbasedcoverage';
 expParams                = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
@@ -16,8 +16,8 @@ FFTflag     = true;
 saveFig     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','classification','HPC',expName,'100trials_trainHighContrast');
-figurePth   = fullfile(ogRootPath,'figs','HPC', expName, '100trials_trainHighContrast');
+dataPth     = fullfile(ogRootPath,'data','classification',expName,'paddedStim');
+figurePth   = fullfile(ogRootPath,'figs', expName, 'paddedStim');
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = 100;%expParams.nTrials*4;
@@ -52,13 +52,13 @@ if any(strcmp(fn(:),'cparams')); nrConeTypes = size(expParams.cparams.spatialDen
 
 count = 1;
 for em = 1:nrEyemovTypes
-    for eccen = 1:nrEccen
+    for eccen = 2; %1:nrEccen
         for df = 1:nrDefocusLevels
             
             
             %% 2. Load results
             
-            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_trainHighContrast.mat', ...
+            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
                 max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
             if currentFlag; fName = ['current_' fName]; end;
             

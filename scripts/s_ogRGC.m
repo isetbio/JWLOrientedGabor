@@ -71,7 +71,8 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'eccbasedcoverage';
+expName = 'defocus';
+subFolderName = 'paddedStim';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
@@ -245,7 +246,7 @@ for eccen = expParams.eccentricities
                     end
                     
                     if expParams.verbose; fprintf('Saving data..\n'); end
-                    savePth = fullfile(ogRootPath, 'data', expName, 'paddedStim'); if ~exist(savePth,'dir'); mkdir(savePth); end;   
+                    savePth = fullfile(ogRootPath, 'data', expName, subFolderName); if ~exist(savePth,'dir'); mkdir(savePth); end;   
                     parsave(fullfile(savePth, fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
                     if currentFlag; parsave(fullfile(savePth, ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
                 end % sf
