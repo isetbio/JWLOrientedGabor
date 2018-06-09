@@ -35,12 +35,15 @@ set(gca, 'XScale','log', 'XLim', [.005 max(expParams.contrastLevels)], 'XTick', 
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-for eccen = 1:nrEccen
-    parfor df = 1:nrDefocusLevels
-        P = nan(nrContrasts,1);
+eccen = 1;
+
+
         
-        for em = 1:max(nrEyemovTypes)
-            for sf = expParams.spatFreq
+em = 1;
+sf = expParams.spatFreq;
+
+parfor df = 1:nrDefocusLevels
+    P = nan(nrContrasts,1);
                 
                 % Train on high contrast
                 [data, nTrials] = loadAndPermuteData(expParams, nrContrasts(end), em, eccen, df, sf, currentFlag, subFolderName_toLoad);
@@ -114,9 +117,6 @@ for eccen = 1:nrEccen
                 % Visualize
                 %                 plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
             end
-        end
-    end
-end
 
 
 
