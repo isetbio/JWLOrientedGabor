@@ -56,6 +56,7 @@ for c = expParams.contrastLevels
         data = getfield(tmp,'current');
     else
         data = getfield(tmp,'absorptions');
+        data = data(:,:,:,1:54,:); % Truncate time samples, where blank stimulus was presented.
     end
     
     

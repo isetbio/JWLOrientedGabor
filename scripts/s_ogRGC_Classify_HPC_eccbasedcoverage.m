@@ -8,7 +8,7 @@
 % Load experiment parameters
 expName = 'eccbasedcoverage';
 subFolderName_toSave = '100trials_paddedStim';
-subFolderName_toLoad = '100trials_paddedStim';
+subFolderName_toLoad = 'paddedStim';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -58,6 +58,7 @@ parfor eccen = 2:nrEccen
             data = getfield(tmp,'current');
         else
             data = getfield(tmp,'absorptions');
+            data = data(:,:,:,1:54,:); % Truncate time samples, where blank stimulus was presented.
         end
         
         fprintf('Loading and classifying %s\n', fname);

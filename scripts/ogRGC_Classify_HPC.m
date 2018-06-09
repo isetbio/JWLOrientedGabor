@@ -58,6 +58,9 @@ for eccen = 1:nrEccen
                         data = getfield(tmp,'current');
                     else
                         data = getfield(tmp,'absorptions');
+                        % Remove end of data (blank stimulus, only for
+                        % current)
+                        data = data(:,:,:,1:54,:); 
                     end
                     
 
@@ -68,7 +71,9 @@ for eccen = 1:nrEccen
                     tSamples = size(data,4);
                     nrows    = size(data,2);
                     ncols    = size(data,3);
+                    
                     % absorptions is trials x rows x cols x time points x stimuli
+                    
                     
                     %   permute to trials x stimuli x rows x cols x time points
                     data = permute(data, [1 5 2:4]);
