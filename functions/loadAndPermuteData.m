@@ -19,7 +19,7 @@ if currentFlag
     data = getfield(tmp,'current');
 else
     data = getfield(tmp,'absorptions');
-    data = data(:,:,:,1:54,:); % Truncate time samples, where blank stimulus was presented.
+    data = data(:,:,:,1:28,:); % Truncate time samples, where blank stimulus was presented.
 end
 
 

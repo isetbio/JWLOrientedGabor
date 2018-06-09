@@ -62,7 +62,7 @@ mdl = fitcsvm(data, label, 'Standardize', true, 'KernelFunction', 'linear');
 
 parfor c = 1:nrContrasts
     
-    [data, nTrials] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag);
+    [data, nTrials] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad);
     
     % Compute fourier transform the cone array outputs
     if fftFlag; data  = abs(fft2(data)); end

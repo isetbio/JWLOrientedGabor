@@ -60,7 +60,7 @@ for eccen = 1:nrEccen
                         data = getfield(tmp,'absorptions');
                         % Remove end of data (blank stimulus, only for
                         % current)
-                        data = data(:,:,:,1:54,:); 
+                        data = data(:,:,:,1:28,:); 
                     end
                     
 

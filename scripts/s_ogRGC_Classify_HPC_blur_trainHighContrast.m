@@ -42,7 +42,7 @@ eccen = 1;
 em = 1;
 sf = expParams.spatFreq;
 
-parfor df = 1:nrDefocusLevels
+for df = 1:nrDefocusLevels
     P = nan(nrContrasts,1);
                 
                 % Train on high contrast
@@ -67,7 +67,7 @@ parfor df = 1:nrDefocusLevels
                 
                 for c = 1:nrContrasts
                     
-                    [data, nTrials] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag);
+                    [data, nTrials] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad);
                     
                     % Compute fourier transform the cone array outputs
                     if fftFlag; data  = abs(fft2(data)); end
