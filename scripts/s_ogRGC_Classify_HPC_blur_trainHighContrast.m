@@ -25,7 +25,7 @@ nrSpatFreq       = length(expParams.spatFreq);
 nrDefocusLevels  = length(expParams.defocusLevels);
 
 
-savePth = fullfile(ogRootPath, 'data', 'classification', expName, subFolderName);
+savePth = fullfile(ogRootPath, 'data', 'classification', expName, subFolderName_toSave);
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
 % Init figure
