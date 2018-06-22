@@ -186,7 +186,7 @@ for eccen = expParams.eccentricities
             maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integrationTime);
             emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials); % path is in terms of cones shifted
             emPaths = emPaths(:, end-maxEyeMovementsNum+1:end,:);
-            cMosaic.emPositions = squeeze(emPaths(1,:,:));
+            cMosaic.emPositions = emPaths;
             
             if expParams.verbose
                 %plot eye movements

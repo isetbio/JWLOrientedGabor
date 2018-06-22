@@ -16,8 +16,9 @@ FFTflag     = true;
 saveFig     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','classification',expName,'paddedStim');
-figurePth   = fullfile(ogRootPath,'figs', expName, 'paddedStim');
+subFolderName = 'average';
+dataPth     = fullfile(ogRootPath,'data','classification',expName,subFolderName);
+figurePth   = fullfile(ogRootPath,'figs', expName, [subFolderName '2']  );
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = 100;%expParams.nTrials*4;
@@ -52,13 +53,13 @@ if any(strcmp(fn(:),'cparams')); nrConeTypes = size(expParams.cparams.spatialDen
 
 count = 1;
 for em = 1:nrEyemovTypes
-    for eccen = 2; %1:nrEccen
+    for eccen = 1:nrEccen
         for df = 1:nrDefocusLevels
             
             
             %% 2. Load results
             
-            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
+            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s0_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE2.mat', ...
                 max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
             if currentFlag; fName = ['current_' fName]; end;
             
@@ -95,6 +96,9 @@ end
 
 figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488]); hold all;
 
+idx = ~cellfun(@isempty, fit.ctrpred);
+fit.ctrpred = fit.ctrpred(idx);
+
 for ii = 1:length(fit.ctrpred)
     dataToFit = fit.data{ii};
     plot(xUnits(2:end), fit.ctrpred{ii}(2:end)*100, 'Color', colors(ii,:), 'LineWidth',2);
@@ -102,7 +106,7 @@ for ii = 1:length(fit.ctrpred)
     plot(3e-3,dataToFit(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerFaceColor',colors(ii,:))
 end
 
-set(gca, 'XScale','log','XLim',[3e-3, max(expParams.contrastLevels)],'YLim', [min(dataToFit)-10 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
+set(gca, 'XScale','log','XLim',[3e-3, max(expParams.contrastLevels)],'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
 set(gca, 'XTick', [3e-3, expParams.contrastLevels(2:2:end)], 'XTickLabel',sprintfc('%1.1f',[0 expParams.contrastLevels(2:2:end)]*100))
 
 ylabel('Classifier Accuracy (% Correct)', 'FontSize',17)
@@ -113,12 +117,12 @@ legend([h(end:-2:2)],labels, 'Location','bestoutside'); legend boxoff
 
 if saveFig
     if ~exist(figurePth,'dir'); mkdir(figurePth); end
-    savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_100trials',FFTflag,expName)))
-    hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_100trials.eps',FFTflag,expName)))
+    savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_%s_100trials',FFTflag,expName, currentFlag)))
+    hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fft%d_%s_%s_100trials.eps',FFTflag,expName, currentFlag)))
 end
 
 %% Plot density thresholds
-if all(ismember('coneDensity',expName)) || strcmp('eccbasedcoverage',expName)
+if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     
     thresh = cell2mat(fit.ctrthresh);
 %     M  = allDensity/11.111; % Convert mm2 to deg2 [Note: not needed
@@ -134,14 +138,14 @@ if all(ismember('coneDensity',expName)) || strcmp('eccbasedcoverage',expName)
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
+        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_%s_100trials',expName,FFTflag,currentFlag)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_%s_100trials',expName,FFTflag,currentFlag)))
     end
     
 elseif strcmp(expName,'defocus')
     
     thresh = cell2mat(fit.ctrthresh);
-    lm = fitlm(M,thresh);
+    lm = fitlm(M(idx),thresh);
     
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
@@ -152,8 +156,8 @@ elseif strcmp(expName,'defocus')
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_100trials',expName,FFTflag)))
+        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_%s_100trials',expName,FFTflag, currentFlag)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fft%d_%s_100trials',expName,FFTflag, currentFlag)))
     end
     
 end
