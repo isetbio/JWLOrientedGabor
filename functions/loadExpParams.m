@@ -45,7 +45,7 @@ switch lower(expName)
 
      case 'eyemov'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:0.1]; % Stimulus contrast levels (Michelson)
-        expParams.eyemovement     = [0 0 0; 1 0 0; 0 1 0; 1 1 0]'; % None, only tremor, only drift, both tremor and drift
+        expParams.eyemovement     = [0 0; 1 0; 1 1]'; % None, only drift, both drift and MS
         expParams.eccentricities  = 4.5;              % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
