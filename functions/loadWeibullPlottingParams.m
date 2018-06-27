@@ -40,16 +40,14 @@ switch lower(expName)
         labels              = cell(1,length(colors));
         for emIdx = 1:length(colors)
             thisCondition = expParams.eyemovement(:,emIdx)';
-            if all(thisCondition == [0 0 0])
+            if all(thisCondition == [0 0])
                 labels{:,emIdx} = 'No eyemovements';
-            elseif  all(thisCondition == [1 0 0])
-                labels{:,emIdx} = 'Tremor';
-            elseif  all(thisCondition == [0 1 0])
+            elseif  all(thisCondition == [1 0])
                 labels{:,emIdx} = 'Drift';
-            elseif  all(thisCondition == [1 1 0])
-                labels{:,emIdx} = 'Tremor+Drift';
-            elseif  all(thisCondition == [0 0 1])
-                labels{:,emIdx} = 'Microsaccades';
+            elseif  all(thisCondition == [0 1])
+                labels{:,emIdx} = 'MS';
+            elseif  all(thisCondition == [1 1])
+                labels{:,emIdx} = 'Drift and MS';
             end
         end
         xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
