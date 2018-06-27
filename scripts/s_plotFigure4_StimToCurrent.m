@@ -1,4 +1,4 @@
-%% s_MakeFigure2_plotStimToCurrent.m
+%% s_plotFigure4_plotStimToCurrent.m
 
 % Script to plot from stimulus (radiance, to photo current).
 
