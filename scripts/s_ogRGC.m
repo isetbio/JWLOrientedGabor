@@ -72,7 +72,7 @@
 
 % Load experiment parameters
 expName = 'defocus';
-subFolderName = 'paddedStim';
+subFolderName = 'paddedStim2';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
@@ -193,7 +193,13 @@ for eccen = expParams.eccentricities
             end
             
             % Loop over contrasts and defocus
-            for c = expParams.contrastLevels
+            if currentFlag
+                theseContrasts = expParams.contrastLevelsPC;
+            else
+                theseContrasts = expParams.contrastLevels;
+            end
+            
+            for c = theseContrasts
                 
                 for sf = expParams.spatFreq
                     

@@ -77,6 +77,7 @@ switch lower(expName)
      
     case 'defocus'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevelsPC = [0:0.005:0.04, 0.05:0.01:.1, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [1 1]';           % Which type of eye movments, drift and microsaccades
         expParams.eccentricities  = 4.5;              % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
@@ -94,6 +95,7 @@ switch lower(expName)
 
     case 'eccbasedcoverage'
         expParams.contrastLevels  = [0:0.005:0.04, 0.05:0.01:.1]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevelsPC  = [0:0.005:0.04, 0.05:0.01:.1, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
         expParams.eyemovement     = [1 1]';           % Which type of eye movements, drift and microsaccades
         expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40]; % Eccentricity (deg);
         expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
