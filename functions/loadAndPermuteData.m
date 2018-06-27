@@ -1,4 +1,4 @@
-function [data, nTrials] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad)
+function [data, fname] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad)
 
 
 % Load dataset
