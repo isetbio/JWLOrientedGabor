@@ -5,7 +5,7 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'eccbasedcoverage';
+expName                  = 'defocus';
 expParams                = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
@@ -16,12 +16,12 @@ FFTflag     = true;
 saveFig     = true;
 
 % Where to find data and save figures
-subFolderName = 'average';
+subFolderName = 'paddedStim';
 dataPth     = fullfile(ogRootPath,'data','classification',expName,subFolderName);
-figurePth   = fullfile(ogRootPath,'figs', expName, [subFolderName '2']  );
+figurePth   = fullfile(ogRootPath,'figs', expName, [subFolderName]);
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
-nTotal      = 100;%expParams.nTrials*4;
+nTotal      = expParams.nTrials;
 
 %% 1. Set Weibull fitting parameters
 
@@ -59,7 +59,7 @@ for em = 1:nrEyemovTypes
             
             %% 2. Load results
             
-            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s0_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE2.mat', ...
+            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
                 max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
             if currentFlag; fName = ['current_' fName]; end;
             

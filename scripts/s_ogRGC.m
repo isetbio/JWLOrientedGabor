@@ -72,7 +72,7 @@
 
 % Load experiment parameters
 expName = 'defocus';
-subFolderName = 'paddedStim';
+subFolderName = 'paddedStim2';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
@@ -161,32 +161,26 @@ for eccen = expParams.eccentricities
         % Prefered to be 5 ms or lower (1 or 2 ms preferred)
         cMosaic.integrationTime = 0.002; %OG(1).timeStep;
         
-%         for emIdx = 1:size(expParams.eyemovement,2)
-%             if expParams.verbose; fprintf('Defining eyemovements as %s (=tremor, drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
-            % Include tremor, drift, microsaccades?
-%             cparams.em        = emCreate;
-%             cparams.em.emFlag = expParams.eyemovement(:,emIdx);
+        for emIdx = 1:size(expParams.eyemovement,2)
+            if expParams.verbose; fprintf('Defining eyemovements as %s (=drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
             
-%             if cparams.em.emFlag(1) == 2
-%                 cparams.em.tremor.amplitude = cparams.em.tremor.amplitude * cparams.em.emFlag(1);
-%                 cparams.em.emFlag(1) = [cparams.em.emFlag(1)./cparams.em.emFlag(1)]'; % set emFlag back to 1
-%                 warning('(s_ogRGC: tremor amplitude enhanced)')
-%             end
-%             if cparams.em.emFlag(2) == 2
-%                 cparams.em.drift.speed = cparams.em.drift.speed * cparams.em.emFlag(2);
-%                 cparams.em.drift.speedSD = cparams.em.drift.speedSD * cparams.em.emFlag(2);
-%                 cparams.em.emFlag(2) = [cparams.em.emFlag(2)./cparams.em.emFlag(2)]'; % set emFlag back to 1
-%                 warning('(s_ogRGC: drift speed enhanced)')
-%             end
-            
-            % Generate the eye movement paths in units of cone samples. Set the
-            % time sample to 2x the actual time, so that the eye does not
-            % always start at 0,0. We will then clip after generating the eye
-            % movements.
+            % Calculate number of eyemovements based on cone mosaic integration time
             maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integrationTime);
-            emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials); % path is in terms of cones shifted
+            
+            % Check what eyemovements to simulate: 
+            if all(expParams.eyemovement(:,emIdx) == [1;0])      % if only drift, no MS
+                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none');
+            elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
+                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based');
+            elseif all(expParams.eyemovement(:,emIdx) == [0;0]) % if none
+                emPaths = zeros(expParams.nTrials, maxEyeMovementsNum*2, 2);
+            end
+            
+            % Truncate warm up period
             emPaths = emPaths(:, end-maxEyeMovementsNum+1:end,:);
-            cMosaic.emPositions = emPaths;
+            
+            % Add emPaths (which are in terms of cones shifted) to cMosaic struct
+            cMosaic.emPositions = emPaths; 
             
             if expParams.verbose
                 %plot eye movements
@@ -198,16 +192,20 @@ for eccen = expParams.eccentricities
                 plot(sparams.tsamples, emPaths(:,:,2)')
             end
             
-            
-            
             % Loop over contrasts and defocus
-            for c = expParams.contrastLevels
+            if currentFlag
+                theseContrasts = expParams.contrastLevelsPC;
+            else
+                theseContrasts = expParams.contrastLevels;
+            end
+            
+            for c = theseContrasts
                 
                 for sf = expParams.spatFreq
                     
                     if expParams.verbose; fprintf('Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f\n', c, expParams.polarAngle, eccen); end
                     fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
-                        c,expParams.polarAngle,expParams.eyemovement(1,1),expParams.eyemovement(2,1), eccen, defocus, cMosaic.noiseFlag, sf);
+                        c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf);
                     if expParams.verbose;  fprintf('File will be saved as %s\n', fname); end
                     
                     % Update the stimulus contrast & spatial frequency
@@ -218,21 +216,11 @@ for eccen = expParams.eccentricities
                     if expParams.verbose; fprintf('Recomputing scene for current sf and c..\n'); end
                     [OG,scenes,tseries] = ogStimuli(sparams);
                     
-                    %             OG(1).visualize; % ccw
-                    %             vcNewGraphWin;
-                    %               plot(OG(1).timeAxis, OG(1).modulationFunction);
-                    %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                    %
-                    %             OG(2).visualize; % cw
-                    %             vcNewGraphWin;
-                    %               plot(OG(1).timeAxis, OG(1).modulationFunction);
-                    %               xlabel('Time (s)'); ylabel('Stimulus amplitude')
-                    
                     
                     % ------- Compute ABSORPTIONS -----------------------------------
                     
                     % Compute absorptions for multiple trials
-                    absorptions = zeros(expParams.nTrials,cMosaic.rows,cMosaic.cols, cMosaic.tSamples, length(OG));
+                    absorptions = zeros(expParams.nTrials,cMosaic.rows,cMosaic.cols, tSamples, length(OG));
                     current     = absorptions;
                     
                     for s = 1:length(OG)
@@ -252,7 +240,7 @@ for eccen = expParams.eccentricities
                 end % sf
             end % contrast
         end % defocus
-%     end % eyemovements
+    end % eyemovements
 end % eccentricities
 
 return
