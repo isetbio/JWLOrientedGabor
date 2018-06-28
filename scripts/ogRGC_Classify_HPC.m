@@ -35,16 +35,15 @@ for eccen = 1:nrEccen
                 
                 P = nan(nrContrasts,1);
                 
-                for c= 1:nrContrats
+                for c= 1:nrContrasts
                     
                     % data array = trials x rows x cols x time points x stimuli
-                    fprintf('Loading and classifying %s\n', fname);
                     [data, fname] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad);
+%                      fprintf('Loading and classifying %s\n', fname);
                     
                     % Get nr of trials (/2 for dividing the two phases)
+                    nStimuli = size(data,3)/expParams.nTrials;
                     nTrials  = size(data,1) * nStimuli/2;
-                    
-                    
                     
                     % Compute fourier transform the cone array outputs
                     if fftFlag; data  = abs(fft2(data)); end
