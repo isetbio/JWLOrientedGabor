@@ -141,7 +141,7 @@ for eccen = expParams.eccentricities
     % CURRENT: Set outer segment to be computed with linear filters
     cMosaic.os = osLinear;
     
-    for defocus = expParams.defocusLevels(1)
+    for defocus = expParams.defocusLevels
         
         % ---- Add optics blur or defocus if requested
         sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
