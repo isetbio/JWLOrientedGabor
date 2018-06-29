@@ -9,16 +9,21 @@ function ogRGC_Classify_HPC(expName, subFolderName_toLoad, subFolderName_toSave)
 expParams = loadExpParams(expName, false);
 
 % Use parfor?
-parforFlag = false;
+% parforFlag = false;
 
 % Compute accuracy for cone current as well
-currentFlag    = false;
+currentFlag    = true;
 
 % Compute accuracy on fft component of cone absorptions
 fftFlag        = true;
 
 % Predefine matrix for predictions
-nrContrasts      = length(expParams.contrastLevels);
+if currentFlag 
+    nrContrasts      = length(expParams.contrastLevelsPC);
+else
+    nrContrasts      = length(expParams.contrastLevels);
+end
+
 nrEyemovTypes    = size(expParams.eyemovement,2);
 nrEccen          = length(expParams.eccentricities);
 nrSpatFreq       = length(expParams.spatFreq);
@@ -35,7 +40,7 @@ for eccen = 1:nrEccen
                 
                 P = nan(nrContrasts,1);
                 
-                for c= 1:nrContrasts
+                for c = 1:nrContrasts
                     
                     % data array = trials x rows x cols x time points x stimuli
                     [data, fname] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad);

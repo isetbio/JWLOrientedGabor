@@ -1,10 +1,15 @@
 function [data, fname] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad)
 
+if currentFlag
+    theseContrasts = expParams.contrastLevelsPC;
+else
+    theseContrasts = expParams.contrastLevels;
+end
 
 % Load dataset
 fname = sprintf(...
     'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
-    expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+    theseContrasts(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
 
 if currentFlag
     fname = ['current_' fname];
