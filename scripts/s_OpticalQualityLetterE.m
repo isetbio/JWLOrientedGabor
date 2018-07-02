@@ -1,48 +1,23 @@
+%% s_OpticalQualityLetterE
 
-%% 1. Create a letter image
-fH = figure(99);
-t = text(0.45, 0.5,'E','FontName','Arial', 'FontUnits', 'centimeters'); axis off;
-s = t.FontSize; 
-t.FontSize = 3;
-im = getframe(fH);
-close(99)
+% Script to illustrate the effect of optical quality on an example stimulus
+% (Letter 'E') for different eccentricities
 
-%% 2. Define OTF parameters
-pupilMM     = 3; % diameter in millimeters
+%% 1. Define OTF parameters
+pupilMM     = 4; % diameter in millimeters
 waveToPlot  = 550; % nm
 eccen       = [0, -2, -5]; % degrees
 
 [centralRefraction, ~, ~, group] = wvfSortSubjectDataJaekenArtal2012;
-whichGroup  = group(2).idxRE(randi(length(group(2).idxRE),1));% 'emmetropes'; % can also be myopes
+whichGroup  = group(2).LE(randi(length(group(2).LE),1));% 'emmetropes'; % can also be myopes
 
-
-
-mm2deg = 1000/(0.3*0.001);
-
-[wdth, hght, cl] = size(im.cdata);
-half_wdth = wdth/2;
-half_hght = hght/2;
-x = (half_wdth-201):(half_wdth+201);
-y = (half_hght-201):(half_hght+201);
-
-
-
-% Convert letter to gray scale and double format, downsample
-centeredLetter = double(rgb2gray(im.cdata(x,y,:)));
-centeredLetterDownsampled = centeredLetter(1:2:end,1:2:end);
-
-figure(1); clf;
-subplot(241);
-imagesc(centeredLetter); colormap gray
-xlabel('Pixels'); ylabel('Pixels'); title(whichGroup)
-set(gca, 'TickDir', 'out'); box off;
-
-idx = 1;
-
+%% Loop over eccentricities to define wavefront and convolve with letter image
 for ec = eccen
     
+    clear wvf;
+    
     % Get wavefront aberrations from Jaeken and Artal 2012 dataset
-    [wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','right', 'eccentricity',ec, 'whichGroup', whichGroup);
+    [wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','left', 'eccentricity',ec, 'whichGroup', whichGroup);
     
     % Compute OTF for given pupil and wavelength
     wvf = wvfSet(wvf,'calc pupil size',pupilMM);
@@ -50,33 +25,84 @@ for ec = eccen
     
     % Get centered PSF
 %     PSF_centered = wvfGet(wvf,'psf centered',550);
-    PSF_centered = wvf.psf{1}([101:end, 1:100],:);
-    x_mm = wvfGet(wvf,'psf spatial samples', 'mm', 550); % in mm
-    x_deg = x_mm.*mm2deg;
+%     PSF_centered = wvf.psf{1}([101:end, 1:100],:);
     
-    % Convolve PSF with letter
-    opticalQuality = conv2(PSF_centered,centeredLetter,'full');
-    
-    
-    ctr = ceil(0.5*size(opticalQuality,1));
-    halfwidth = floor(0.5*length(x_deg));
-    opticalQualityCropped = opticalQuality((ctr-halfwidth):(ctr+halfwidth),(ctr-halfwidth):(ctr+halfwidth),1);
-    
-    subplot(2,4,idx+1)
-    imagesc(x_deg, x_deg, opticalQualityCropped);
-    colormap gray;
-    xlabel('deg'); ylabel('deg'); title(ec)
-    set(gca, 'TickDir', 'out'); box off;
-    
-    subplot(2,4,idx+5);
-    imagesc(x_deg, x_deg,PSF_centered);
-    xlabel('deg'); ylabel('deg');  title(ec)
-    set(gca, 'TickDir', 'out'); box off;
-    
-    
-
-    
-    idx = idx+1;
+    psfFromOI = abs(ifft2((oi.optics.OTF.OTF)));
+    PSF_centered(:,:,ec==eccen) = psfFromOI([101:end, 1:100],[101:end, 1:100]);
     
     
 end
+    
+support_samples = wvfGet(wvf, 'psfangularsamples', 'min', 550);    
+support_minPerSample = wvfGet(wvf, 'psf arcmin per sample', 550);    
+
+
+%% 2. Create a letter image
+
+% To simulate figure 5 from Jaeken & Artal:
+% - Letter has size 30 arc min
+
+% Point spread function 
+psf.pix = length(support_samples); %201
+psf.min = max(support_samples)*2; %33 arc min
+
+minperpix = psf.min /  psf.pix;
+
+E.min       = 100;
+E.fraction  = .33;
+E.pix       = round(E.min / minperpix);
+
+figure(1); clf;set(gcf, 'Color', 'w')
+axis([0 1 0 1]*E.min); axis square;
+t = text( .5*E.min, .5*E.min, 'E');
+t.FontUnits = 'normalized';
+t.FontSize = E.fraction; % .84;
+t.VerticalAlignment = 'middle';
+t.HorizontalAlignment = 'center';
+t.FontName = 'Arial';
+
+axis off
+grid off
+
+E1 = getframe(gca);
+E.im = rgb2gray(E1.cdata);
+E.im = imresize(E.im, E.pix * [1 1]);
+
+axis on
+grid on
+
+E2 = getframe(gca);
+E2.im = rgb2gray(E2.cdata);
+E2.im = imresize(E2.im, E.pix * [1 1]);
+
+
+    
+%% Convolve PSF with letter
+figure(1); clf; hold all
+
+for ecIdx = 1:length(eccen)
+    
+    opticalQuality = conv2(PSF_centered(:,:,ecIdx),E.im,'full');
+
+    ctr = ceil(0.5*size(opticalQuality,1));
+    halfwidth = floor(0.5*length(support_samples));
+    opticalQualityCropped = opticalQuality((ctr-halfwidth):(ctr+halfwidth),(ctr-halfwidth):(ctr+halfwidth),1);
+
+    subplot(241);
+    imagesc(support_samples,support_samples,E.im); colormap gray
+    xlabel('arc min'); ylabel('arc min');
+    set(gca, 'TickDir', 'out'); box off;
+
+    subplot(2,4,ecIdx+1)
+    imagesc(support_samples, support_samples, opticalQualityCropped);
+    colormap gray;
+    xlabel('arc min'); ylabel('arc min'); title(sprintf('Eccentricity: %d',eccen(ecIdx)))
+    set(gca, 'TickDir', 'out'); box off;
+
+    subplot(2,4,ecIdx+5);
+    imagesc(support_samples, support_samples, PSF_centered(:,:,ecIdx));
+    xlabel('arc min'); ylabel('arc min'); title(sprintf('Eccentricity: %d',eccen(ecIdx)))
+    set(gca, 'TickDir', 'out'); box off;
+
+end
+
