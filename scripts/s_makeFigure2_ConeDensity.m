@@ -64,7 +64,7 @@ end
 fn = fieldnames(SEinDeg);
 
 % Set up figure to plot cone densities
-figure(1); clf; set(1,'Color','w', 'Position',[1116, 453, 680, 345]); hold all;
+figure(1); clf; set(1,'Color','w', 'Position',[885, 327, 658, 598]); hold all;
 
 % Loop over polar angles
 for ii = 1:length(ang)
@@ -83,7 +83,7 @@ for ii = 1:length(ang)
     
     % Make axes pretty
     xlabel('Eccentricity (deg)'); ylabel('Density (cones/deg^2)')
-    set(gca,'XScale', 'log', 'YScale', 'log')%,'YLim', 10.^[2, 4], 'XLim', 10.^[ -0.5, 1]);
+    set(gca,'XScale', 'log', 'YScale', 'log','YLim', 10.^[4.9, 6], 'XLim', 10.^[ -0.5, 1]);
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
     grid on; set(gca, 'GridLineStyle','-', 'MinorGridLineStyle', ':')
 end
@@ -94,24 +94,24 @@ legend(angNames, 'Location', 'Best'); legend boxoff;
 
 %% 2. Make inset of cone density plot for 3-7 degrees eccentricities
 
-% Find eccentricities
-idx3Deg = find(eccDeg==3);
-idx7Deg = find(eccDeg==7);
-
-% Set up figure 
-figure(2); clf; set(2,'Color','w', 'Position',[1796, 456, 320, 342]); hold all;
-
-% Loop over polar angles
-for ii = 1:4
-    plot(eccDeg, densityDeg(ii,:), 'Color', cmap(ii,:),  'LineWidth', 2);
-    errorbar(eccDeg, densityDeg(ii,:),SEinDeg.(fn{2+ii}), 'Color', cmap(ii,:),  'LineWidth', 2);
-end
-
-% Make axes pretty
-set(gca,'XScale', 'log', 'YScale', 'log','YLim', 10.^[2.5, 3.5], 'XLim', 10.^[0.4771, 0.8451]);
-xlabel('Eccentricity (deg)'); ylabel('Density (cones/deg^2)')
-set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
-grid on; set(gca, 'GridLineStyle','-', 'MinorGridLineStyle', ':')
+% % Find eccentricities
+% idx3Deg = find(eccDeg==3);
+% idx7Deg = find(eccDeg==7);
+% 
+% % Set up figure 
+% figure(2); clf; set(2,'Color','w', 'Position',[1796, 456, 320, 342]); hold all;
+% 
+% % Loop over polar angles
+% for ii = 1:4
+%     plot(eccDeg, densityDeg(ii,:), 'Color', cmap(ii,:),  'LineWidth', 2);
+%     errorbar(eccDeg, densityDeg(ii,:),SEinDeg.(fn{2+ii}), 'Color', cmap(ii,:),  'LineWidth', 2);
+% end
+% 
+% % Make axes pretty
+% set(gca,'XScale', 'log', 'YScale', 'log','YLim', 10.^[2.5, 3.5], 'XLim', 10.^[0.4771, 0.8451]);
+% xlabel('Eccentricity (deg)'); ylabel('Density (cones/deg^2)')
+% set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
+% grid on; set(gca, 'GridLineStyle','-', 'MinorGridLineStyle', ':')
 
 %% 3. Make correlation plot cone density at 4.5 degrees eccentricity & behavior
 
@@ -136,6 +136,6 @@ errorbar(coneDensMean, behavior, coneDensSE, 'horizontal','LineStyle','none');
 plot(lm, 'Color', [0 0 0], 'Marker', 'o', 'LineWidth',3); legend off;
 
 % Make axes pretty
-ylim([50 100]); xlim([1.1 1.6].*10^3); set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
+ylim([50 100]); xlim([1.2 2.1].*10^5); set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
 xlabel('Cone density (cones/deg^2)'); ylabel('Behavior (% correct)')
 title(sprintf('Adjusted R-squared: %1.2f',lm.Rsquared.Adjusted))
