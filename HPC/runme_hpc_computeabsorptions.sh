@@ -3,7 +3,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time 20:00:00 # time (D-HH:MM)
-#SBATCH --mem=125GB # memory pool for all cores
+#SBATCH --mem=250GB # memory pool for all cores
 #SBATCH --job-name=s_ogRGC
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ek99@nyu.edu
