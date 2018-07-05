@@ -7,7 +7,7 @@
 
 % Load experiment parameters
 expName = 'eccbasedcoverage';
-subFolderName_toSave = '100trials_paddedStim';
+subFolderName_toSave = 'paddedStim';
 subFolderName_toLoad = 'paddedStim';
 expParams = loadExpParams(expName, false);
 
