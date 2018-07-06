@@ -1,4 +1,4 @@
-function [data, fname] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad)
+function [data, fname, sz] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad)
 
 if currentFlag
     theseContrasts = expParams.contrastLevelsPC;
@@ -35,6 +35,8 @@ nTrials  = size(data,1) * nStimuli/2;
 tSamples = size(data,4);
 nrows    = size(data,2);
 ncols    = size(data,3);
+
+sz = [nTrials, nrows, ncols, tSamples, nStimuli];
 % absorptions is trials x rows x cols x time points x stimuli
 
 %   permute to trials x stimuli x rows x cols x time points

@@ -12,16 +12,18 @@ expParams = loadExpParams(expName, false);
 % parforFlag = false;
 
 % Compute accuracy for cone current as well
-currentFlag    = true;
+currentFlag    = false;
 
 % Compute accuracy on fft component of cone absorptions
 fftFlag        = true;
 
 % Predefine matrix for predictions
-if currentFlag 
+if currentFlag
     nrContrasts      = length(expParams.contrastLevelsPC);
+    theseContrasts   = expParams.contrastLevelsPC;
 else
     nrContrasts      = length(expParams.contrastLevels);
+    theseContrasts   = expParams.contrastLevels;
 end
 
 nrEyemovTypes    = size(expParams.eyemovement,2);
@@ -43,12 +45,14 @@ for eccen = 1:nrEccen
                 for c = 1:nrContrasts
                     
                     % data array = trials x rows x cols x time points x stimuli
-                    [data, fname] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad);
-%                      fprintf('Loading and classifying %s\n', fname);
+                    [data, fname, sz] = loadAndPermuteData(expParams, c, em, eccen, df, sf, currentFlag, subFolderName_toLoad);
                     
-                    % Get nr of trials (/2 for dividing the two phases)
-                    nStimuli = size(data,3)/expParams.nTrials;
-                    nTrials  = size(data,1) * nStimuli/2;
+                    % Get size of array: [nTrials, nrows, ncols, tSamples, nStimuli];
+                    nTrials  = sz(1);
+                    nrows    = sz(2);
+                    ncols    = sz(3);
+                    tSamples = sz(4);
+                    nStimuli = sz(5);
                     
                     % Compute fourier transform the cone array outputs
                     if fftFlag; data  = abs(fft2(data)); end
@@ -71,26 +75,30 @@ for eccen = 1:nrEccen
                     classLoss = kfoldLoss(cvmdl);
                     
                     P(c) = (1-classLoss) * 100;
+%                     
+%                     % visualize beta's
+%                     betas(em, :,:,:) = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
+%                     mn_betas = squeeze(mean(betas(em,:,:,:),4));
+%                     subplot(length(eyemovement),1,em); imagesc(mn_betas);
+% 
+%                     title(sprintf('Condition %s - FFT at input freq: %1.3f x10^6', eyemovement{em}, mn_betas(8,3)*10^6));
+%                     set(gca,'CLim', 4*10^-5*[-1 1]);
+%                     
+%                     
                     
-                    % visualize beta's
-                    %                     betas(em, :,:,:) = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
-                    %                     mn_betas = squeeze(mean(betas(em,:,:,:),4));
-                    %                     subplot(length(eyemovement),1,em); imagesc(mn_betas);
-                    %
-                    %                     title(sprintf('Condition %s - FFT at input freq: %1.3f x10^6', eyemovement{em}, mn_betas(8,3)*10^6));
-                    %                     set(gca,'CLim', 4*10^-5*[-1 1]);
+                    
+                    % Save classifier accuracy
+                    fname = sprintf(...
+                        'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
+                        theseContrasts(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                    if currentFlag; fname = ['current_' fname]; end
+                    parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                     
                     
+                    disp(P);
+                    
+                    clear data cvmdl
                 end
-                
-                disp(P);
-                
-                % Save classifier accuracy
-                fname = sprintf(...
-                    'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
-                    expParams.contrastLevels(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
-                if currentFlag; fname = ['current_' fname]; end
-                parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                 
                 
                 % Visualize
