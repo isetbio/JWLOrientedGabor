@@ -5,7 +5,7 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'defocus';
+expName                  = 'eccbasedcoverage';
 expParams                = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
@@ -59,12 +59,12 @@ for em = 1:nrEyemovTypes
             
             %% 2. Load results
             
-            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE0.mat', ...
+            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
                 max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
             if currentFlag; fName = ['current_' fName]; end;
             
-             if subFolderName == 'average'
-                 fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE0.mat', ...
+             if strcmp(subFolderName,'average')
+                 fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
                      max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
                  SE{count} = load(fullfile(dataPth, fNameSE));
              end
@@ -142,7 +142,7 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
     set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
     xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
-    set(gca, 'XTick',[2, 3, 4],'XTickLabel',[100 1000 10000], 'XLim', [1.99 5],'YLim', [0 0.04]),
+    set(gca, 'XTick',[4, 5, 6, 7],'XTickLabel',[10e4, 10e5, 10e6, 10e7], 'XLim', [4.5 7],'YLim', [0 0.04]),
     legend off; title('Contrast threshold versus Cone density')
     
     if saveFig
@@ -154,21 +154,21 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     b_intcpt = lm.Coefficients.Estimate(1);
     a_coeff  = lm.Coefficients.Estimate(2);
     
-    cThreshold = @(x) (a_coeff*x) + b_intcpt;
-    diopters = @(y) (y-b_intcpt)./a_coeff;
-    reportedBehavior = [b_intcpt; b_intcpt+0.015]; % contrast thresholds reported in behavior, corresponding to horizontal versus upper vertical meridian
-    modelPredictionForPF = diopters(reportedBehavior);
+    cThreshold = @(x) (a_coeff* log10(x)) + b_intcpt;
+    density = @(y) 10.^((y-b_intcpt)./a_coeff);
+    reportedBehavior = [0.02+0.015, 0.02]; % contrast thresholds reported in behavior, corresponding to horizontal versus upper vertical meridian
+    modelPredictionForPF = density(reportedBehavior);
     
-    totalVariance.dioptersPredictedByModel = diff(modelPredictionForPF);
-    totalVariance.dioptersReportedInLiterature = 4.1111e+04; % From Song's paper
-    totalVariance.contributionOfDefocusPercent = (totalVariance.dioptersReportedInLiterature / totalVariance.dioptersPredictedByModel) * 100;
+    totalVariance.densityPredictedByModel = diff(modelPredictionForPF);
+    totalVariance.densityReportedInLiterature =  diff([1.4222*1.0e+05, 1.8667*1.0e+05]); % From Song's paper
+    totalVariance.contributionOfDensityPercent = (totalVariance.densityReportedInLiterature / totalVariance.densityPredictedByModel) * 100;
     
     figure(10); clf; set(gcf, 'Color', 'w', 'Position', [300, 982, 289, 363])
-    bar([0.2 0.3], [totalVariance.dioptersPredictedByModel, totalVariance.dioptersReportedInLiterature], 'barWidth', 0.3, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'k');
+    bar([0.2 0.3], [totalVariance.densityPredictedByModel, totalVariance.densityReportedInLiterature], 'barWidth', 0.3, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'k');
     set(gca, 'TickDir', 'out', 'XTick', [0.2,0.3], 'XTickLabel', {'Model prediction for PF', 'Max reported difference literature'}, 'XTickLabelRotation', 45, 'FontSize', 9);
-    ylim([0 max(totalVariance.dioptersPredictedByModel)+ 0.1*totalVariance.dioptersPredictedByModel]); 
+    ylim([0 (max(totalVariance.densityPredictedByModel) + 0.1*totalVariance.densityPredictedByModel)]); 
     xlim([0.15 0.37]); box off;
-    ylabel('Defocus (Diopters)')
+    ylabel('Density (cones/deg^2)')
     
     fprintf('Total contribution of cone density according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDefocusPercent)
     
