@@ -5,7 +5,7 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'eccbasedcoverage';
+expName                  = 'eyemov';
 expParams                = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
@@ -16,7 +16,7 @@ FFTflag     = true;
 saveFig     = true;
 
 % Where to find data and save figures
-subFolderName = 'average';
+subFolderName = 'paddedStim9';
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName,subFolderName);
 figurePth   = fullfile(ogRootPath,'figs', expName, [subFolderName]);
 
@@ -58,12 +58,16 @@ for em = 1:nrEyemovTypes
             
             
             %% 2. Load results
-            
-            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
+                 
+            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
                 max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
             if currentFlag; fName = ['current_' fName]; end;
             
-             if strcmp(subFolderName,'average')
+            if strcmp(subFolderName,'average')
+                fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
+                    max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
+                    if currentFlag; fName = ['current_' fName]; end;
+                
                  fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
                      max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
                  SE{count} = load(fullfile(dataPth, fNameSE));
@@ -170,7 +174,7 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     xlim([0.15 0.37]); box off;
     ylabel('Density (cones/deg^2)')
     
-    fprintf('Total contribution of cone density according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDefocusPercent)
+    fprintf('Total contribution of cone density according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDensityPercent)
     
      if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
