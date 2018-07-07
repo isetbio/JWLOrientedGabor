@@ -16,7 +16,7 @@ FFTflag     = true;
 saveFig     = true;
 
 % Where to find data and save figures
-subFolderName = 'paddedStim9';
+subFolderName = 'average';
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName,subFolderName);
 figurePth   = fullfile(ogRootPath,'figs', expName, [subFolderName]);
 
@@ -147,7 +147,7 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
     xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
     set(gca, 'XTick',[4, 5, 6, 7],'XTickLabel',[10e4, 10e5, 10e6, 10e7], 'XLim', [4.5 7],'YLim', [0 0.04]),
-    legend off; title('Contrast threshold versus Cone density')
+    legend off; title(sprintf('Contrast threshold vs level of cone density - R2: %1.2f', lm.Rsquared.ordinary))
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
