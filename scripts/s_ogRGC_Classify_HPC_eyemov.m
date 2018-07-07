@@ -7,8 +7,8 @@
 
 % Load experiment parameters
 expName = 'eyemov';
-subFolderName_toSave = '100trials';
-subFolderName_toLoad = '';
+subFolderName_toSave = 'paddedStim8';
+subFolderName_toLoad = 'paddedStim8';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well

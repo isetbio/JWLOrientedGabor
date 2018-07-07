@@ -7,8 +7,8 @@
 
 % Load experiment parameters
 expName = 'defocus';
-subFolderName_toSave = '100trials_paddedStim';
-subFolderName_toLoad = 'paddedStim';
+subFolderName_toSave = 'paddedStim2';
+subFolderName_toLoad = 'paddedStim2';
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
