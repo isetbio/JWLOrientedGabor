@@ -101,7 +101,7 @@ switch lower(expName)
             cMosaic.setSizeToFOV(cparams.cmFOV);
             allDensity(ec==expParams.eccentricities,:) = eccen2density(cMosaic, 'deg');
             
-            labels{ec==expParams.eccentricities} = sprintf('%1.2f x10^4 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^4);
+            labels{ec==expParams.eccentricities} = sprintf('%1.2f x10^6 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^6);
         end
         
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
