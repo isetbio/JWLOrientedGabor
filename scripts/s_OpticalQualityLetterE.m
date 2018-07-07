@@ -16,6 +16,10 @@ verticalDF   = wvfDefocusDioptersToMicrons([0.03, NaN, 0.01],4);
 % zCoefs = wvfLoadThibosVirtualEyes(pupilMM);
 % wave = 550;
 
+zcoefs(1,:)  = [-0.2848, -5.3751, -0.7814, 0.1268, -0.0754, -0.0644, -0.0474, 0.1217, 0.0306, -0.0475, 0.0109, -0.0185, 0.0688, -0.0024, 0.0235];
+zcoefs(2,:) = [-0.4365, -5.4364, -0.8595, 0.0814, -0.1639, -0.1605, -0.0502, 0.1213, 0.0444, -0.0485, 0.0118, -0.0131, 0.0683, -0.0062, 0.0190];
+zcoefs(3,:) = [-0.5445, -5.5653, -1.0369, 0.0779, -0.2309, -0.2028, -0.0532, 0.1199, 0.0491, -0.0454, 0.0131, -0.0132, 0.0635, -0.0072, 0.0192];
+
 
 %% Loop over eccentricities to define wavefront and convolve with letter image
 for ec = eccen
@@ -34,10 +38,12 @@ for ec = eccen
     wvf = wvfSet(wvf,'calc wave',waveToPlot);
     
     if ec ~= 0
-        wvf =  wvfSet(wvf,'zcoeffs', verticalDF(ec==eccen), {'defocus'});
+        zcoefs(ec==eccen, 5) = verticalDF(ec==eccen);
+        wvf =  wvfSet(wvf,'zcoeffs', zcoefs(ec==eccen,:), 0:14);
         %
         %     % compute the PSF
         wvf = wvfComputePSF(wvf);
+        wvf.psf{1} = wvfGet(wvf,'psf centered',550);
         otf = wvfGet(wvf,'otf');
     else
         otf = oi.optics.OTF.OTF;
