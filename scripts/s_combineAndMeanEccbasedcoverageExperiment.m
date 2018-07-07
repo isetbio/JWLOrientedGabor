@@ -20,13 +20,10 @@ nTotal      = 100;
 nrEccen    = length(expParams.eccentricities);
 
 
-
-
-% First combine fovea
-    
+% First combine fovea    
 d = dir(fullfile(dataPth, 'paddedStim*'));
 
-for ii = 2:size(d,1)
+for ii = 3;%2:size(d,1)
     
     P =[];
     for c = expParams.contrastLevels
@@ -44,7 +41,9 @@ for ii = 2:size(d,1)
 
     save(fullfile(d(ii).folder, d(ii).name, fName), 'P')
 end
-             
+
+
+% Then combine all trials
 for ec = 1:nrEccen
         
         fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
