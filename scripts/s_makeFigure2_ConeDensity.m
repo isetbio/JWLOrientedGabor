@@ -83,13 +83,14 @@ for ii = 1:length(ang)
     
     % Make axes pretty
     xlabel('Eccentricity (deg)'); ylabel('Density (cones/deg^2)')
-    set(gca,'XScale', 'log', 'YScale', 'log','YLim', 10.^[4.9, 6], 'XLim', 10.^[ -0.5, 1]);
+    set(gca,'XScale', 'log', 'YScale', 'log','YLim', 10.^[4.7, 6], 'XLim', 10.^[-0.3, 1]);
     set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
-    grid on; set(gca, 'GridLineStyle','-', 'MinorGridLineStyle', ':')
+    grid on; set(gca, 'GridLineStyle','-', 'MinorGridLineStyle', ':');
 end
 
 % Add legend
 legend(angNames, 'Location', 'Best'); legend boxoff;
+axis square
 
 
 %% 2. Make inset of cone density plot for 3-7 degrees eccentricities
@@ -117,25 +118,51 @@ legend(angNames, 'Location', 'Best'); legend boxoff;
 
 idx = find(eccDeg==4.5);
 
-behavior = [85, 69, 87, 65]; % percent correct for Nasal, Superior, Temporal, Inferior polar coords
+% behavior = [85, 69, 87, 65]; % percent correct for Nasal, Superior, Temporal, Inferior polar coords
+behaviorJT = [2.3, 4.1, 2.5, 3.5];
+behaviorJH = [4.2, 4.2, 4.0, 4.3];
+behaviorLC = [3.8, 4.8, 3.8, 4.5];
+
+meanBehavior4CPD = mean([behaviorJT;behaviorJH;behaviorLC],1);
+seBehavior4CPD  = std([behaviorJT;behaviorJH;behaviorLC],[],1)/sqrt(4);
+
+
+nasalConeDensity = densityDeg(1,idx);
+temporalConeDensity = densityDeg(3,idx);
+densityDeg([1,3],idx) = mean([nasalConeDensity,temporalConeDensity]);
+
 coneDensMean  = densityDeg(:,idx);
-coneDensSE(1) = SEinDeg.nasalMatched(idx);
+coneDensSE(1) = mean([SEinDeg.nasalMatched(idx); SEinDeg.temporalMatched(idx)]);
 coneDensSE(2) = SEinDeg.superiorMatched(idx);
-coneDensSE(3) = SEinDeg.temporalMatched(idx);
+coneDensSE(3) = mean([SEinDeg.nasalMatched(idx); SEinDeg.temporalMatched(idx)]);
 coneDensSE(4) = SEinDeg.inferiorMatched(idx);
 
 % Fit linear model
-lm = fitlm(coneDensMean,behavior);
+lm = fitlm(coneDensMean,meanBehavior4CPD);
 
 % Set up figure
 figure(3); clf; set(3,'Color','w', 'Position',[276, 330, 658, 598]);
 
 % Plot data and line
-scatter(coneDensMean, behavior, 'k'); hold on;
-errorbar(coneDensMean, behavior, coneDensSE, 'horizontal','LineStyle','none');
-plot(lm, 'Color', [0 0 0], 'Marker', 'o', 'LineWidth',3); legend off;
+scatter(coneDensMean, meanBehavior4CPD, [], cmap); hold on;
+eb = [];
+for ii = 1:4
+    eb = errorbar(coneDensMean(ii), meanBehavior4CPD(ii), coneDensSE(ii),'horizontal','LineStyle',':', 'Color', cmap(ii,:));
+    eb.Bar.LineStyle = 'dashed';
+    eb.Bar.LineWidth = 2;
+    
+    eb = errorbar(coneDensMean(ii), meanBehavior4CPD(ii), seBehavior4CPD(ii),'vertical','LineStyle',':', 'Color', cmap(ii,:));
+    eb.Bar.LineStyle = 'dashed';
+    eb.Bar.LineWidth = 2;
+end
+
+y = (lm.Coefficients.Estimate(2)*coneDensMean) + lm.Coefficients.Estimate(1);
+plot(coneDensMean,y, 'Color', [0 0 0], 'LineWidth',2); legend off;
+
+
 
 % Make axes pretty
-ylim([50 100]); xlim([1.2 2.1].*10^5); set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
-xlabel('Cone density (cones/deg^2)'); ylabel('Behavior (% correct)')
+ylim([2.5 5]); xlim([1.2 2.1].*10^5); set(gca, 'FontSize', 16, 'TickDir', 'out', 'TickLength', [0.015 0.015], 'box', 'off');
+xlabel('Cone density (cones/deg^2)'); ylabel('Threshold (% contrast)')
 title(sprintf('Adjusted R-squared: %1.2f',lm.Rsquared.Adjusted))
+axis square
