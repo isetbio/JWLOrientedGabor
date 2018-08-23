@@ -10,7 +10,7 @@ eccen       = 0; % degrees
 whichGroup  = 'emmetropes'; % can also be myopes
 
 % Get wavefront aberrations from Jaeken and Artal 2012 dataset 
-[wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','left', 'eccentricity',eccen, 'whichGroup', whichGroup);
+[wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','left', 'eccentricity',[eccen,0], 'whichGroup', whichGroup);
 
 % Compute OTF for given pupil and wavelength
 wvf = wvfSet(wvf,'calc pupil size',pupilMM);
@@ -28,12 +28,12 @@ for ii = 1:length(defocusLevels)
     
     % Load Thibos modeled zernike coefficients
     zCoefs = wvfLoadThibosVirtualEyes(pupilMM);
-    
+
     % Create wavefront
     wvfP = wvfCreate('wave',550,'zcoeffs',zCoefs,'name', sprintf('Thibos human-%d',pupilMM));
     wvfP = wvfSet(wvfP,'calc pupil size',pupilMM);
     wvfP = wvfSet(wvfP,'calc wave',waveToPlot);
-    wvfP = wvfSet(wvfP,'zcoeffs',ii,{'defocus'});
+    wvfP = wvfSet(wvfP,'zcoeffs',defocusLevels(ii),{'defocus'});
     
     % Compute PSF in order to get OTF
     wvfP = wvfComputePSF(wvfP);
@@ -46,7 +46,7 @@ eccentricities = -8:0; % degrees, negative numbers correspond to temporal retina
 for eccen = 1:length(eccentricities)
     
     % Get wavefront aberrations from Jaeken and Artal 2012 dataset 
-    [wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','left', 'eccentricity',eccentricities(eccen), 'whichGroup', whichGroup);
+    [wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','left', 'eccentricity',[eccentricities(eccen),0], 'whichGroup', whichGroup);
 
     % Compute OTF for given pupil and wavelength
     wvf = wvfSet(wvf,'calc pupil size',pupilMM);
