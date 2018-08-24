@@ -7,7 +7,7 @@
 %% Set parameters
 
 % Save figures?
-saveFigs = true;
+saveFigs = false;
 
 % Wavelength to plot
 wv = 550;
@@ -37,8 +37,10 @@ varySatValues = 1-linspace(0.1,1,5);
 trialColors = varysat(cmap,varySatValues);
 contrastColors = [0 0 0; 241 101 33]./255;
 
+figPath = fullfile(ogRootPath, 'figs', 'overviewFigure4');
+
 %% Plot the cone mosaic separate because of the different colormap
-load(fullfile(ogRootPath, 'figs','cMosaicPlotted'))
+load(fullfile(figPath,'cMosaicPlotted'))
 
 % Get size
 m2deg = 10/3;
@@ -83,7 +85,7 @@ for c = 1:length(contrasts)
     
     % Load data
     for ii = 1:length(fNames)
-        load(fullfile(ogRootPath, 'figs', [fNames{ii} sprintf('_%d.mat',contrasts(c))]));
+        load(fullfile(figPath, [fNames{ii} sprintf('_%d.mat',contrasts(c))]));
     end
         
     %% 1. RADIANCE
@@ -116,7 +118,7 @@ for c = 1:length(contrasts)
         
     if saveFigs
         if c==2
-            print(fullfile(ogRootPath, 'figs', 'Fig2_radiance_2d'),'-depsc')
+            print(fullfile(figPath, 'Fig2_radiance_2d'),'-depsc')
         end
     end
    
@@ -173,7 +175,7 @@ for c = 1:length(contrasts)
     
     if saveFigs
         if c==2
-            print(fullfile(ogRootPath, 'figs', 'Fig2_irradiance_2d'),'-depsc')
+            print(fullfile(figPath, 'Fig2_irradiance_2d'),'-depsc')
         end
     end
    
@@ -219,7 +221,7 @@ for c = 1:length(contrasts)
     
     if saveFigs
         if c ==2
-            print(fullfile(ogRootPath, 'figs', 'Fig2_absorptions_2d'),'-depsc')
+            print(fullfile(figPath, 'Fig2_absorptions_2d'),'-depsc')
         end
     end
     
@@ -259,7 +261,7 @@ for c = 1:length(contrasts)
     
     if saveFigs
         if c ==2
-            print(fullfile(ogRootPath, 'figs', 'Fig2_current_2d'),'-depsc')
+            print(fullfile(figPath, 'Fig2_current_2d'),'-depsc')
         end
     end
     %% 5. PLOT INDIVIDUAL CONE TIMESERIES
@@ -496,7 +498,7 @@ figure(8); clf; set(gcf, 'Color', 'w', 'Position', [974, 790, 735, 241]);
 for c = [1,2]
     
     % Load beta's
-    load(fullfile(ogRootPath, 'figs', sprintf('fftBetas_%d.mat',contrasts(c))));
+    load(fullfile(figPath, sprintf('fftBetas_%d.mat',contrasts(c))));
     
     % Apply FFTshift, take average over time samples
     mn_betas = fftshift(squeeze(mean(betas,3)));
@@ -510,12 +512,12 @@ for c = [1,2]
 end
 
 if saveFigs
-    print(fullfile(ogRootPath, 'figs', 'Fig2_classifierweights'),'-deps2')
+    print(fullfile(figPath, 'Fig2_classifierweights'),'-deps2')
 end
 
 
 %% Load accuracy for 0-10% contrasts
-accuracy = load(fullfile(ogRootPath, 'figs', 'classification_accuracy_10.mat'));
+accuracy = load(fullfile(figPath, 'classification_accuracy_10.mat'));
 
 % Set inital slope, threshold for first stage fitting
 fit.init   = [2, 0.02]; % slope, threshold at ~80%
@@ -548,7 +550,7 @@ xlabel('Stimulus Contrast (%)', 'FontSize',17);
 
 
 if saveFigs
-    print(fullfile(ogRootPath, 'figs', 'Fig2_weibull'),'-deps2')
+    print(fullfile(figPath, 'Fig2_weibull'),'-deps2')
 end
 
 
