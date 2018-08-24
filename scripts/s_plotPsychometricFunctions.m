@@ -5,7 +5,7 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'eyemov';
+expName                  = 'defocus';
 expParams                = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
@@ -179,7 +179,7 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
      if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
         savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
+        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d.eps',expName,FFTflag, currentFlag)))
     end
     
 elseif strcmp(expName,'defocus')
@@ -196,7 +196,7 @@ elseif strcmp(expName,'defocus')
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
         savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d.eps',expName,FFTflag, currentFlag)))
     end
     
     b_intcpt = lm.Coefficients.Estimate(1);
@@ -222,7 +222,7 @@ elseif strcmp(expName,'defocus')
      if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
         savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
+        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d.eps',expName,FFTflag, currentFlag)))
     end
     
 end
