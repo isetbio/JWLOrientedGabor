@@ -28,7 +28,7 @@ for em = 1:nrEyemovTypes
     d = dir(fullfile(dataPth, 'paddedStim*'));
     
     P =[];
-    for ii = 1:5; %size(d,1)
+    for ii = size(d,1) %[2,4,10:12] %
         
         accuracy = load(fullfile(d(ii).folder, d(ii).name, fName));
         accuracy.P = squeeze(accuracy.P);
@@ -44,15 +44,15 @@ for em = 1:nrEyemovTypes
     P_SE = std(P,[],2)./sqrt(size(P,2));
     
     P = mean(P,2);
-    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE0.mat', ...
+    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
         max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq);
     
-    fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE0.mat', ...
+    fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
         max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq);
     
     
     if ~exist(fullfile(dataPth, 'average'),'dir'), mkdir(fullfile(dataPth, 'average')); end;
-    save(fullfile(dataPth, 'average',fName),'P');
-    save(fullfile(dataPth, 'average',fNameSE),'P_SE');
+    save(fullfile(dataPth, 'average', fName),'P');
+    save(fullfile(dataPth, 'average', fNameSE),'P_SE');
     
 end
