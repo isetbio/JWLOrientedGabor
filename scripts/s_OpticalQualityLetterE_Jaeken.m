@@ -7,7 +7,7 @@ waveToPlot  = 550; % nm
 eccen       = [-5 0 5]; % degrees
 
 [centralRefraction, ~, ~, group] = wvfSortSubjectDataJaekenArtal2012;
-whichGroup  = 38;%group(2).RE(randi(length(group(2).RE),1));% 'emmetropes'; % can also be myopes
+whichGroup  = group(2).RE(randi(length(group(2).RE),1));% 'emmetropes'; % can also be myopes
 
  meridian = 'horz';
 
@@ -49,8 +49,8 @@ for ec = eccen
     clear wvf;
     
     % Get wavefront aberrations from Jaeken and Artal 2012 dataset
-    [wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','right', 'eccentricity',[ec 0], 'whichGroup', whichGroup, 'relativeRefraction', true, 'verbose', false);
-    
+    [wvf, oi] = wvfLoadWavefrontOpticsData('jIndex', 0:14, 'whichEye','right', 'eccentricity',[ec 0], 'whichGroup', whichGroup, 'relativeRefraction', true, 'verbose', true);
+    close all;
     %     wvf = wvfCreate('wave',wave,'zcoeffs',zCoefs,'name',sprintf('human-%d',pupilMM));
     %     wvf = wvfSet(wvf,'calc pupil size',pupilMM);
     %     wvf = wvfComputePSF(wvf);
@@ -68,8 +68,8 @@ for ec = eccen
 % 
 %         % Recompute the PSF
 %         wvf = wvfComputePSF(wvf);
-%         wvf.psf{1} = wvfGet(wvf,'psf centered',550);
-        PSF_centered(:,:,ec==eccen) =  wvf.psf{1};
+        wvf.psf{1} = wvfGet(wvf,'psf centered',550);
+        PSF_toPlot(:,:,ec==eccen) =  wvf.psf{1};
 % 
 %         % Recompute the OTF
 %         %	otf = wvfGet(wvf,'otf');
@@ -77,7 +77,7 @@ for ec = eccen
 % %     else % If horizontal: We already got the OTF from wvfLoadWavefrontOpticsData function
 %         otf = oi.optics.OTF.OTF;
 %         psfFromOI = abs(ifft2((otf))); %abs(ifft2((oi.optics.OTF.OTF)));
-%         PSF_centered(:,:,ec==eccen) = psfFromOI([101:end, 1:100],[101:end, 1:100]);    
+%         PSF_toPlot(:,:,ec==eccen) = psfFromOI([101:end, 1:100],[101:end, 1:100]);    
 %     end
     
 
@@ -94,7 +94,7 @@ support_minPerSample = wvfGet(wvf, 'psf arcmin per sample', 550);
 
 % Point spread function
 psf.pix = length(support_samples); %201
-psf.min = max(support_samples)*2; %33 arc min
+psf.min = max(support_samples)*2; %23 arc min
 
 
 E.min       = 50;
@@ -121,7 +121,7 @@ E.support = linspace(-E.min/2, E.min/2, E.pix);
 
 % axis on
 % grid on
-% 
+
 % E2 = getframe(gca);
 % E2.im = rgb2gray(E2.cdata);
 % E2.im = imresize(E2.im, E.pix * [1 1]);
@@ -131,7 +131,7 @@ close(1)
 %% Convolve PSF with letter
 figure(2); clf; hold all
 for ecIdx = 1:length(eccen)
-    opticalQuality = conv2(double(E.im),double(PSF_centered(:,:,ecIdx)),'same');
+    opticalQuality = conv2(double(E.im),double(PSF_toPlot(:,:,ecIdx)),'same');
     
     subplot(241);
     imagesc(E.support, E.support, E.im); colormap gray
@@ -148,7 +148,7 @@ for ecIdx = 1:length(eccen)
     axis([-1 1 -1 1]*E.min/2);
     
     subplot(2,4,ecIdx+5);
-    imagesc(support_samples, support_samples, PSF_centered(:,:,ecIdx));
+    imagesc(support_samples, support_samples, PSF_toPlot(:,:,ecIdx));
     xlabel('arc min'); ylabel('arc min'); title(sprintf('Eccentricity: %d at %s',eccen(ecIdx), meridian))
     set(gca, 'TickDir', 'out'); box off;
     axis equal
@@ -157,4 +157,4 @@ for ecIdx = 1:length(eccen)
     
     
 end
-
+    

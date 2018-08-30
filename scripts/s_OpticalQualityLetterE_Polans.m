@@ -30,7 +30,7 @@ for ec = 1:numel(locations)
     clear wvf oi;
     
     % Get wavefront aberrations from Jaeken and Artal 2012 dataset
-    [wvf] = wvfLoadWavefrontOpticsData('wvfZcoefsSource', 'Polans2015', 'jIndex', 3:14, 'whichEye', 'right', 'eccentricity', locations{ec}, 'whichGroup', subject, 'relativeRefraction', true, 'verbose', false);
+    [wvf] = wvfLoadWavefrontOpticsData('wvfZcoefsSource', 'Polans2015', 'jIndex', 3:14, 'whichEye', 'right', 'eccentricity', locations{ec}, 'whichGroup', subject, 'relativeRefraction', true, 'verbose', true);
     
     fprintf('Subject %d, Z4: %1.2f (D)\n', subject, wvfDefocusMicronsToDiopters(wvf.zcoeffs(5),4))
    
@@ -41,7 +41,8 @@ for ec = 1:numel(locations)
     % Compute OTF for given pupil and wavelength
     wvf = wvfSet(wvf,'calc pupil size',pupilMM);
     wvf = wvfSet(wvf,'calc wave',waveToPlot);
-
+    
+    wvf.psf{1} = wvfGet(wvf,'psf centered',550);
     PSF_toPlot(:,:,ec) =  wvf.psf{1};
 
 end
@@ -56,7 +57,7 @@ support_minPerSample = wvfGet(wvf, 'psf arcmin per sample', 550);
 
 % Point spread function
 psf.pix = length(support_samples); %201
-psf.min = max(support_samples)*2; %33 arc min
+psf.min = max(support_samples)*2; %23 arc min
 
 % Define image size of letter E with the same samples
 E.min       = 50;
@@ -136,8 +137,8 @@ for ecIdx = 1:numel(locations)
     
 end
 
-pth = '/Volumes/GoogleDrive/My Drive/prep_PF_ISETBIO/figures/Fig3_Introduction_OpticalQuality/Polans_subjects/';
-hgexport(fH2, fullfile(pth, sprintf('letterE_subject%d.eps',subject)))
-pth = '/Volumes/GoogleDrive/My Drive/prep_PF_ISETBIO/figures/Fig3_Introduction_OpticalQuality/Polans_subjects/';
-hgexport(fH3, fullfile(pth, sprintf('psf_subject%d.eps',subject)))
+% pth = '/Volumes/GoogleDrive/My Drive/prep_PF_ISETBIO/figures/Fig3_Introduction_OpticalQuality/Polans_subjects/';
+% hgexport(fH2, fullfile(pth, sprintf('letterE_subject%d.eps',subject)))
+% pth = '/Volumes/GoogleDrive/My Drive/prep_PF_ISETBIO/figures/Fig3_Introduction_OpticalQuality/Polans_subjects/';
+% hgexport(fH3, fullfile(pth, sprintf('psf_subject%d.eps',subject)))
 end
