@@ -43,6 +43,13 @@ fprintf('Midget RGC ratio horizontal/vertical using Watson (2014) equation 8:\n'
 disp((mRFDensitySqDegVisual(1)+mRFDensitySqDegVisual(3)) / ...
     (mRFDensitySqDegVisual(2)+mRFDensitySqDegVisual(4)) )
 
+fprintf('Midget RGC density horizontal and inferior retina:\n')
+disp(mean([mRFDensitySqDegVisual(1),mRFDensitySqDegVisual(3)]))
+disp(mRFDensitySqDegVisual(4))
+fprintf('Midget RGC density ratio horizontal / inferior retina:\n')
+disp(mean([mRFDensitySqDegVisual(1),mRFDensitySqDegVisual(3)]) / mRFDensitySqDegVisual(4))
+
+
 
 
 return
