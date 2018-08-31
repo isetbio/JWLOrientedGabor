@@ -15,7 +15,7 @@ if currentFlag
     fname = ['current_' fname];
 end
 
-pth = fullfile(ogRootPath, 'data', expParams.name, subFolderName_toLoad, fname);
+pth = fullfile(ogRootPath, 'data', 'PF_data_alias', expParams.name, subFolderName_toLoad, fname);
 if ~exist(pth, 'file'), error('The file %s is not found', fname); end
 
 tmp = load(pth);
