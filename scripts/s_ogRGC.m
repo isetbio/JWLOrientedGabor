@@ -71,8 +71,8 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'defocus';
-subFolderName = 'paddedStim2';
+expName = 'eyemov';
+subFolderName = 'paddedStim14_zion';
 expParams = loadExpParams(expName, false);
 
 % Temporal properties of one trial
@@ -107,7 +107,7 @@ OG = ogStimuli(sparams);
 tSamples         = OG(1).length;
 
 % Set if we want to compute cone current from cone absorptions
-currentFlag = true;
+currentFlag = false;
 
 %% Loop over conditions, generating cone absorptions for each condition
 
