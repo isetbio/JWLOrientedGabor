@@ -1,4 +1,4 @@
-%% s_numbersOnMerodionalDifferences
+%% s_numbersOnMeridonialDifferences
 
 % Script to calculate the differences between cardinal meridians for cone
 % density and midget retinal ganglion cell density
