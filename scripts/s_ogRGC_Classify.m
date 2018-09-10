@@ -6,9 +6,9 @@
 %% Classify
 
 % Load experiment parameters
-expName = 'eccbasedcoverage';
-subFolderName_toLoad = 'paddedStim';
-subFolderName_toSave = '100trials'; 
+expName = 'eyemov';
+subFolderName_toLoad = 'paddedStim12_zion';
+subFolderName_toSave = 'paddedStim12_zion'; 
 expParams = loadExpParams(expName, false);
 
 % Compute accuracy for cone current as well
@@ -60,6 +60,7 @@ for eccen = 1:nrEccen
                         data = getfield(tmp,'current');
                     else
                         data = getfield(tmp,'absorptions');
+                        data = data(:,:,:,1:28,:); % truncate time samples (only include stimulus on period)
                     end
                     
                     
