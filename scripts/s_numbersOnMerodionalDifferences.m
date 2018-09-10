@@ -53,7 +53,7 @@ disp(mean([mRFDensitySqDegVisual(1),mRFDensitySqDegVisual(3)]) / mRFDensitySqDeg
 
 
 return
-%% OBSOLETE (using Dacey data)
+%% OBSOLETE Getting RGC data (using Dacey data)
 
 load(fullfile(isetbioDataPath,'rgc','midgetData.mat'))
 
@@ -89,3 +89,40 @@ set(gca,'fontsize',14);
 
 legend('Data','Fit','Binned Average');
 axis([0 18 0 450]);
+
+
+
+
+%% OBSOLETE Getting RGC data (using isetbio mosaics)
+
+imSize = 128; lineSpacing = 48; fov = 2; % deg
+scene = sceneCreate('grid lines',imSize,lineSpacing);
+scene = sceneSet(scene,'fov',fov);
+oi = oiCreate;    % Standard human optics
+oi = oiCompute(oi,scene);
+
+nMovements = 25;
+cMosaic = coneMosaic('center', [0 0.0015]);
+cMosaic.setSizeToFOV(2);
+cMosaic.emGenSequence(nMovements);
+cMosaic.compute(oi, 'currentFlag', true);
+
+bpL = bipolarLayer(cMosaic);
+bpMosaicParams.spread  = 2;  % RF diameter w.r.t. input samples
+bpMosaicParams.stride  = 2;  % RF diameter w.r.t. input samples
+bpL.mosaic{1} = bipolarMosaic(cMosaic,'on midget',bpMosaicParams);
+bpL.mosaic{1}.compute;
+
+clear rgcL rgcParams
+
+% Create RGC layer from bipolar layer
+rgcL = rgcLayer(bpL);
+
+% Spread and stride are not working
+rgcParams.rfDiameter = 2;
+
+% rgcL.mosaic{ii} = rgcGLM(rgcL, bpL.mosaic{1},'on midget');
+rgcL.mosaic{1} = rgcGLM(rgcL, bpL.mosaic{1},'on midget',rgcParams);
+rgcL.compute;
+
+rgcL.window;
