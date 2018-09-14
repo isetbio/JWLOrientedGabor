@@ -78,7 +78,7 @@ switch lower(expName)
         
         % Change x labels to density
         whichEye          = 'left';
-        cparams.cmFOV     =  1; % degrees
+        cparams.cmFOV     =  2; % degrees
         
         % Convertion deg to m
         deg2m  = 0.3 * 0.001; % .3 deg per mm, .001 mm per meter
