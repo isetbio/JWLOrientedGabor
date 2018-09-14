@@ -72,8 +72,15 @@
 
 % Load experiment parameters
 expName = 'eyemov';
-subFolderName = 'paddedStim14_zion';
+subFolderName = 'test';
 expParams = loadExpParams(expName, false);
+
+% Set if we want to compute cone current from cone absorptions
+currentFlag = false;
+
+% Set fixed seed
+fixedSeed = 1; % could be any integer or 'default'
+rng(fixedSeed);
 
 % Temporal properties of one trial
 tStep             = 0.002;                % Time step for optical image sequence (seconds)
@@ -106,9 +113,6 @@ OG = ogStimuli(sparams);
 % matches the number of time points in the optical image sequence
 tSamples         = OG(1).length;
 
-% Set if we want to compute cone current from cone absorptions
-currentFlag = false;
-
 %% Loop over conditions, generating cone absorptions for each condition
 
 % Eccentricity loop
@@ -136,7 +140,7 @@ for eccen = expParams.eccentricities
     cMosaic.setSizeToFOV(cparams.cmFOV);
     
     % Add photon noise
-    cMosaic.noiseFlag = 'random'; % 'random' 'frozen' 'none'
+    cMosaic.noiseFlag = 'frozen'; % 'random' 'frozen' 'none'
     
     % CURRENT: Set outer segment to be computed with linear filters
     cMosaic.os = osLinear;
@@ -169,9 +173,9 @@ for eccen = expParams.eccentricities
             
             % Check what eyemovements to simulate: 
             if all(expParams.eyemovement(:,emIdx) == [1;0])      % if only drift, no MS
-                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none');
+                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', fixedSeed);
             elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
-                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based');
+                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', fixedSeed);
             elseif all(expParams.eyemovement(:,emIdx) == [0;0]) % if none
                 emPaths = zeros(expParams.nTrials, maxEyeMovementsNum*2, 2);
             end
@@ -229,7 +233,7 @@ for eccen = expParams.eccentricities
                                 'emPaths', emPaths);
                         else
                             absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
-                                'emPaths', emPaths);
+                                'emPaths', emPaths, 'seed', fixedSeed);
                         end
                     end
                     

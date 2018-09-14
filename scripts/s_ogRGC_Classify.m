@@ -5,11 +5,15 @@
 
 %% Classify
 
+% Fix seed
+rng(1)
+
 % Load experiment parameters
 expName = 'eyemov';
-subFolderName_toLoad = 'paddedStim12_zion';
-subFolderName_toSave = 'paddedStim12_zion'; 
+subFolderName_toLoad = 'test';
+subFolderName_toSave = 'test'; 
 expParams = loadExpParams(expName, false);
+noiseFlag = 'frozen'; % photon noise properties, saved in file name, could also be 'none' or 'random'
 
 % Compute accuracy for cone current as well
 currentFlag    = false;
@@ -44,8 +48,8 @@ for eccen = 1:nrEccen
                     
                     % Load dataset
                     fname = sprintf(...
-                        'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat',...
-                        expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                        'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
+                        expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), noiseFlag, sf);
                     
                     if currentFlag
                         fname = ['current_' fname];
@@ -98,7 +102,7 @@ for eccen = 1:nrEccen
                     
                     % Fit the SVM model.
                     cvmdl = fitcsvm(data, label, 'Standardize', true, 'KernelFunction', 'linear', 'kFold', 10);
-                    
+
                     %             cvmdl = crossval(mdl);
                     
                     % predict the data not in the training set.
