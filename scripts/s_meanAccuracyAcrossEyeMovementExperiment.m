@@ -10,7 +10,7 @@ polarAngles = expParams.polarAngle;
 FFTflag     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
+dataPth     = fullfile(ogRootPath,'data','classification',expName);
 figurePth   = fullfile(ogRootPath,'figs', expName, 'average');
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
@@ -28,7 +28,7 @@ for em = 1:nrEyemovTypes
     d = dir(fullfile(dataPth, 'paddedStim*'));
     
     P =[];
-    for ii = size(d,1) %[2,4,10:12] %
+    for ii = 1:size(d,1)
         
         accuracy = load(fullfile(d(ii).folder, d(ii).name, fName));
         accuracy.P = squeeze(accuracy.P);
@@ -40,7 +40,7 @@ for em = 1:nrEyemovTypes
         
     end
     
-%     figure; hold all; for ii = 1:8; plot(expParams.contrastLevels,P(:,ii)); end
+    figure; hold all; for ii = 1:size(P,2); plot(expParams.contrastLevels,P(:,ii)); end
     P_SE = std(P,[],2)./sqrt(size(P,2));
     
     P = mean(P,2);
