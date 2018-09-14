@@ -30,9 +30,8 @@ if strcmp(unit,'mm')
 end
 
 if strcmp(unit,'deg')
-    densityMM = sqrt(density*10.^-6);
-    densityDeg = densityMM*(1/.3);
-    densityDeg2 = densityDeg.^2;
+    densityMM2 = density*10.^-6;
+    densityDeg2 = densityMM2/((1/.3).^2);
     density = densityDeg2;
 end
 
