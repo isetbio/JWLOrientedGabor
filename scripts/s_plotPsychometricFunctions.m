@@ -5,7 +5,7 @@
 % observer model
 
 %% 0. Set general experiment parameters
-expName                  = 'defocus';
+expName                  = 'eccbasedcoverage';
 expParams                = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
@@ -145,8 +145,9 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
     set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
-    xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast sensitivity threshold','FontSize',25)
-    set(gca, 'XTick',[4, 5, 6, 7],'XTickLabel',[10e4, 10e5, 10e6, 10e7], 'XLim', [4.5 7],'YLim', [0 0.04]),
+    xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast threshold (%)','FontSize',25)
+    set(gca, 'XTick',[ 3 4 5],'XTickLabel',round([10e3, 10e4, 10e5]), 'XLim', [2 5],'YLim', [0 0.04]),
+    set(gca, 'YTick',[ 0 .01 .02 .03 .04],'YTickLabel',[0 1 2 3 4]),
     legend off; title(sprintf('Contrast threshold vs level of cone density - R2: %1.2f', lm.Rsquared.ordinary))
     
     if saveFig
@@ -155,24 +156,34 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
         hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d',expName,FFTflag,currentFlag)))
     end
     
+    % Get intercept and slope of log-linear fit
     b_intcpt = lm.Coefficients.Estimate(1);
     a_coeff  = lm.Coefficients.Estimate(2);
     
+    % Reconstruct log-linear function
     cThreshold = @(x) (a_coeff* log10(x)) + b_intcpt;
-    density = @(y) 10.^((y-b_intcpt)./a_coeff);
-    reportedBehavior = [0.02+0.015, 0.02]; % contrast thresholds reported in behavior, corresponding to horizontal versus upper vertical meridian
-    modelPredictionForPF = density(reportedBehavior);
+    predictedDensity = @(y) 10.^((y-b_intcpt)./a_coeff);
+    
+    % contrast thresholds reported in behavior, corresponding to horizontal versus upper vertical meridian
+    reportedBehavior = [0.02+0.015, 0.02]; % (thresholds in % contrast)
+    modelPredictionForPF = predictedDensity(reportedBehavior);
+    
+    ang = [0, 90, 180, 270]; % polar angles: nasal (HM), superior (LVM), temporal (HM), inferior (UVM) (radians)
+    for jj = 1:length(ang) 
+        densityMM2 = coneDensityReadData('coneDensitySource', 'Song2011Young','eccentricity',4.5,'angle',ang(jj),'eccentricityUnits', 'deg','whichEye','left');
+        densityDeg2(jj) = densityMM2/((1/.3)^2);
+    end
     
     totalVariance.densityPredictedByModel = diff(modelPredictionForPF);
-    totalVariance.densityReportedInLiterature =  diff([1.4222*1.0e+05, 1.8667*1.0e+05]); % From Song's paper
+    totalVariance.densityReportedInLiterature =  diff([densityDeg2(4), mean(densityDeg2([1 3]))]); % From Song's paper
     totalVariance.contributionOfDensityPercent = (totalVariance.densityReportedInLiterature / totalVariance.densityPredictedByModel) * 100;
     
-    figure(10); clf; set(gcf, 'Color', 'w', 'Position', [300, 982, 289, 363])
-    bar([0.2 0.3], [totalVariance.densityPredictedByModel, totalVariance.densityReportedInLiterature], 'barWidth', 0.3, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'k');
-    set(gca, 'TickDir', 'out', 'XTick', [0.2,0.3], 'XTickLabel', {'Model prediction for PF', 'Max reported difference literature'}, 'XTickLabelRotation', 45, 'FontSize', 9);
-    ylim([0 (max(totalVariance.densityPredictedByModel) + 0.1*totalVariance.densityPredictedByModel)]); 
-    xlim([0.15 0.37]); box off;
-    ylabel('Density (cones/deg^2)')
+%     figure(10); clf; set(gcf, 'Color', 'w', 'Position', [300, 982, 289, 363])
+%     bar([0.2 0.3], [totalVariance.densityPredictedByModel, totalVariance.densityReportedInLiterature], 'barWidth', 0.3, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'k');
+%     set(gca, 'TickDir', 'out', 'XTick', [0.2,0.3], 'XTickLabel', {'Model prediction for PF', 'Max reported difference literature'}, 'XTickLabelRotation', 45, 'FontSize', 9);
+%     ylim([0 (max(totalVariance.densityPredictedByModel) + 0.1*totalVariance.densityPredictedByModel)]); 
+%     xlim([0.15 0.37]); box off;
+%     ylabel('Density (cones/deg^2)')
     
     fprintf('Total contribution of cone density according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDensityPercent)
     
