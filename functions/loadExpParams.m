@@ -35,6 +35,15 @@ expParams.verbose  = true;             % Print out images for debugging, or not
 
 switch lower(expName)
 
+    case 'twocontrasts'  
+        expParams.contrastLevels    = [0 0.02]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevelsPC  = []; % Stimulus contrast levels (Michelson)
+        expParams.eyemovement       = [0 0]';         % Type of eye movements: tremor, drift or ms?
+        expParams.eccentricities    = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq          = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle        = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels     = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+
     case 'default'  
         expParams.contrastLevels = [0:0.005:0.04, 0.05:0.01:0.1]; % Stimulus contrast levels (Michelson)
         expParams.contrastLevelsPC = [0:0.005:0.04, 0.05:0.01:.1, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)

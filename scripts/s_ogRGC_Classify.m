@@ -9,7 +9,7 @@
 rng(1)
 
 % Load experiment parameters
-expName = 'eyemov';
+expName = 'twocontrasts'; % 'eyemov';
 subFolderName_toLoad = 'test';
 subFolderName_toSave = 'test'; 
 expParams = loadExpParams(expName, false);
