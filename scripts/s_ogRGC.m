@@ -72,7 +72,7 @@
 
 % Load experiment parameters
 expName = 'eyemov';
-subFolderName = 'test';
+subFolderName = 'frozenSeed_diffEyemov';
 expParams = loadExpParams(expName, false);
 
 % Set if we want to compute cone current from cone absorptions
@@ -166,35 +166,6 @@ for eccen = expParams.eccentricities
         cMosaic.integrationTime = 0.002; %OG(1).timeStep;
         
         for emIdx = 1:size(expParams.eyemovement,2)
-            if expParams.verbose; fprintf('Defining eyemovements as %s (=drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
-            
-            % Calculate number of eyemovements based on cone mosaic integration time
-            maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integrationTime);
-            
-            % Check what eyemovements to simulate: 
-            if all(expParams.eyemovement(:,emIdx) == [1;0])      % if only drift, no MS
-                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', fixedSeed);
-            elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
-                emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', fixedSeed);
-            elseif all(expParams.eyemovement(:,emIdx) == [0;0]) % if none
-                emPaths = zeros(expParams.nTrials, maxEyeMovementsNum*2, 2);
-            end
-            
-            % Truncate warm up period
-            emPaths = emPaths(:, end-maxEyeMovementsNum+1:end,:);
-            
-            % Add emPaths (which are in terms of cones shifted) to cMosaic struct
-            cMosaic.emPositions = emPaths; 
-            
-            if expParams.verbose
-                %plot eye movements
-                figure,
-                subplot(211)
-                plot(sparams.tsamples, emPaths(:,:,1)')
-                
-                subplot(212)
-                plot(sparams.tsamples, emPaths(:,:,2)')
-            end
             
             % Loop over contrasts and defocus
             if currentFlag
@@ -228,12 +199,44 @@ for eccen = expParams.eccentricities
                     current     = absorptions;
                     
                     for s = 1:length(OG)
+                        
+
+                    if expParams.verbose; fprintf('Defining eyemovements as %s (=drift, ms)..\n', mat2str(expParams.eyemovement(:,emIdx))); end
+
+                        % Calculate number of eyemovements based on cone mosaic integration time
+                        maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integrationTime);
+
+                        % Check what eyemovements to simulate: 
+                        if all(expParams.eyemovement(:,emIdx) == [1;0])      % if only drift, no MS
+                            emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', fixedSeed+s);
+                        elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
+                            emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*2, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', fixedSeed+s);
+                        elseif all(expParams.eyemovement(:,emIdx) == [0;0]) % if none
+                            emPaths = zeros(expParams.nTrials, maxEyeMovementsNum*2, 2);
+                        end
+
+                        % Truncate warm up period
+                        emPaths = emPaths(:, end-maxEyeMovementsNum+1:end,:);
+
+                        % Add emPaths (which are in terms of cones shifted) to cMosaic struct
+                        cMosaic.emPositions = emPaths; 
+
+                        if expParams.verbose
+                            %plot eye movements
+                            figure,
+                            subplot(211)
+                            plot(sparams.tsamples, emPaths(:,:,1)')
+
+                            subplot(212)
+                            plot(sparams.tsamples, emPaths(:,:,2)')
+                        end
+
                         if currentFlag
                             [absorptions(:,:,:,:,s), current(:,:,:,:,s), interpFilters, meanCur] = cMosaic.compute(OG(s), 'currentFlag', currentFlag, ...
-                                'emPaths', emPaths);
+                                'emPaths', emPaths, 'seed', fixedSeed+s);
                         else
                             absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
-                                'emPaths', emPaths, 'seed', fixedSeed);
+                                'emPaths', emPaths, 'seed', fixedSeed+s);
                         end
                     end
                     
