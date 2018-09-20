@@ -5,13 +5,13 @@
 
 %% Classify
 
-% Fix seed
-rng(1)
+% reset rng seed
+rng;
 
 % Load experiment parameters
 expName = 'eyemov';
-subFolderName_toLoad = 'test';
-subFolderName_toSave = 'test'; 
+subFolderName_toLoad = 'frozenSeed_diffEyemov';
+subFolderName_toSave = 'frozenSeed_diffEyemov'; 
 expParams = loadExpParams(expName, false);
 noiseFlag = 'frozen'; % photon noise properties, saved in file name, could also be 'none' or 'random'
 
@@ -94,7 +94,7 @@ for eccen = 1:nrEccen
                     data = reshape(data, nTrials*2, []);
                     
                     % permute the trial order within each of the two classes
-                    idx = [randperm(nTrials) randperm(nTrials)+nTrials];
+                    idx = [randperm(nTrials) randperm(nTrials)+nTrials];                   
                     
                     data = data(idx, :);
                     
@@ -102,8 +102,7 @@ for eccen = 1:nrEccen
                     
                     % Fit the SVM model.
                     cvmdl = fitcsvm(data, label, 'Standardize', true, 'KernelFunction', 'linear', 'kFold', 10);
-
-                    %             cvmdl = crossval(mdl);
+%                    
                     
                     % predict the data not in the training set.
                     classLoss = kfoldLoss(cvmdl);
