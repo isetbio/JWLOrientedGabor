@@ -10,8 +10,9 @@ polarAngles = expParams.polarAngle;
 FFTflag     = true;
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','classification',expName);
-figurePth   = fullfile(ogRootPath,'figs', expName, 'average');
+dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, 'Sep2018','HPC');
+savePth     = fullfile(dataPth, 'average_frozen');
+figurePth   = fullfile(ogRootPath,'figs', expName, 'average_frozen');
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = 100;%expParams.nTrials*4;
@@ -19,40 +20,61 @@ nTotal      = 100;%expParams.nTrials*4;
 % Get nr of conditions
 nrEyemovTypes    = size(expParams.eyemovement,2);
 
+cmap = copper(nrEyemovTypes);
 
+figure(3); clf;  hold all; 
+xlabel('Contrast (%)'); ylabel('Accuracy (% correct)'); title('HPC classifier performance (using frozen seed)')
+set(gca, 'TickDir', 'out', 'FontSize', 15, 'XScale','log', 'LineWidth',2); box off; 
 for em = 1:nrEyemovTypes
-    
-    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
+    fNamePre   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
         max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq);    
     
-    d = dir(fullfile(dataPth, 'paddedStim*'));
+    d = dir(fullfile(dataPth, 'frozen_s*'));
     
     P =[];
     for ii = 1:size(d,1)
+        fprintf('Load file name: %s\n', d(ii).name); 
         
-        accuracy = load(fullfile(d(ii).folder, d(ii).name, fName));
+        accuracy = load(fullfile(d(ii).folder, d(ii).name, fNamePre));
         accuracy.P = squeeze(accuracy.P);
         if size(accuracy.P,1)<size(accuracy.P,2)
             accuracy.P = accuracy.P';
         end
         
         P = [P accuracy.P];
-        
+%         fprintf('Accuracy is: %d \t',P)
     end
     
-    figure; hold all; for ii = 1:size(P,2); plot(expParams.contrastLevels,P(:,ii)); end
+    for plotIdx = 1:size(P,2)
+        plot(expParams.contrastLevels(2:end),P(2:end,plotIdx), 'LineWidth',1,'Color', cmap(em,:)'); 
+        plot(10.^(-2.5),P(1,plotIdx), 'o', 'LineWidth',1,'Color', cmap(em,:)'); 
+    end
+    
     P_SE = std(P,[],2)./sqrt(size(P,2));
     
     P = mean(P,2);
-    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
+    fNamePostMean   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
         max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq);
     
-    fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
+    fNamePostSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
         max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq);
     
+    % plot mean in thick line
+    plot(expParams.contrastLevels(2:end), P(2:end), 'LineWidth', 4, 'Color', cmap(em,:)'); 
+    plot(10.^(-2.5), P(1), 'o', 'LineWidth', 4, 'Color', cmap(em,:)'); 
     
-    if ~exist(fullfile(dataPth, 'average'),'dir'), mkdir(fullfile(dataPth, 'average')); end;
-    save(fullfile(dataPth, 'average', fName),'P');
-    save(fullfile(dataPth, 'average', fNameSE),'P_SE');
+    if ~exist(savePth,'dir'), mkdir(savePth); end
+    save(fullfile(dataPth, 'average', fNamePostMean),'P');
+    save(fullfile(dataPth, 'average', fNamePostSE),'P_SE');
     
 end
+
+h = findobj(gca,'Type','line', '-and',{'LineWidth',4});
+legend([h(6), h(4), h(2)],labels, 'Location', 'Best')
+% 
+% legendMatrix = strings(8,3);
+% legendMatrix(1,1) = labels{1};
+% legendMatrix(1,2) = labels{2};
+% legendMatrix(1,3) = labels{3};
+% 
+% legend(cellstr(legendMatrix(:)))
