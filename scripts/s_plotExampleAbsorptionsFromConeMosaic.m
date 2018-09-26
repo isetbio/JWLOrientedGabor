@@ -76,7 +76,7 @@ for eccen = eccentricities
         
 
         subplot(1,3, find(eccen==eccentricities)); hold all;
-        imagesc(squeeze(absorptions(1,:,:,1)));
+        imagesc(squeeze(absorptions(1,:,:,1))./2);
         colormap gray; axis image; axis off; colorbar;
         title(sprintf('Cone density %d', eccen2density(cMosaic, 'deg')) ,'Fontsize',12)
 
