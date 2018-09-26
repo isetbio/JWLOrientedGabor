@@ -4,4 +4,8 @@ s_makeFigure2_ConeDensity
 s_makeFigure3_OpticalQualityLetter
 s_makeFigure4_CorrelationBehaviorAndConeDensity
 s_makeFigure5_ModelOverview
+s_makeFigure6_EffectOfEyemovements
+s_makeFigure7_EffectOfOptics
+s_makeFigure8_EffectOfConeDensity
+
 
