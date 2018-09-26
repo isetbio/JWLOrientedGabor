@@ -8,7 +8,7 @@
 
 
 %% Visualize different cone mosaics (Figure 8A)
-
+s_plotExampleAbsorptionsFromConeMosaic
 
 
 %% Plot effect of cone density on psychometric function (Figure 8B)
