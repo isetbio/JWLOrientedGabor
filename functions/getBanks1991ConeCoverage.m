@@ -30,6 +30,7 @@ p.KeepUnmatched = true;
 % Required and added
 p.addRequired('eccentricity',@isvector);
 p.addParameter('eccentricityUnits','deg',@ischar);
+p.addParameter('verbose',false,@islogical);
 
 % Parse
 p.parse(eccentricity, varargin{:});
@@ -65,10 +66,12 @@ coverage = f.a*exp(f.b*allEccentricities) + f.c*exp(f.d*allEccentricities);
 coverage(1) = 1; % reset fovea to 1.
 
 % Plot for debugging
-figure(1); clf,
-plot(allEccentricities, coverage, 'o-'); set(gca, 'YScale', 'log', ...
-    'XScale', 'linear', 'XLim', [0 50], 'YLim', [0.01 1]);
-hold all; scatter(banksEccen, banksData, 80','k');
+if p.Results.verbose
+    figure(1); clf,
+    plot(allEccentricities, coverage, 'o-'); set(gca, 'YScale', 'log', ...
+        'XScale', 'linear', 'XLim', [0 50], 'YLim', [0.01 1]);
+    hold all; scatter(banksEccen, banksData, 80','k');
+end
 
 idx = (eccDeg == allEccentricities);
 if any(idx)
