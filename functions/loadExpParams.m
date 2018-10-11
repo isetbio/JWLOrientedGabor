@@ -135,4 +135,11 @@ if saveParams
     save(fullfile(ogRootPath, 'Stimulus', sprintf('ogDefault_%s.mat',expName)),'expParams')
 end
 
+% Get toolbox versions used
+out = ver;
+
+if saveParams
+    save(fullfile(ogRootPath, 'toolboxVersions.mat'),'out')
+end
+
 return

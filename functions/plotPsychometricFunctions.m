@@ -1,24 +1,26 @@
-%% s_makePsychometricFunctions
+function [] = plotPsychometricFunctions(expName, saveFig)
 
 
-% Script to compute psychometric functions based on the computational
-% observer model
+% Function to compute psychometric functions based on the computational
+% observer model.
+
+% INPUTS:
+% expName       : string defining the condition you want to plot.
+%                   (See load expParams for possible conditions)
+% saveFig       : boolean defining to save figures or not
+
+
 
 %% 0. Set general experiment parameters
-expName                  = 'eccbasedcoverage';
-expParams                = loadExpParams(expName, false);
-[xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
-% Use cone current (flag = true) or cone absorptions (flag = false)
-currentFlag = false;
-polarAngles = expParams.polarAngle;
-FFTflag     = true;
-saveFig     = true;
+% Load specific experiment parameters
+expParams                   = loadExpParams(expName, false);
+[xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
 % Where to find data and save figures
 subFolderName = 'average';
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName,subFolderName);
-figurePth   = fullfile(ogRootPath,'figs', expName, [subFolderName]);
+dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName,'toPlot', subFolderName);
+figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials;
@@ -59,17 +61,15 @@ for em = 1:nrEyemovTypes
             
             %% 2. Load results
                  
-            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
-                max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
-            if currentFlag; fName = ['current_' fName]; end;
-            
+            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
+                max(expParams.contrastLevels),sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
+           
             if strcmp(subFolderName,'average')
-                fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
-                    max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
-                    if currentFlag; fName = ['current_' fName]; end;
+                fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
+                    max(expParams.contrastLevels),sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
                 
-                 fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
-                     max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
+                 fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
+                     max(expParams.contrastLevels),sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
                  SE{count} = load(fullfile(dataPth, fNameSE));
              end
             
@@ -104,7 +104,7 @@ end
 
 %% 4. Visualize psychometric curves
 
-figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488]); hold all;
+figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488], 'NumberTitle', 'off', 'Name', sprintf('Psychometric function condition: %s', expName)); hold all;
 
 idx = ~cellfun(@isempty, fit.ctrpred);
 fit.ctrpred = fit.ctrpred(idx);
@@ -132,8 +132,8 @@ legend([h(end:-2:2)],labels, 'Location','bestoutside'); legend boxoff
 
 if saveFig
     if ~exist(figurePth,'dir'); mkdir(figurePth); end
-    savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fftFlag%d_%s_currentFlag%d',FFTflag,expName, currentFlag)))
-    hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_fftFlag%d_%s_currentFlag%d.eps',FFTflag,expName, currentFlag)))
+    savefig(fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_%s',expName)))
+    hgexport(gcf,fullfile(figurePth,sprintf('WeibullFit_contrastVSperformance_%s.eps',expName)))
 end
 
 %% Plot density thresholds
@@ -152,8 +152,8 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d',expName,FFTflag,currentFlag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d',expName,FFTflag,currentFlag)))
+        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
     end
     
     % Get intercept and slope of log-linear fit
@@ -189,8 +189,8 @@ if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
     
      if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d.eps',expName,FFTflag, currentFlag)))
+        savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s',expName)))
+        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s.eps',expName)))
     end
     
 elseif strcmp(expName,'defocus')
@@ -206,8 +206,8 @@ elseif strcmp(expName,'defocus')
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s_fftFlag%d_currentFlag%d.eps',expName,FFTflag, currentFlag)))
+        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s.eps',expName)))
     end
     
     b_intcpt = lm.Coefficients.Estimate(1);
@@ -232,8 +232,8 @@ elseif strcmp(expName,'defocus')
     
      if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d',expName,FFTflag, currentFlag)))
-        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s_fftFlag%d_currentFlag%d.eps',expName,FFTflag, currentFlag)))
+        savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s',expName)))
+        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s.eps',expName)))
     end
     
 end

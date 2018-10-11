@@ -10,9 +10,10 @@ polarAngles = expParams.polarAngle;
 FFTflag     = true;
 
 % Where to find data and save figures
+subFolderName = 'average_frozen';
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, 'Sep2018','HPC');
-savePth     = fullfile(dataPth, 'average_frozen');
-figurePth   = fullfile(ogRootPath,'figs', expName, 'average_frozen');
+savePth     = fullfile(dataPth, subFolderName);
+figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = 100;%expParams.nTrials*4;
@@ -64,8 +65,8 @@ for em = 1:nrEyemovTypes
     plot(10.^(-2.5), P(1), 'o', 'LineWidth', 4, 'Color', cmap(em,:)'); 
     
     if ~exist(savePth,'dir'), mkdir(savePth); end
-    save(fullfile(dataPth, 'average', fNamePostMean),'P');
-    save(fullfile(dataPth, 'average', fNamePostSE),'P_SE');
+    save(fullfile(dataPth, subFolderName, fNamePostMean),'P');
+    save(fullfile(dataPth, subFolderName, fNamePostSE),'P_SE');
     
 end
 

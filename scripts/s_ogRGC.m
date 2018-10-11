@@ -72,7 +72,7 @@
 
 % Load experiment parameters
 expName = 'eyemov';
-subFolderName = 'frozenSeed_diffEyemov';
+subFolderName = 'frozen_s1';
 expParams = loadExpParams(expName, false);
 
 % Set if we want to compute cone current from cone absorptions
@@ -223,7 +223,7 @@ for eccen = expParams.eccentricities
 
                         if expParams.verbose
                             %plot eye movements
-                            figure,
+                            figure(1);clf;
                             subplot(211)
                             plot(sparams.tsamples, emPaths(:,:,1)')
 

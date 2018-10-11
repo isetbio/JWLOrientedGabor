@@ -1,103 +1,89 @@
+%% s_VisualizeEyemovements.m
 
-cMosaic     = coneMosaic('center', [0.0015  0]);
-cMosaic.integrationTime = 0.002;
-cMosaic.setSizeToFOV(2);
+% Script to visualize eye movement paths and relative size compared to one
+% cycle of a 1D Gabor stimulus.
+
+%% 0. Define parameters
+
+% Unit converter
+deg2m   = 0.3 * 0.001;          % (we first choose 3 deg per mm, .001 mm per meter, but now adjusted to the default in isetbio)
+
+% What eye to make the cone mosaic of
+whichEye = 'left';
+    
+% Specify retinal location where stimulus is presented
+cparams.eccentricity      = 4.5;             % Visual angle of stimulus center, in deg
+cparams.polarAngle        = 90; % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+
+% Cone mosaic field of view in degrees
+cparams.cmFOV        = 2; % degrees
+
+
+%% 1. Make cone mosaic for a given eccentricity and polar angle
+
+% Compute x,y position in m of center of retinal patch from ecc and angle
+[x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
+x = x * deg2m;  y = y * deg2m;
+
+% Create coneMosaic for particular location and eye
+cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye); % cMosaic     = coneMosaic('center', [0.0015  0]);
+
+% Set the field of view (degrees)
+cMosaic.setSizeToFOV(cparams.cmFOV);
+
+
+
+%% 2. Create one cycle of 1D Gabor stimulus
+
+% Get cone mosaic size
 rows = cMosaic.rows;
+
+% Define how many cones one cycle is
 oneCycle = rows / 12;
 
-x= (1:500)/500;
-H = sin(x*2*pi*12);
-G = exp(-(x-mean(x)).^2 / (2* (0.25).^2));
-stim = G .* H;
+% Define the Gabor stimulus
+x = (1:500)/500;    % Space sampling
+H = sin(x*2*pi*12); % Harmonic
+G = exp(-(x-mean(x)).^2 / (2* (0.25).^2)); % Gaussian window
+stim = G .* H;      % Gabor stimulus = Gaussian .* harmonic
 
+% Define y axis limits
+yl = oneCycle*[-0.5 0.5];
 
-n = 109;
+%% 3. Create a time vector
+
+% Set the number of time steps and sampling rate
+n = 28;
+cMosaic.integrationTime = 0.002;
+
+% Get time vector
 t = (0:n-1)*cMosaic.integrationTime;
 
-em = emCreate;
+% Define x axis limits
+xl      = [min(t), max(t)];
 
 
-m =50;
-yl = oneCycle*[-0.5 0.5];
-xl = [min(t) max(t)];
+%% 4. Create eye movement paths with tremor + drift
 
-% figure(3);
-% imagesc(xl, .5*[-rows rows], stim'); colormap gray; hold on; axis square; axis off;
-% print('~/Desktop/eyemovement_panelA','-depsc')
+% Genereate eyemovements
+[emPaths, fixobj]     = cMosaic.emGenSequence(109*2, 'nTrials', 5, 'microsaccadeType', 'stats based', 'rSeed',6);
 
-% 
-% yl = 2*oneCycle*[-.5 .5];
-% xl = [min(t) max(t)];
+% Truncate paths to match stimulus duration (54 ms)
+emPaths = emPaths(:,110:137,:); 
 
-% figure(6); imagesc(xl, .5*[-rows rows], stim'); axis([xl yl]); colormap gray; hold on; axis off;
+%% 5. Plot Figure 6A
 
-% print('~/Desktop/eyemovement_panelB','-depsc')
-
-% % Drift
-% em.emFlag   = [0 1 0];
-% emPaths     = cMosaic.emGenSequence(n*2, 'nTrials', m,'em', em);
-% emPaths     = emPaths(:,n+1:end,:);
-% subplot(3,2,1)
-% imagesc(xl, .5*[-rows rows], stim'); colormap gray; hold on;
-% plot(t,emPaths(:,:,1)', 'LineWidth',2);title('Drift in X pos', 'FontSize',16); axis([xl yl]);
-% set(gca, 'FontSize',16);
-% xlabel('Time (s)', 'FontSize',16); ylabel('Cones', 'FontSize',16); box off;
-% 
-% subplot(3,2,2)
-% imagesc(xl, .5*[-rows rows], stim'); colormap gray; hold on;
-% plot(t,emPaths(:,:,2)', 'LineWidth',2); title('Drift in Y pos', 'FontSize',16); axis([xl yl])
-% set(gca, 'FontSize',16);
-% xlabel('Time (s)', 'FontSize',16); ylabel('Cones', 'FontSize',16); box off;
-
-% % Tremor
-% % em.emFlag   = [1 0 0];
-% emPaths     = cMosaic.emGenSequence(n*2, 'nTrials', m);
-% emPaths     = emPaths(:,n+1:end,:);
-% subplot(3,2,3)
-% imagesc(xl, .5*[-rows rows], stim'); colormap gray; hold on;
-% plot(t,emPaths(:,:,1)', 'LineWidth',2); title('Tremor in X pos', 'FontSize',16); axis([xl yl])
-% set(gca, 'FontSize',16);
-% xlabel('Time (s)', 'FontSize',16); ylabel('Cones', 'FontSize',16); box off;
-% 
-% subplot(3,2,4)
-% imagesc(xl, .5*[-rows rows], stim'); colormap gray; hold on;
-% plot(t,emPaths(:,:,2)', 'LineWidth',2);title('Tremor in Y pos', 'FontSize',16); axis([xl yl])
-% set(gca, 'FontSize',16);
-% xlabel('Time (s)', 'FontSize',16); ylabel('Cones', 'FontSize',16); box off;
-
-
-%%
-% Tremor + Drift
-figure(4); clf
-em.emFlag   = [1 1];
-[emPaths, fixobj]     = cMosaic.emGenSequence(109*2, 'nTrials', 5, 'em', fixationalEM,'microsaccadeType', 'stats based');
-emPaths     = emPaths(:,110:end,:);
+figure(1); clf; set(gcf, 'NumberTitle', 'Off', 'Name', 'Figure 6A - Effect of Eye movements');
 subplot(121)
 imagesc(xl, .5*[-rows rows], stim'); colormap gray; hold on; axis([xl yl]);
-plot(t, emPaths(:,:,1)', 'LineWidth',2); title('MS + Drift in X pos', 'FontSize',16); axis([xl yl])
-set(gca, 'FontSize',16);
-xlabel('Time (s)', 'FontSize',16); ylabel('Cones', 'FontSize',16); box off;
+plot(t, emPaths(:,:,1)', 'LineWidth',4); title('MS + Drift in X pos', 'FontSize',16); axis([xl yl])
+set(gca, 'FontSize',16, 'TickDir', 'out');
+xlabel('Time (s)', 'FontSize',16); ylabel('Position (Cones)', 'FontSize',16); box off;
+axis square
 
 subplot(122)
 imagesc(xl, .5*[-rows rows], stim'); colormap gray; hold on;
-plot(t, emPaths(:,:,2)', 'LineWidth',2); title('MS + Drift in Y pos', 'FontSize',16); axis([xl yl]);
-set(gca, 'FontSize',16);
-xlabel('Time (s)', 'FontSize',16); ylabel('Cones', 'FontSize',16); box off;
-
-% print('~/Desktop/eyemovement_panelC','-depsc')
-
-figure(5); clf;
-% for ii = 1:50;  clf;
-plot(squeeze(emPaths(5,:,1)), squeeze(emPaths(5,:,2))', 'LineWidth',2);  
-
-xlim([-6 6]); ylim([-6 6]);
-set(gca, 'FontSize',16, 'XGrid', 'on', 'YGrid', 'on');
-xlabel('X Position (cones)', 'FontSize',16); ylabel('Y Position (cones)', 'FontSize',16); box off; axis square;
-
-%  title(ii); waitforbuttonpress;
-% end
-
-title('Drift + MS in XY pos', 'FontSize',16);
-
-% print('~/Desktop/eyemovement_panelD','-depsc')
-
+plot(t, emPaths(:,:,2)', 'LineWidth',4); title('MS + Drift in Y pos', 'FontSize',16); axis([xl yl]);
+set(gca, 'FontSize',16, 'TickDir', 'out');
+xlabel('Time (s)', 'FontSize',16); ylabel('Position (Cones)', 'FontSize',16); box off;
+axis square
