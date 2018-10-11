@@ -1,5 +1,5 @@
 function runComputationalObserverModel(expName, saveFolder)
-%% runComputationalObserverModel(expName, saveFolder, seed)
+%% runComputationalObserverModel(expName, saveFolder, [seed], 1, [currentFlag], 'false')
 
 % ---------------------- Description ----------------------
 
@@ -71,8 +71,14 @@ if expParams.verbose; fprintf('(%s): Creating scene.\n', mfilename); end
 tSamples         = OG(1).length;
 
 % Loop over conditions, generating cone absorptions for each condition
+% 1. Eccentricity (hack to get different cone densities)
+% 2. Optics
+% 3. Eye movements
+% 4. Contrasts
+% 5. Spatial frequencies
+% 6. OIS (Oriented Gabors) when computing absorptions
 
-for eccen = expParams.eccentricities
+for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density) levels
     
     %% ------------------- MOSAIC -------------------
     if expParams.verbose; fprintf('(%s): Creating mosaic.\n',mfilename); end
@@ -90,31 +96,21 @@ for eccen = expParams.eccentricities
         cMosaic.pigment.pdHeight = cMosaic.pigment.height*propCovered; % meters
     end
     
-    for defocus = expParams.defocusLevels
+    for defocus = expParams.defocusLevels  % loop over defocus conditions
         
         %% ------------------- OPTICS -------------------
         if expParams.verbose; fprintf('(%s): Setting defocus to %s (microns)\n', mfilename, defocus); end
         sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
         
-        
-        %% ------------------- EYE MOVEMENTS -------------------
-        for emIdx = 1:size(expParams.eyemovement,2)
+  
+        for emIdx = 1:size(expParams.eyemovement,2) % loop over eye movement conditions
             
-            if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
-            
-            % Get the eyemovements
-            [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams);
-            
-            % Add emPaths (which are in terms of cones shifted) to cMosaic struct
-            cMosaic.emPositions = emPaths;
-            
-            
-            for c = theseContrasts
+            for c = theseContrasts % loop over contrasts
                 
-                for sf = expParams.spatFreq
+                for sf = expParams.spatFreq % loop over spatial frequencies
                     
                     
-                    %% ------------------- UPDATE SCENE and STIMULI  -------------------
+                    %% ------------------- UPDATE SCENE and STIMULI (Contrast and SF) -------------------
                     if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f\n', mfilename, c, expParams.polarAngle, eccen); end                   
                     fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
                         c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf);                    
@@ -129,20 +125,29 @@ for eccen = expParams.eccentricities
                     
                     
                     %% ------------------- COMPUTE ABSORPTIONS  -------------------
+                    if expParams.verbose;  fprintf('(%s): Compute absorptions.\n', fname); end
                     
                     % Compute absorptions for multiple trials
                     absorptions = zeros(expParams.nTrials,cMosaic.rows,cMosaic.cols, tSamples, length(OG));
                     current     = absorptions;
-                    
-                    if expParams.verbose;  fprintf('(%s): Compute absorptions.\n', fname); end
 
-                    for s = 1:length(OG)
+                    for s = 1:length(OG) % loop over OIS'
+                        
+            
+                        %% ------------------- EYE MOVEMENTS -------------------
+                        if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
+
+                        [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams);
+
+                        % Add emPaths (which are in terms of cones shifted) to cMosaic struct
+                        cMosaic.emPositions = emPaths;
+                        
                         if expParams.currentFlag
                             [absorptions(:,:,:,:,s), current(:,:,:,:,s), interpFilters, meanCur] = cMosaic.compute(OG(s), 'currentFlag', expParams.currentFlag, ...
-                                'emPaths', emPaths, 'seed', seed);
+                                'emPaths', emPaths, 'seed', seed+s);
                         else
                             absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
-                                'emPaths', emPaths, 'seed', seed);
+                                'emPaths', emPaths, 'seed', seed+s);
                         end
                     end
                     
