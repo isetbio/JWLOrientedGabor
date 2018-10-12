@@ -111,7 +111,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
     cMosaic.integrationTime = 0.002; % ms
     
     % Change cone spacing based on eccentricity
-    if strcmp(expName,'eccbasedcoverage')
+    if strcmp(expName,'conedensity')
         propCovered = getBanks1991ConeCoverage(eccen); % proportion
         
         cMosaic.pigment.pdWidth  = cMosaic.pigment.width*propCovered; % meters

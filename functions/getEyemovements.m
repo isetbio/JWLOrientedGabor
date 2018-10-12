@@ -26,7 +26,7 @@ function [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, e
 %                       seed used to produce eye movement paths  
 %
 % INPUTS: 
-%   emPaths         : 3 dimensional array contains (x,y) position x time
+%   emPaths         : 3 dimensional array contains trials x position (x,y) x time
 
 
 
@@ -44,6 +44,17 @@ elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
     emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', currSeed);
 elseif all(expParams.eyemovement(:,emIdx) == [0;0]) % if none
     emPaths = zeros(expParams.nTrials, maxEyeMovementsNum*paddingFactor, 2);
+elseif all(expParams.eyemovement(:,emIdx) == [2;0]) % if enhanced drift, no MS
+    error('this condition is not implemented yet')
+    em = fixationalEM;
+    % todo: add line to adjust the velocity/speed/etc
+    emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', currSeed, 'emobj', em);    
+elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
+    error('this condition is not implemented yet')
+    em = fixationalEM;
+    % todo: add line to adjust the velocity/speed/etc
+    emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', currSeed, 'emobj', em);
+
 end
 
 % Truncate warm up period
