@@ -1,5 +1,5 @@
-function runComputationalObserverModel(expName, saveFolder)
-%% runComputationalObserverModel(expName, saveFolder, [seed], 1, [currentFlag], 'false')
+function runComputationalObserverModel(expName, varargin)
+%% runComputationalObserverModel(expName, [saveFolder], [], [seed], 1, [currentFlag], 0)
 
 % ---------------------- Description ----------------------
 
@@ -25,7 +25,7 @@ function runComputationalObserverModel(expName, saveFolder)
 %       * Check inputs and define experimental manipulation
 %       * Create default scene and achromatic Gabor patches (OIS, optical image sequence).
 %       * Create cone mosaic
-%       * Create optics 
+%       * Create optics
 %       * Create eyemovements
 %       * Update scene and stimuli by setting contrast and spatial frequency
 %       * Compute cone absorptions
@@ -36,11 +36,27 @@ function runComputationalObserverModel(expName, saveFolder)
 
 %% 0. Check inputs and define experimental parameters
 p = inputParser;
-p.addRequired('expName', @isstring);
-p.addRequired('saveFolder', @isstring);
-p.addParameter('seed', 1, @(x) (isstring(x) | isscalar(x)));
-p.addParameter('currentFlag', false, islogical);
-p.parse(expName, saveFolder, varargin{:});
+p.KeepUnmatched = true;
+p.addRequired('expName', @ischar);
+p.addParameter('saveFolder', []);
+p.addParameter('seed', 1, @(x) (ischar(x) | isscalar(x)));
+p.addParameter('currentFlag', false, @islogical);
+p.parse(expName, varargin{:});
+
+% Check and create folder to save absorption data
+currDate = datestr(datetime,'yyyymmdd_HHMMSS');
+
+if ~isempty(p.Results.saveFolder)
+    saveFolder = p.Results.saveFolder;
+    saveFolderClassification = fullfile(saveFolder, 'classification', currDate);
+else
+    saveFolder = fullfile(ogRootPath, 'data', expName, currDate);
+    saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, currDate);
+end
+
+% Create folders if they don't exist
+if ~exist('saveFolder', 'dir'); mkdir(saveFolder); end
+if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); end
 
 % Specify experiment parameters
 expParams = loadExpParams(expName, false);   % (false argument is for not saving params in separate matfile)
@@ -55,16 +71,22 @@ expParams.seed = p.Results.seed;
 % Check if current is requested, then we want to add more contrast levels
 if p.Results.currentFlag
     theseContrasts = expParams.contrastLevelsPC;
-    expParams.currentFlag = currentFlag;
+    expParams.currentFlag = p.Results.currentFlag;
 else
     theseContrasts = expParams.contrastLevels;
-    expParams.currentFlag = currentFlag;
+    expParams.currentFlag = p.Results.currentFlag;
 end
+
+if expParams.verbose
+    fH = figure(99); clf; hold all;
+end
+
+
 
 %% ------------------- DEFAULT SCENE and STIMULI -------------------
 % Get scene radiance and default stimulus (OG, i.e. the Oriented Gabors)
 if expParams.verbose; fprintf('(%s): Creating scene.\n', mfilename); end
-[OG, scenes, sparams] = getSceneAndStimuli;
+[OG, scenes, sparams] = getSceneAndStimuli; %#ok<ASGLU>
 
 % We make sure that the number of time points in the eye movement sequence
 % matches the number of time points in the optical image sequence
@@ -82,7 +104,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
     
     %% ------------------- MOSAIC -------------------
     if expParams.verbose; fprintf('(%s): Creating mosaic.\n',mfilename); end
-    [cMosaic, cparams] = getConeMosaic(eccen, expParams);
+    [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams);
     
     % Integration time can be defined independently from OIS time step.
     % Prefered to be 5 ms or lower (1 or 2 ms preferred)
@@ -99,71 +121,95 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
     for defocus = expParams.defocusLevels  % loop over defocus conditions
         
         %% ------------------- OPTICS -------------------
-        if expParams.verbose; fprintf('(%s): Setting defocus to %s (microns)\n', mfilename, defocus); end
+        if expParams.verbose; fprintf('(%s): Setting defocus to %1.2f (microns)\n', mfilename, defocus); end
         sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
         
-  
+        
         for emIdx = 1:size(expParams.eyemovement,2) % loop over eye movement conditions
             
+            accuracy = NaN(size(theseContrasts));
             for c = theseContrasts % loop over contrasts
                 
                 for sf = expParams.spatFreq % loop over spatial frequencies
                     
                     
                     %% ------------------- UPDATE SCENE and STIMULI (Contrast and SF) -------------------
-                    if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f\n', mfilename, c, expParams.polarAngle, eccen); end                   
+                    if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f\n', mfilename, c, expParams.polarAngle, eccen); end
                     fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
-                        c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf);                    
+                        c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf);
                     if expParams.verbose;  fprintf('(%s): File will be saved as %s\n', mfilename, fname); end
                     
                     % Update the stimulus contrast & spatial frequency
-                    if expParams.verbose; fprintf('(%s): Recomputing scene for current sf: %f and c: %1.2f..\n', mfilename, sf, c); end
-
+                    if expParams.verbose; fprintf('(%s): Recomputing scene for current sf: %1.2f and c: %1.2f..\n', mfilename, sf, c); end
+                    
                     sparams.gabor.contrast  = c;  % Michelson, [0 1]
-                    sparams.freqCPD         = sf; % Cycles/degree        
-                    [OG,scenes,tseries] = ogStimuli(sparams);
+                    sparams.freqCPD         = sf; % Cycles/degree
+                    [OG,scenes,tseries] = ogStimuli(sparams); %#ok<ASGLU>
                     
                     
                     %% ------------------- COMPUTE ABSORPTIONS  -------------------
-                    if expParams.verbose;  fprintf('(%s): Compute absorptions.\n', fname); end
+                    if expParams.verbose;  fprintf('(%s): Compute absorptions.\n', mfilename); end
                     
                     % Compute absorptions for multiple trials
                     absorptions = zeros(expParams.nTrials,cMosaic.rows,cMosaic.cols, tSamples, length(OG));
                     current     = absorptions;
-
+                    
                     for s = 1:length(OG) % loop over OIS'
                         
-            
+                        
                         %% ------------------- EYE MOVEMENTS -------------------
                         if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
-
-                        [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams);
-
+                        
+                        [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, emIdx, expParams.seed+s);
+                        
                         % Add emPaths (which are in terms of cones shifted) to cMosaic struct
                         cMosaic.emPositions = emPaths;
                         
                         if expParams.currentFlag
                             [absorptions(:,:,:,:,s), current(:,:,:,:,s), interpFilters, meanCur] = cMosaic.compute(OG(s), 'currentFlag', expParams.currentFlag, ...
-                                'emPaths', emPaths, 'seed', seed+s);
+                                'emPaths', emPaths, 'seed', expParams.seed+s); %#ok<ASGLU>
                         else
-                            absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
-                                'emPaths', emPaths, 'seed', seed+s);
+                            absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', expParams.currentFlag, ...
+                                'emPaths', emPaths, 'seed', expParams.seed+s);
                         end
                     end
                     
-                    % Save data
-                    if expParams.verbose; fprintf('(%s): Saving data..\n', mfilename); end
-                    savePth = fullfile(ogRootPath, 'data', expName, subFolderName); if ~exist(savePth,'dir'); mkdir(savePth); end;
-                    parsave(fullfile(savePth, fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
-                    if expParams.currentFlag; parsave(fullfile(savePth, ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
+                    % Save cone absorption data
+                    if expParams.verbose; fprintf('(%s): Saving data..\n', mfilename); end                   
+                    parsave(fullfile(saveFolder, fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
+                    
+                    % If cone current was requested, also save this array
+                    if expParams.currentFlag; parsave(fullfile(saveFolder, ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
+                    
+                    
+                    
+                    %% ------------------- Classify absorptions  -------------------
+                    fname = sprintf(...
+                        'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
+                        c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, sf);
+                    
+                    if expParams.currentFlag
+                        accuracy(c==theseContrasts) = getClassifierAccuracy(current);
+                        fname = ['current_' fname]; %#ok<AGROW>
+                    else
+                        accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions); % truncate time samples (only include stimulus on period)
+                    end
+                    
+                    if expParams.verbose; fprintf('(%s): Classifier accuracy for stim contrast %1.2f is %3.2f..\n', mfilename, c, accuracy(c==theseContrasts)); end
+
                 end % sf
             end % contrast
+            
+            % Save
+            parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fname)),'accuracy',accuracy);
+            
+            % Visualize
+            if expParams.verbose; set(0, 'CurrentFigure', fH); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow; end
+
         end % defocus
     end % eyemovements
 end % eccentricities
 
-
-%% ------------------- Classify absorptions  ------------------- 
 
 
 return
