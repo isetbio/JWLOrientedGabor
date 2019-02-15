@@ -36,7 +36,7 @@ switch lower(expName)
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'eyemov'
-        colors              = copper(size(expParams.eyemovement,2));
+        colors              = [0 0 0;  0.5000, 1.0000, 0.5000; 1 0 0];
         labels              = cell(1,length(colors));
         for emIdx = 1:length(colors)
             thisCondition = expParams.eyemovement(:,emIdx)';
@@ -117,7 +117,7 @@ switch lower(expName)
             labels{df==expParams.defocusLevels} = sprintf('%2.2f Diopters of Defocus',M(df==expParams.defocusLevels));
         end
         
-        colors              = copper(length(expParams.defocusLevels));
+        colors              = jet(length(expParams.defocusLevels));
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
         
