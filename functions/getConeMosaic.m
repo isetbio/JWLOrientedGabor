@@ -1,4 +1,4 @@
-function [cMosaic, cparams] = getConeMosaic(eccen, expParams)
+function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams)
 % ----- CONE MOSAIC -----------------------------------------
     % Make CONE MOSAIC for a given eccentricity and polar angle
     whichEye = 'left';
@@ -8,7 +8,7 @@ function [cMosaic, cparams] = getConeMosaic(eccen, expParams)
     cparams.polarAngle        = expParams.polarAngle; % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
     
     % Cone mosaic field of view in degrees
-    cparams.cmFOV        = sparams.sceneFOV; % degrees
+    cparams.cmFOV             = sparams.sceneFOV; % degrees
     
     % Compute x,y position in m of center of retinal patch from ecc and angle
     [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);

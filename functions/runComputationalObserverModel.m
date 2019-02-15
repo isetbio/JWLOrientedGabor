@@ -1,4 +1,4 @@
-function runComputationalObserverModel(expName, saveFolder)
+function runComputationalObserverModel(expName, saveFolder, varargin)
 %% runComputationalObserverModel(expName, saveFolder, seed)
 
 % ---------------------- Description ----------------------
@@ -36,10 +36,11 @@ function runComputationalObserverModel(expName, saveFolder)
 
 %% 0. Check inputs and define experimental parameters
 p = inputParser;
-p.addRequired('expName', @isstring);
-p.addRequired('saveFolder', @isstring);
+p.KeepUnmatched = true;
+p.addRequired('expName', @ischar);
+p.addParameter('saveFolder', [], @ischar);
 p.addParameter('seed', 1, @(x) (isstring(x) | isscalar(x)));
-p.addParameter('currentFlag', false, islogical);
+p.addParameter('currentFlag', false, @islogical);
 p.parse(expName, saveFolder, varargin{:});
 
 % Specify experiment parameters
@@ -55,11 +56,15 @@ expParams.seed = p.Results.seed;
 % Check if current is requested, then we want to add more contrast levels
 if p.Results.currentFlag
     theseContrasts = expParams.contrastLevelsPC;
-    expParams.currentFlag = currentFlag;
+    expParams.currentFlag = p.Results.currentFlag;
 else
     theseContrasts = expParams.contrastLevels;
-    expParams.currentFlag = currentFlag;
+    expParams.currentFlag = p.Results.currentFlag;
 end
+
+% Check if specific folder to save data exists, otherwise create it
+savePth = fullfile(ogRootPath, 'data', expName, saveFolder); 
+if ~exist(savePth,'dir'); mkdir(savePth); end;
 
 %% ------------------- DEFAULT SCENE and STIMULI -------------------
 % Get scene radiance and default stimulus (OG, i.e. the Oriented Gabors)
@@ -76,7 +81,7 @@ for eccen = expParams.eccentricities
     
     %% ------------------- MOSAIC -------------------
     if expParams.verbose; fprintf('(%s): Creating mosaic.\n',mfilename); end
-    [cMosaic, cparams] = getConeMosaic(eccen, expParams);
+    [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams);
     
     % Integration time can be defined independently from OIS time step.
     % Prefered to be 5 ms or lower (1 or 2 ms preferred)
@@ -93,7 +98,7 @@ for eccen = expParams.eccentricities
     for defocus = expParams.defocusLevels
         
         %% ------------------- OPTICS -------------------
-        if expParams.verbose; fprintf('(%s): Setting defocus to %s (microns)\n', mfilename, defocus); end
+        if expParams.verbose; fprintf('(%s): Setting defocus to %1.2f (microns)\n', mfilename, defocus); end
         sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
         
         
@@ -103,7 +108,7 @@ for eccen = expParams.eccentricities
             if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
             
             % Get the eyemovements
-            [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams);
+            [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, emIdx);
             
             % Add emPaths (which are in terms of cones shifted) to cMosaic struct
             cMosaic.emPositions = emPaths;
@@ -121,11 +126,11 @@ for eccen = expParams.eccentricities
                     if expParams.verbose;  fprintf('(%s): File will be saved as %s\n', mfilename, fname); end
                     
                     % Update the stimulus contrast & spatial frequency
-                    if expParams.verbose; fprintf('(%s): Recomputing scene for current sf: %f and c: %1.2f..\n', mfilename, sf, c); end
+                    if expParams.verbose; fprintf('(%s): Recomputing scene for current sf: %1.2f and c: %1.2f..\n', mfilename, sf, c); end
 
-                    sparams.gabor.contrast  = c;  % Michelson, [0 1]
+                    sparams.gabor.contrast  = c;  % Michelson, range = [0 1]
                     sparams.freqCPD         = sf; % Cycles/degree        
-                    [OG,scenes,tseries] = ogStimuli(sparams);
+                    [OG,scenes,tseries]     = ogStimuli(sparams);
                     
                     
                     %% ------------------- COMPUTE ABSORPTIONS  -------------------
@@ -139,16 +144,15 @@ for eccen = expParams.eccentricities
                     for s = 1:length(OG)
                         if expParams.currentFlag
                             [absorptions(:,:,:,:,s), current(:,:,:,:,s), interpFilters, meanCur] = cMosaic.compute(OG(s), 'currentFlag', expParams.currentFlag, ...
-                                'emPaths', emPaths, 'seed', seed);
+                                'emPaths', emPaths, 'seed', expParams.seed);
                         else
-                            absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', false, ...
-                                'emPaths', emPaths, 'seed', seed);
+                            absorptions(:,:,:,:,s) = cMosaic.compute(OG(s), 'currentFlag', expParams.currentFlag, ...
+                                'emPaths', emPaths, 'seed', expParams.seed);
                         end
                     end
                     
                     % Save data
                     if expParams.verbose; fprintf('(%s): Saving data..\n', mfilename); end
-                    savePth = fullfile(ogRootPath, 'data', expName, subFolderName); if ~exist(savePth,'dir'); mkdir(savePth); end;
                     parsave(fullfile(savePth, fname), 'absorptions', absorptions, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths);
                     if expParams.currentFlag; parsave(fullfile(savePth, ['current_' fname]), 'current', current, 'sparams', sparams, 'cparams', cparams, 'expParams', expParams, 'emPaths', emPaths); end
                 end % sf

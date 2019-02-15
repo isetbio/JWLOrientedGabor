@@ -1,4 +1,4 @@
-function [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams)
+function [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, emIdx)
 
 % Calculate number of eyemovements based on cone mosaic integration time
 maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integrationTime);
