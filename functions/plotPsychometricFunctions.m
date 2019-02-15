@@ -222,11 +222,11 @@ elseif strcmp(expName,'defocus')
     totalVariance.dioptersReportedInLiterature = 0.2; % From Artal's papers
     totalVariance.contributionOfDefocusPercent = (totalVariance.dioptersReportedInLiterature / totalVariance.dioptersPredictedByModel) * 100;
     
-    figure(10); clf; set(gcf, 'Color', 'w', 'Position', [300, 982, 289, 363])
-    bar([0.2 0.3], [totalVariance.dioptersPredictedByModel, totalVariance.dioptersReportedInLiterature], 'barWidth', 0.3, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'k');
-    set(gca, 'TickDir', 'out', 'XTick', [0.2,0.3], 'XTickLabel', {'Model prediction for PF', 'Max reported difference literature'}, 'XTickLabelRotation', 45, 'FontSize', 9);
-    ylim([0 7]); xlim([0.15 0.37]); box off;
-    ylabel('Defocus (Diopters)')
+%     figure(10); clf; set(gcf, 'Color', 'w', 'Position', [300, 982, 289, 363])
+%     bar([0.2 0.3], [totalVariance.dioptersPredictedByModel, totalVariance.dioptersReportedInLiterature], 'barWidth', 0.3, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'k');
+%     set(gca, 'TickDir', 'out', 'XTick', [0.2,0.3], 'XTickLabel', {'Model prediction for PF', 'Max reported difference literature'}, 'XTickLabelRotation', 45, 'FontSize', 9);
+%     ylim([0 7]); xlim([0.15 0.37]); box off;
+%     ylabel('Defocus (Diopters)')
     
     fprintf('Total contribution of defocus according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDefocusPercent)
     
