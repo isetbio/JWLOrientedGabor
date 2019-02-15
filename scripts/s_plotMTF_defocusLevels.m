@@ -16,7 +16,7 @@ zCoefs = wvfLoadThibosVirtualEyes(pupilMM);
 
 %% 2. Plot MTFs
 
-figure(1); clf; set(gcf, 'Color', 'w', 'NumberTitle', 'off', 'Name', 'Figure 7A - MTF for different defocus levels');
+figure(100); clf; set(gcf, 'Color', 'w', 'NumberTitle', 'off', 'Name', 'Figure 7A - MTF for different defocus levels');
 hold all;
 
 for ii = defocusMicrons
@@ -55,7 +55,7 @@ end
 
 %% 3. Stimuli (2D and 1D) under different defocus levels
 
-figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1000, 681, 1173, 657], 'NumberTitle', 'off', 'Name', 'Figure 7A - 1D and 2D stim for different defocus levels');
+figure(99); clf; set(gcf, 'Color', 'w', 'Position', [1000, 681, 1173, 657], 'NumberTitle', 'off', 'Name', 'Figure 7A - 1D and 2D stim for different defocus levels');
 hold all;
 
 plotIdx = 1;
