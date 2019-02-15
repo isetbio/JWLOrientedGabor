@@ -1,4 +1,5 @@
 function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams)
+
 % ----- CONE MOSAIC -----------------------------------------
     % Make CONE MOSAIC for a given eccentricity and polar angle
     whichEye = 'left';
@@ -26,4 +27,5 @@ function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams)
     % CURRENT: Set outer segment to be computed with linear filters
     cMosaic.os = osLinear;
     
-    return
+return
+
