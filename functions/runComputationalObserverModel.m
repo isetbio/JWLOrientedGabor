@@ -125,15 +125,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
         
         %% ------------------- EYE MOVEMENTS -------------------
         for emIdx = 1:size(expParams.eyemovement,2) % loop over eye movement conditions
-            
-            if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
-            
-            % Get the eyemovements
-            [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, emIdx);
-            
-            % Add emPaths (which are in terms of cones shifted) to cMosaic struct
-            cMosaic.emPositions = emPaths;
-            
+
             accuracy = NaN(size(theseContrasts));
             
             for c = theseContrasts % loop over contrasts
