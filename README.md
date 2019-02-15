@@ -28,4 +28,28 @@ variations can account for variations in the computational observer
 performance for the given task as a function of the visual field position of
 the stimulus. 
 
-## More to follow here...
+## Dependencies
+This repository is MATLAB-based (v9.1) and depends on the following toolboxes:
+* ISETBIO (https://github.com/isetbio/isetbio/, works at least until version commit c752bc5 - Oct 12, 2018)
+
+MATLAB Toolboxes:
+* Bioinformatics Toolbox, 4.7
+* Computer Vision System Toolbox, 7.2
+* Control System Toolbox, 10.1
+* Curve Fitting Toolbox, 3.5.4
+* DSP System Toolbox, 9.3
+* Database Toolbox, 7.0
+* Global Optimization Toolbox, 3.4.1
+* Image Acquisition Toolbox, 5.1
+* Image Processing Toolbox, 9.5
+* Instrument Control Toolbox, 3.10
+* Mapping Toolbox, 4.4
+* Neural Network Toolbox, 9.1
+* Optimization Toolbox, 7.5
+* Parallel Computing Toolbox, 6.9
+* Partial Differential Equation Toolbox, 2.3
+* Signal Processing Toolbox, 7.3
+* Statistics and Machine Learning Toolbox, 11.0
+* Symbolic Math Toolbox, 7.1
+* System Identification Toolbox, 9.5
+* Wavelet Toolbox, 4.17
