@@ -1,4 +1,4 @@
-function oi = oiDefocus(defocus)
+function oi = oiDefocus(defocus, verbose)
 % OIDEFOCUS - Create an human wvf oi with some amount of defocus
 %
 % Input:
@@ -11,6 +11,8 @@ function oi = oiDefocus(defocus)
 %            oiCreate
 %
 % JW/EK ISETBIO Team, 2017
+
+if verbose; fprintf('(%s): Adding optics defocus to %1.2f (microns)\n', mfilename, defocus); end
 
 pupilMM = 3;
 zCoefs = wvfLoadThibosVirtualEyes(pupilMM);

@@ -28,6 +28,8 @@ function [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, e
 % INPUTS: 
 %   emPaths         : 3 dimensional array contains trials x position (x,y) x time
 
+if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
+
 % Calculate number of eyemovements based on cone mosaic integration time
 maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integrationTime);
 

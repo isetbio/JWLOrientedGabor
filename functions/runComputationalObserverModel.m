@@ -122,8 +122,8 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
         for defocus = expParams.defocusLevels  % loop over defocus conditions
             
             %% ------------------- OPTICS -------------------
-            if expParams.verbose; fprintf('(%s): Setting defocus to %1.2f (microns)\n', mfilename, defocus); end
-            sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
+            if expParams.verbose; fprintf('(%s): Adding optics.\n', mfilename); end
+            sparams.oi = oiDefocus(defocus, expParams.verbose); % input is Zernicke defocus coeff
             
             
             %% ------------------- EYE MOVEMENTS -------------------
@@ -162,7 +162,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                             
                             
                             %% ------------------- EYE MOVEMENTS -------------------
-                            if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
+                            if expParams.verbose; fprintf('(%s): Adding eyemovements.\n', mfilename); end
                             
                             [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, emIdx, expParams.seed+s);
                             
@@ -179,7 +179,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         end
                         
                         % Save cone absorption data
-                        if expParams.verbose; fprintf('(%s): Saving cone absorption data..\n', mfilename); end
+                        if expParams.verbose; fprintf('(%s): Saving cone absorption data.\n', mfilename); end
                         parsave(fullfile(saveFolder, fname), ...
                             'absorptions', absorptions, ...
                             'sparams', sparams, ...
