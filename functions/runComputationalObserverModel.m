@@ -137,9 +137,9 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         
                         %% ------------------- UPDATE SCENE and STIMULI (Contrast and SF) -------------------
-                        if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f, LMS ratio %1.1f:%1.1f:%1.1f\n', mfilename, c, expParams.polarAngle, eccen, lmsRatio(2),lmsRatio(3),lmsRatio(4)); end
+                        if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f, LMS ratio %1.1f:%1.1f:%1.1f\n', mfilename, c, expParams.polarAngle, eccen, lmsRatio(lmsIdx,2),lmsRatio(lmsIdx,3),lmsRatio(lmsIdx,4)); end
                         fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat',...
-                            c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
+                            c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(lmsIdx,2),lmsRatio(lmsIdx,3),lmsRatio(lmsIdx,4));
                         if expParams.verbose;  fprintf('(%s): File will be saved as %s\n', mfilename, fname); end
                         
                         % Update the stimulus contrast & spatial frequency
@@ -206,7 +206,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         %% ------------------- Classify absorptions  -------------------
                         fname = sprintf(...
                             'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
-                            c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
+                            c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(lmsIdx,2),lmsRatio(lmsIdx,3),lmsRatio(lmsIdx,4));
                         
                         if expParams.verbose
                             fprintf('(%s): Classify cone absorption data..\n', mfilename);
