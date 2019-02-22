@@ -7,13 +7,15 @@ function expParams = loadExpParams(expName, saveParams)
 
 % INPUTS: 
 %   ExpNames        : String defining which type of experiment parameters to use. 
-%                       Choose from 'default',
-%                                   'eyemov',
-%                                   'eyemovEnhanced',
-%                                   'coneDensity',
-%                                   'defocus',
-%                                   'ConeTypes',
-%                                   'spatFreq'
+%                       Choose from:
+%                       'default'         - drift and ms, 4.5 deg eccen, 4 cpd, no defocus
+%                       'eyemov',         - no eye movements, drift only, drift and ms, all at 4.5 deg eccen, 4 cpd, no defocus          
+%                       'eyemovEnhanced', - NOT IMPLEMENTED ANYMORE due to new code implementation of eye movements
+%                       'conedensity',    - sweep through eccentricities to get different cone densities in mosaic, all with drift and ms, 4 cpd, no defocus
+%                       'defocus',        - sweep through defocus levels, all with drift and ms, at 4.5 deg eccen, 4 cpd
+%                       'conetypes',      - create single cone type cone mosaics and default mosaic, all with drift and ms, at 4.5 deg eccen, 4 cpd, no defocus
+%                       'conetypeslm90'   - create cone mosaics with LM cone type ratio 0.9:0.1 and vv, all with drift and ms, at 4.5 deg eccen, 4 cpd, no defocus
+%                       'spatFreq'        - sweep through different spatial freq of stim, all with drift and ms, at 4.5 deg eccen, 4 cpd, no defocus
 %                     (default= 'default')
 %   saveParams      : Boolean defining whether to save or not expParams in
 %                      matfile (default = true)
@@ -65,7 +67,8 @@ switch lower(expName)
         expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??) 
         
-%     case 'eyemovhanced'
+     case 'eyemovenhanced'
+         error('(%s): Experiment with enhanced eyemovements is currently not implemented', mfilename);
 %         expParams.eyemovement     = [0 0; 2 0; 2 2]';           % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
 %         expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
 %         expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
@@ -86,6 +89,15 @@ switch lower(expName)
         expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
         expParams.cparams.spatialDensity = [0 0.6 0.3 0.1; 0 1 0 0; 0 0 1 0; 0 0 0 1]; % Blank, L, M, S cone probabilities; Using default, or only one cone time at a time              
+
+     case 'conetypeslm90'
+        expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
+        expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
+        expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
+        expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.cparams.spatialDensity = [0 0.6 0.3 0.1; 0 0.9 0.1 0; 0 0.1 0.9 0]; % Blank, L, M, S cone probabilities; Using default, or L:M = 0.9:0.1 or L:M = 0.1:0.9             
+
         
     case 'conetypeseccen'   
         expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
@@ -97,11 +109,10 @@ switch lower(expName)
         
     case 'spatfreq' 
         expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
-        expParams.eccentricities  = 0;                          % Eccentricity (deg);
+        expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
         expParams.spatFreq        = [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26]; % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
-        expParams.verbose         = true;                       % Print out images for debugging, or not
 
 
 end

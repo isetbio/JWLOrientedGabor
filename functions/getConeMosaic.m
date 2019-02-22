@@ -1,6 +1,13 @@
-function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams)
+function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams, spatialDensity)
 
 % ----- CONE MOSAIC -----------------------------------------
+    % Update ratio of cone types in mosaic if requested:
+    if nargin < 4
+        spatialDensity = [0 0.6 0.3 0.1]; % Relative density of cone types, K, L, M, S. 
+    else
+        if expParams.verbose; fprintf('LMS density was reset to %1.1f:%1.1f:%1.1f', spatialDensity); end
+    end
+
     % Make CONE MOSAIC for a given eccentricity and polar angle
     whichEye = 'left';
     
@@ -16,7 +23,7 @@ function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams)
     x = x * expParams.deg2m;  y = y * expParams.deg2m;
     
     % Create coneMosaic for particular location and eye
-    cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
+    cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye, 'spatialDensity', spatialDensity);
     
     % Set the field of view (degrees)
     cMosaic.setSizeToFOV(cparams.cmFOV);

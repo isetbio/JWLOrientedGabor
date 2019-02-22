@@ -1,4 +1,4 @@
-function [] = plotPsychometricFunctions(expName, saveFig)
+function [] = plotPsychometricFunctions(expName, subFolderName, saveFig)
 
 
 % Function to compute psychometric functions based on the computational
@@ -7,9 +7,13 @@ function [] = plotPsychometricFunctions(expName, saveFig)
 % INPUTS:
 % expName       : string defining the condition you want to plot.
 %                   (See load expParams for possible conditions)
+% subFolderName : string defining the sub folder you want to plot from.
+
 % saveFig       : boolean defining to save figures or not
 
-
+if isempty(subFolderName) || ~exist('subFolderName', 'var')
+    subFolderName = 'average';
+end
 
 %% 0. Set general experiment parameters
 
@@ -18,7 +22,6 @@ expParams                   = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
 % Where to find data and save figures
-subFolderName = 'average';
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName,'toPlot', subFolderName);
 figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
@@ -45,36 +48,62 @@ nrEyemovTypes    = size(expParams.eyemovement,2);
 nrEccen          = length(expParams.eccentricities);
 nrSpatFreq       = length(expParams.spatFreq);
 nrDefocusLevels  = length(expParams.defocusLevels);
+nrLMSRatios      = size(expParams.cparams.spatialDensity,2);
 
 % Check if different fitting accuracy for different cone types is requested
-% (not implemented yet)
 fn = fieldnames(expParams);
-if any(strcmp(fn(:),'cparams')); nrConeTypes = size(expParams.cparams.spatialDensity,2);
-    error('s_makePsychometricFunctions does not allow multiple cone type conditions (yet)'); end
-
 
 count = 1;
 for em = 1:nrEyemovTypes
-    for eccen = 1:nrEccen
-        for df = 1:nrDefocusLevels
+    for lmsIdx = 1:nrLMSRatios
+        for eccen = 1:nrEccen
+            for df = 1:nrDefocusLevels
             
             
             %% 2. Load results
-                 
-            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
-                max(expParams.contrastLevels),sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
-           
+            
+            if strcmp(expName, 'conetypes')
+                 fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+                            max(expParams.contrastLevels), ...
+                            sprintf('%i',expParams.eyemovement(:,em)'), ...
+                            expParams.eccentricities(eccen), ...
+                            expParams.defocusLevels(df), ...
+                            expParams.spatFreq, ...
+                            expParams.cparams.spatialDensity(lmsIdx,2), ...
+                            expParams.cparams.spatialDensity(lmsIdx,3), ...
+                            expParams.cparams.spatialDensity(lmsIdx,4));
+            else
+                 fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
+                            max(expParams.contrastLevels), ...
+                            sprintf('%i',expParams.eyemovement(:,em)'), ...
+                            expParams.eccentricities(eccen), ...
+                            expParams.defocusLevels(df), ...
+                            expParams.spatFreq);
+            end
+            
             if strcmp(subFolderName,'average')
-                fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
-                    max(expParams.contrastLevels),sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
+                 fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
+                            max(expParams.contrastLevels), ...
+                            sprintf('%i',expParams.eyemovement(:,em)'), ...
+                            expParams.eccentricities(eccen), ...
+                            expParams.defocusLevels(df), ...
+                            expParams.spatFreq);
                 
                  fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
-                     max(expParams.contrastLevels),sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities(eccen),expParams.defocusLevels(df),expParams.spatFreq);
+                            max(expParams.contrastLevels), ...
+                            sprintf('%i',expParams.eyemovement(:,em)'), ...
+                            expParams.eccentricities(eccen), ...
+                            expParams.defocusLevels(df), ...
+                            expParams.spatFreq);
                  SE{count} = load(fullfile(dataPth, fNameSE));
-             end
+            end
             
+            % load model performance
             accuracy = load(fullfile(dataPth, fName));
-            accuracy.P = squeeze(accuracy.P);
+            fn = fieldnames(accuracy);
+            accuracy.P = squeeze(accuracy.(fn{1}));
+            
+            % Transpose matrix if necessary
             if size(accuracy.P,1)<size(accuracy.P,2)
                 accuracy.P = accuracy.P';
             end
@@ -96,10 +125,11 @@ for em = 1:nrEyemovTypes
             fit.data{count} = accuracy.P;
             
             count = count +1;
-        end
-        
-    end
-end
+            
+            end % defocus
+        end % eccen
+    end % lms ratio
+end % eyemovements
 
 
 %% 4. Visualize psychometric curves
@@ -137,7 +167,7 @@ if saveFig
 end
 
 %% Plot density thresholds
-if strcmp('coneDensity',expName) || strcmp('eccbasedcoverage',expName)
+if strcmp('conedensity',expName) || strcmp('eccbasedcoverage',expName)
     
     thresh = cell2mat(fit.ctrthresh);
     lm = fitlm(log10(M),thresh);
