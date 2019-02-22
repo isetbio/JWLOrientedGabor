@@ -19,7 +19,7 @@ Eventually, we would like to model more stages of the visual pathway:
 For example: 
 * cone currents (temporal integration);
 * bipolar (temporal and spatial integration);
-* RGC density (temporal and spatial integration;
+* RGC density (temporal and spatial integration);
 * cortical responses (Receptive fields, cortical magnification); 
 * other behavioral tasks
 
@@ -53,3 +53,10 @@ MATLAB Toolboxes:
 * Symbolic Math Toolbox, 7.1
 * System Identification Toolbox, 9.5
 * Wavelet Toolbox, 4.17
+
+## Example scripts
+```
+% Run default observer model for CW/CCW Gabors at 4.5 deg eccentricity, 4 cpd, with small fixational eyemovements
+runComputationalObserverModel('default')
+```
+
