@@ -31,8 +31,15 @@ switch lower(expName)
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'conetypes'
-        colors              = copper(size(expParams.cparams.spatialDensity,2));
-        labels              = {'LMS cone array','L cone array','M cone array','S cone arry'};
+        colors              = copper(size(expParams.cparams.spatialDensity,1));
+        labels              = {'LMS default cone mosaic','L only cone mosaic','M only cone mosaic','S only cone mosaic'};
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
+        
+    case 'conetypeslm90'
+        colors              = copper(size(expParams.cparams.spatialDensity,1));
+        labels              = {sprintf('LMS cone ratio = %1.1f:%1.1f:%1.1f', expParams.cparams.spatialDensity(1,2:4)), ...
+                               sprintf('LMS cone ratio = %1.1f:%1.1f:%1.1f', expParams.cparams.spatialDensity(2,2:4)), ...
+                               sprintf('LMS cone ratio = %1.1f:%1.1f:%1.1f', expParams.cparams.spatialDensity(3,2:4))};
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'eyemov'
