@@ -35,7 +35,7 @@ expParams.nTrials          = 100;                                       % Number
 expParams.verbose          = true;                                      % Print out images for debugging, or not
 expParams.contrastLevels   = [0:0.005:0.04, 0.05:0.01:0.1];             % Stimulus contrast levels (Michelson)
 expParams.contrastLevelsPC = [0:0.005:0.04, 0.05:0.01:.1, 0.2:0.1:1];   % Stimulus contrast levels when computing photo current (Michelson)
-
+expParams.cparams.spatialDensity = [0 0.6 0.3 0.1];                     % Blank, L, M, S cone probabilities; Using default
 
 switch lower(expName)
 
