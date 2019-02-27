@@ -15,8 +15,10 @@ function oi = oiDefocus(defocus, verbose)
 if verbose; fprintf('(%s): Adding optics defocus to %1.2f (microns)\n', mfilename, defocus); end
 
 pupilMM = 3;
-zCoefs = wvfLoadThibosVirtualEyes(pupilMM);
+[zCoefs, ~, individualCoeffs] = wvfLoadThibosVirtualEyes(pupilMM);
 wave = 400:10:700; wave = wave(:);
+
+% zCoefs = mean(individualCoeffs.rightEye,2);
 
 wvfP = wvfCreate('wave',wave,'zcoeffs',zCoefs,'name',sprintf('human-%d',pupilMM));
 wvfP = wvfSet(wvfP,'calc pupil size',pupilMM);
