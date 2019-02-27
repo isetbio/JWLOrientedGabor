@@ -47,8 +47,8 @@ p.parse(expName, varargin{:});
 currDate = datestr(datetime,'yyyymmdd_HHMMSS');
 
 if ~isempty(p.Results.saveFolder)
-    saveFolder = p.Results.saveFolder;
-    saveFolderClassification = fullfile(saveFolder, 'classification', currDate);
+    saveFolder = fullfile(ogRootPath, 'data', expName, p.Results.saveFolder);
+    saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, p.Results.saveFolder);
 else
     saveFolder = fullfile(ogRootPath, 'data', expName, currDate);
     saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, currDate);
@@ -100,7 +100,7 @@ tSamples         = OG(1).length;
 
 for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density) levels
     
-    for lmsIdx = 1:size(expParams.cparams.spatialDensity,2)
+    for lmsIdx = 1:size(expParams.cparams.spatialDensity,1)
         lmsRatio = expParams.cparams.spatialDensity(lmsIdx,:);
         
         %% ------------------- MOSAIC -------------------
@@ -137,13 +137,13 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         
                         %% ------------------- UPDATE SCENE and STIMULI (Contrast and SF) -------------------
-                        if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f, LMS ratio %1.1f:%1.1f:%1.1f\n', mfilename, c, expParams.polarAngle, eccen, lmsRatio(lmsIdx,2),lmsRatio(lmsIdx,3),lmsRatio(lmsIdx,4)); end
+                        if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f, LMS ratio %1.1f:%1.1f:%1.1f\n', mfilename, c, expParams.polarAngle, eccen, lmsRatio(2),lmsRatio(3),lmsRatio(4)); end
                         fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat',...
-                            c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(lmsIdx,2),lmsRatio(lmsIdx,3),lmsRatio(lmsIdx,4));
+                            c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         if expParams.verbose;  fprintf('(%s): File will be saved as %s\n', mfilename, fname); end
                         
                         % Update the stimulus contrast & spatial frequency
-                        if expParams.verbose; fprintf('(%s): Recomputing scene for current sf: %1.2f and c: %1.2f..\n', mfilename, sf, c); end
+                        if expParams.verbose; fprintf('(%s): Recomputing scene for current sf: %1.2f and c: %1.3f..\n', mfilename, sf, c); end
                         
                         
                         sparams.gabor.contrast  = c;  % Michelson, range = [0 1]
@@ -206,7 +206,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         %% ------------------- Classify absorptions  -------------------
                         fname = sprintf(...
                             'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
-                            c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(lmsIdx,2),lmsRatio(lmsIdx,3),lmsRatio(lmsIdx,4));
+                            c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         
                         if expParams.verbose
                             fprintf('(%s): Classify cone absorption data..\n', mfilename);
