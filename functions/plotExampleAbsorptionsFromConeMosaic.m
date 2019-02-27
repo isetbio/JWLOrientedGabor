@@ -10,7 +10,7 @@ function plotExampleAbsorptionsFromConeMosaic(expName)
 
 p = inputParser;
 p.KeepUnmatched = true;
-p.addRequired('expName', @(x) (strcmp(x,'conetypes') | strcmp(x,'conedensity')));
+p.addRequired('expName', @(x) (strcmp(x,'conetypes') | strcmp(x,'conetypeslm90') | strcmp(x,'conedensity')));
 p.parse(expName);
 
 %% 1. Define other parameters
@@ -27,7 +27,7 @@ if strcmp(expName, 'conedensity')
 else
     eccentricities    = 4.5; % deg
     cparams.spatialDensity = expParams.cparams.spatialDensity;
-    nrPlots = size(cparams.spatialDensity,2);
+    nrPlots = size(cparams.spatialDensity,1);
     figttl = 'Figure XX - 2D absorptions for 3 single cone type mosaics + default mosaic';
 end
 
@@ -59,7 +59,7 @@ sparams.gabor.contrast  = 1;                           % Presumably michelson, [
 sparams.gabor.GaborFlag = sparams.gausSDdeg*deg2fov;   % Gaussian window
 
 % Add defocus
-sparams.oi = oiDefocus(0);
+sparams.oi = oiDefocus(0, expParams.verbose);
 
 %% 2. Create Optical Image Sequence
 OG = ogStimuli(sparams);
@@ -71,7 +71,7 @@ for idx = 1:nrPlots
         % Specify retinal location where stimulus is presented
         cparams.eccentricity = eccentricities(idx);            % Visual angle of stimulus center, in deg
         spatialDensity       = [0 0.6 0.3 0.1];                % Reset to default mosaic: Blank, L, M, S cone type ratio within cone mosaic
-    elseif strcmp(expName, 'conetypes')
+    elseif (strcmp(expName, 'conetypes') || strcmp(expName, 'conetypeslm90'))
         cparams.eccentricity = eccentricities;                 % Visual angle of stimulus center, in deg
         spatialDensity       = cparams.spatialDensity(idx,:);  % Blank, L, M, S cone type ratio within cone mosaic
     end
@@ -104,7 +104,7 @@ for idx = 1:nrPlots
     
     if strcmp(expName, 'conedensity')
         ttl = sprintf('Cone density %d', eccen2density(cMosaic, 'deg'));
-    elseif strcmp(expName, 'conetypes')
+    elseif (strcmp(expName, 'conetypes') || strcmp(expName, 'conetypeslm90'))
         ttl = sprintf('L:M:S ratio: %1.1f:%1.1f:%1.1f', spatialDensity(2), spatialDensity(3), spatialDensity(4));
     end
     
