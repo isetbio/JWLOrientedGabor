@@ -112,7 +112,7 @@ for idx = 1:nrPlots
     subplot(1,nrPlots, idx); hold all;
     imagesc(squeeze(absorptions(1,:,:,1))./2);
     colormap gray; axis image; axis off; colorbar;
-    title(ttl ,'Fontsize',12)
+    title(ttl ,'Fontsize',12); set(gca, 'CLim', [0 max(max(squeeze(absorptions(1,:,:,1))./2))])
     
 end
 
