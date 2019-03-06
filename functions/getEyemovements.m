@@ -35,7 +35,7 @@ maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integr
 
 % Lengthen the number of eyemovements such that the starting position
 % varies across trials and OIS'.
-paddingFactor = 8;
+paddingFactor = 2; % we multiply by two because we sample at 2 ms.
 
 % Check what eyemovements to simulate:
 if all(expParams.eyemovement(:,emIdx) == [1;0])      % if only drift, no MS
