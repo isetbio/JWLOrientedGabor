@@ -5,7 +5,7 @@ function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams, spatialDe
     if nargin < 4
         spatialDensity = [0 0.6 0.3 0.1]; % Relative density of cone types, K, L, M, S. 
     else
-        if expParams.verbose; fprintf('(%s): LMS density was reset to %1.1f:%1.1f:%1.1f\n', mfilename, spatialDensity(2),spatialDensity(3),spatialDensity(4)); end
+        if expParams.verbose; fprintf('(%s): LMS ratio was reset to %1.1f:%1.1f:%1.1f\n', mfilename, spatialDensity(2),spatialDensity(3),spatialDensity(4)); end
     end
 
     % Make CONE MOSAIC for a given eccentricity and polar angle
