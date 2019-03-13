@@ -10,6 +10,7 @@ function [] = plotPsychometricFunctions(expName, varargin)
 % [subFolderName] : string defining the sub folder you want to plot from.
 
 % [saveFig]       : boolean defining to save figures or not
+% [plotAvg]      : boolean defining to plot average across experiments runs or not
 
 %% 0. Set general experiment parameters
 p = inputParser;
@@ -17,12 +18,14 @@ p.KeepUnmatched = true;
 p.addRequired('expName', @ischar);
 p.addParameter('subFolderName', 'average', @ischar);
 p.addParameter('saveFig', false, @islogical);
+p.addParameter('plotAvg', true, @islogical);
 p.parse(expName, varargin{:});
 
 % Rename variables
 expName       = p.Results.expName;
 subFolderName = p.Results.subFolderName;
 saveFig       = p.Results.saveFig;
+plotAvg       = p.Results.plotAvg;
 
 % Load specific experiment parameters
 expParams                   = loadExpParams(expName, false);
@@ -34,6 +37,7 @@ figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials;
+
 
 %% 1. Set Weibull fitting parameters
 
@@ -47,7 +51,7 @@ fit.ctrr2   = cell(size(colors,1),1);
 fit.data    = cell(size(colors,1),1);
 
 % Set inital slope, threshold for first stage fitting
-fit.init   = [2, 0.02]; % slope, threshold at ~80%
+fit.init   = [2, 0.01]; % slope, threshold at ~80%
 fit.thresh = 0.75;
 
 % Get nr of conditions
@@ -62,82 +66,53 @@ fn = fieldnames(expParams);
 
 count = 1;
 for em = 1:nrEyemovTypes
+    
+    if (em == 1) && (strcmp(subFolderName, 'average_noStimPhaseShift'))
+        expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
+    else
+        expParams.contrastLevels = [0:0.005:0.04, 0.05:0.01:0.1];
+    end
+    
     for lmsIdx = 1:nrLMSRatios
         for eccen = 1:nrEccen
             for df = 1:nrDefocusLevels
                 
                 
                 %% 2. Get correct filename
-                switch expName
+                
+                if plotAvg
+                    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
+                        max(expParams.contrastLevels), ...
+                        sprintf('%i',expParams.eyemovement(:,em)'), ...
+                        expParams.eccentricities(eccen), ...
+                        expParams.defocusLevels(df), ...
+                        expParams.spatFreq, ...
+                        expParams.cparams.spatialDensity(lmsIdx,2), ...
+                        expParams.cparams.spatialDensity(lmsIdx,3), ...
+                        expParams.cparams.spatialDensity(lmsIdx,4));
                     
-                    case {'conetypes', 'conetypeslm90'}
-                        
-                        if strcmp(subFolderName,'average')
-                            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
-                                max(expParams.contrastLevels), ...
-                                sprintf('%i',expParams.eyemovement(:,em)'), ...
-                                expParams.eccentricities(eccen), ...
-                                expParams.defocusLevels(df), ...
-                                expParams.spatFreq, ...
-                                expParams.cparams.spatialDensity(lmsIdx,2), ...
-                                expParams.cparams.spatialDensity(lmsIdx,3), ...
-                                expParams.cparams.spatialDensity(lmsIdx,4));
-                            
-                            fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
-                                max(expParams.contrastLevels), ...
-                                sprintf('%i',expParams.eyemovement(:,em)'), ...
-                                expParams.eccentricities(eccen), ...
-                                expParams.defocusLevels(df), ...
-                                expParams.spatFreq, ...
-                                expParams.cparams.spatialDensity(lmsIdx,2), ...
-                                expParams.cparams.spatialDensity(lmsIdx,3), ...
-                                expParams.cparams.spatialDensity(lmsIdx,4));
-                            
-                            SE{count} = load(fullfile(dataPth, fNameSE));
-                            
-                        else
-                            
-                            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
-                                max(expParams.contrastLevels), ...
-                                sprintf('%i',expParams.eyemovement(:,em)'), ...
-                                expParams.eccentricities(eccen), ...
-                                expParams.defocusLevels(df), ...
-                                expParams.spatFreq, ...
-                                expParams.cparams.spatialDensity(lmsIdx,2), ...
-                                expParams.cparams.spatialDensity(lmsIdx,3), ...
-                                expParams.cparams.spatialDensity(lmsIdx,4));
-                        end
-                        
-                    case {'default', 'defocus', 'conedensity', 'eyemov'}
-                        
-                        if strcmp(subFolderName,'average')
-                            
-                            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_AVERAGE.mat', ...
-                                max(expParams.contrastLevels), ...
-                                sprintf('%i',expParams.eyemovement(:,em)'), ...
-                                expParams.eccentricities(eccen), ...
-                                expParams.defocusLevels(df), ...
-                                expParams.spatFreq);
-                            
-                            fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_SE.mat', ...
-                                max(expParams.contrastLevels), ...
-                                sprintf('%i',expParams.eyemovement(:,em)'), ...
-                                expParams.eccentricities(eccen), ...
-                                expParams.defocusLevels(df), ...
-                                expParams.spatFreq);
-                            
-                            SE{count} = load(fullfile(dataPth, fNameSE));
-                        
-                        else
-                            fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
-                                max(expParams.contrastLevels), ...
-                                sprintf('%i',expParams.eyemovement(:,em)'), ...
-                                expParams.eccentricities(eccen), ...
-                                expParams.defocusLevels(df), ...
-                                expParams.spatFreq);
-                        end
-                        
+                    fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
+                        max(expParams.contrastLevels), ...
+                        sprintf('%i',expParams.eyemovement(:,em)'), ...
+                        expParams.eccentricities(eccen), ...
+                        expParams.defocusLevels(df), ...
+                        expParams.spatFreq, ...
+                        expParams.cparams.spatialDensity(lmsIdx,2), ...
+                        expParams.cparams.spatialDensity(lmsIdx,3), ...
+                        expParams.cparams.spatialDensity(lmsIdx,4));
+                    
+                    SE{count} = load(fullfile(dataPth, fNameSE));
+                    
+                else
+                    
+                    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
+                        max(expParams.contrastLevels), ...
+                        sprintf('%i',expParams.eyemovement(:,em)'), ...
+                        expParams.eccentricities(eccen), ...
+                        expParams.defocusLevels(df), ...
+                        expParams.spatFreq);
                 end
+                
                 
                 %% 3. Load performance results
                 
@@ -182,20 +157,32 @@ figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488], 'Number
 idx = ~cellfun(@isempty, fit.ctrpred);
 fit.ctrpred = fit.ctrpred(idx);
 
+logzero = 3e-3;
+
 for ii = 1:length(fit.ctrpred)
     dataToFit = fit.data{ii};
+   
+    if (ii == 1) && (strcmp(subFolderName, 'average_noStimPhaseShift'))
+        expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
+        logzero = 4e-4;
+    else
+        expParams.contrastLevels = [0:0.005:0.04, 0.05:0.01:0.1];
+    end
+
+    
+    
     plot(xUnits(2:end), fit.ctrpred{ii}(2:end)*100, 'Color', colors(ii,:), 'LineWidth',2);
     scatter(expParams.contrastLevels(2:end), dataToFit(2:end), 80, colors(ii,:), 'filled');
     
-    plot(3e-3,dataToFit(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerFaceColor',colors(ii,:))
+    plot(logzero,dataToFit(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerFaceColor',colors(ii,:))
     
-    if strcmp(subFolderName, 'average')
-        errorbar([3e-3, expParams.contrastLevels(2:end)], dataToFit, SE{ii}.P_SE,'Color', colors(ii,:), 'LineStyle','none');
+    if plotAvg
+        errorbar([logzero, expParams.contrastLevels(2:end)], dataToFit, SE{ii}.P_SE,'Color', colors(ii,:), 'LineStyle','none');
     end
 end
 
-set(gca, 'XScale','log','XLim',[3e-3, max(expParams.contrastLevels)],'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
-set(gca, 'XTick', [3e-3, expParams.contrastLevels(2:2:end)], 'XTickLabel',sprintfc('%1.1f',[0 expParams.contrastLevels(2:2:end)]*100))
+set(gca, 'XScale','log','XLim',[logzero, max(expParams.contrastLevels)],'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
+set(gca, 'XTick', [logzero, expParams.contrastLevels(2:2:end)], 'XTickLabel',sprintfc('%1.1f',[0 expParams.contrastLevels(2:2:end)]*100))
 
 ylabel('Classifier Accuracy (% Correct)', 'FontSize',17)
 xlabel('Stimulus Contrast (%)', 'FontSize',17);
@@ -250,14 +237,7 @@ if strcmp('conedensity',expName) || strcmp('eccbasedcoverage',expName)
     totalVariance.densityPredictedByModel = diff(modelPredictionForPF);
     totalVariance.densityReportedInLiterature =  diff([densityDeg2(4), mean(densityDeg2([1 3]))]); % From Song's paper
     totalVariance.contributionOfDensityPercent = (totalVariance.densityReportedInLiterature / totalVariance.densityPredictedByModel) * 100;
-    
-    %     figure(10); clf; set(gcf, 'Color', 'w', 'Position', [300, 982, 289, 363])
-    %     bar([0.2 0.3], [totalVariance.densityPredictedByModel, totalVariance.densityReportedInLiterature], 'barWidth', 0.3, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'k');
-    %     set(gca, 'TickDir', 'out', 'XTick', [0.2,0.3], 'XTickLabel', {'Model prediction for PF', 'Max reported difference literature'}, 'XTickLabelRotation', 45, 'FontSize', 9);
-    %     ylim([0 (max(totalVariance.densityPredictedByModel) + 0.1*totalVariance.densityPredictedByModel)]);
-    %     xlim([0.15 0.37]); box off;
-    %     ylabel('Density (cones/deg^2)')
-    
+        
     fprintf('Total contribution of cone density according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDensityPercent)
     
     if saveFig
@@ -294,13 +274,24 @@ elseif strcmp(expName,'defocus')
     totalVariance.dioptersPredictedByModel = diff(modelPredictionForPF);
     totalVariance.dioptersReportedInLiterature = 0.2; % From Artal's papers
     totalVariance.contributionOfDefocusPercent = (totalVariance.dioptersReportedInLiterature / totalVariance.dioptersPredictedByModel) * 100;
-        
+    
     fprintf('Total contribution of defocus according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDefocusPercent)
+    
+elseif strcmp(expName,'conetypesmixed')
+
+    thresh = cell2mat(fit.ctrthresh);
+    lm = fitlm(M,thresh, 'quadratic');
+    
+    figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
+    plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
+    set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear', 'XLim', [-10,110])
+    xlabel('Probability of L-cones in L:M cone ratio ','FontSize',25); ylabel('Contrast threshold','FontSize',25)
+    legend off; title(sprintf('Contrast threshold vs probability of L-cones - R2: %1.2f', lm.Rsquared.ordinary))
     
     if saveFig
         if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s',expName)))
-        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s.eps',expName)))
+        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
+        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s.eps',expName)))
     end
     
 end
