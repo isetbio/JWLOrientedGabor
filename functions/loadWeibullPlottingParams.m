@@ -31,23 +31,24 @@ switch lower(expName)
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'conetypes'
-        colors              = copper(size(expParams.cparams.spatialDensity,1));
+        colors              = [0 0 0; 1 0 0; 0 0.5 0.25; 0 0 1];
         labels              = {'LMS default cone mosaic','L only cone mosaic','M only cone mosaic','S only cone mosaic'};
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
         
     case 'conetypesmixed'
         nrMixtures          = size(expParams.cparams.spatialDensity,1);
-        colors              = jet(nrMixtures);
+        colors              = [linspace(1,0,nrMixtures); linspace(0,.5,nrMixtures); linspace(0, .25, nrMixtures)]';
         labels              = cell(nrMixtures,1);
         for ii = 1:nrMixtures
             labels{ii}      =  sprintf('LMS cone ratio = %1.1f:%1.1f:%1.1f', expParams.cparams.spatialDensity(ii,2:4));
         end
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
+        M                   = [100:-10:0];
         
     case 'eyemov'
         colors              = [0 0 0;  0.5000, 1.0000, 0.5000; 1 0 0];
         labels              = cell(1,length(colors));
-        for emIdx = 1:length(colors)
+        for emIdx = 1:size(expParams.eyemovement,2)
             thisCondition = expParams.eyemovement(:,emIdx)';
             if all(thisCondition == [0 0])
                 labels{:,emIdx} = 'No eyemovements';
@@ -59,7 +60,7 @@ switch lower(expName)
                 labels{:,emIdx} = 'Drift and MS';
             end
         end
-        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
         
     case 'eyemovenhanced'
         colors              = copper(size(expParams.eyemovement,2));
