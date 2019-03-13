@@ -51,11 +51,11 @@ function [OG, scenes, tseries, fname] = ogStimuli(varargin)
 % See also vaStimuli in WLVernier repository
 
 %% Load a stored image, if it exists
-
-pth = fullfile(ogRootPath, 'Stimulus');
-if ~exist(pth, 'dir'), mkdir(pth); end
-fname = fullfile(pth, 'stimulus.mat');
-
+% 
+% pth = fullfile(ogRootPath, 'Stimulus');
+% if ~exist(pth, 'dir'), mkdir(pth); end
+% fname = fullfile(pth, 'stimulus.mat');
+% 
 % if exist(fname,'file')
 %     disp('Loading stimulus from file - parameters match')
 %     try
@@ -124,14 +124,14 @@ ogparams(2).ang      = -oGabor.ang;
 
 ogparams(3).name     = 'ccw_cos_OG';  
 ogparams(3).ang      = -oGabor.ang;
-ogparams(3).ph      =  oGabor.ph - pi;
+ogparams(3).ph       =  oGabor.ph - pi;
 
 
 % CW oriented Gabor on a zero background
-ogparams(4).name     = 'cw_sin_0OG'; 
+ogparams(4).name     = 'cw_sin_OG'; 
 
-ogparams(5).name     = 'cw_cos_0OG'; 
-ogparams(5).ph      =  oGabor.ph - pi;
+ogparams(5).name     = 'cw_cos_OG'; 
+ogparams(5).ph       =  oGabor.ph - pi;
 
 
 % Put test params and scene params into P for use with oisCreate
@@ -153,7 +153,7 @@ for ii = 1:4
 
 end
 
-save(fname,'OG','scenes','tseries','P');
+% save(fname,'OG','scenes','tseries','P');
 
 % Print out the offset in degrees of arc sec 
 % offsetDeg = sceneGet(scenes{1},'degrees per sample')*vparams(2).offset;
