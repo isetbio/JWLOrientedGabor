@@ -1,7 +1,8 @@
-% Compute mean over defocus percent correct
+% Compute mean over cone type runs with percent correct as a function of
+% contrast
 
 %% 0. Set general experiment parameters
-expName                  = 'conetypesLM90'; % choose from 'conetypesLM90' for L:M = 0.1:0.9 and vv, or 'conetypes' for single cone type mosaic
+expName                  = 'conetypesmixed'; % choose from 'conetypesmixed' for L:M = 0.1:0.09 to 0.5:0.5 and vv, or 'conetypes' for single cone type mosaic
 expParams                = loadExpParams(expName, false);
 [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
 
@@ -24,7 +25,7 @@ for lmsIdx = 1:nrLMSRatios
     lmsRatio = expParams.cparams.spatialDensity(lmsIdx,:);
     
     fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
-        max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement'),expParams.eccentricities,expParams.defocusLevels(df),expParams.spatFreq, lmsRatio(2),lmsRatio(3),lmsRatio(4));    
+        max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq, lmsRatio(2),lmsRatio(3),lmsRatio(4));    
     
     d = dir(fullfile(dataPth, 'run*'));
     
@@ -46,10 +47,10 @@ for lmsIdx = 1:nrLMSRatios
     
     P = mean(P,2);
     fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
-        max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement'),expParams.eccentricities,expParams.defocusLevels(df),expParams.spatFreq, lmsRatio(2),lmsRatio(3),lmsRatio(4));
+        max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq, lmsRatio(2),lmsRatio(3),lmsRatio(4));
     
     fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
-        max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement'),expParams.eccentricities,expParams.defocusLevels(df),expParams.spatFreq, lmsRatio(2),lmsRatio(3),lmsRatio(4));
+        max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq, lmsRatio(2),lmsRatio(3),lmsRatio(4));
     
     
     if ~exist(fullfile(dataPth, 'average'),'dir'), mkdir(fullfile(dataPth, 'average')); end;

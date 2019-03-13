@@ -41,6 +41,7 @@ p.addRequired('expName', @ischar);
 p.addParameter('saveFolder', [], @ischar);
 p.addParameter('seed', 1, @(x) (isstring(x) | isscalar(x)));
 p.addParameter('currentFlag', false, @islogical);
+p.addParameter('idealObserver', false, @islogical);
 p.parse(expName, varargin{:});
 
 % Check and create folder to save absorption data
@@ -76,6 +77,9 @@ else
     theseContrasts = expParams.contrastLevels;
     expParams.currentFlag = p.Results.currentFlag;
 end
+
+% Check if ideal observer is requested
+expParams.idealObserver = p.Results.idealObserver;
 
 if expParams.verbose
     fH = figure(99); clf; hold all;
@@ -137,7 +141,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         
                         %% ------------------- UPDATE SCENE and STIMULI (Contrast and SF) -------------------
-                        if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %4.3f, polar angle %d, eccen %1.2f, LMS ratio %1.1f:%1.1f:%1.1f\n', mfilename, c, expParams.polarAngle, eccen, lmsRatio(2),lmsRatio(3),lmsRatio(4)); end
+                        if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %1.3f, polar angle %d, eccen %1.2f, LMS ratio %1.1f:%1.1f:%1.1f\n', mfilename, c, expParams.polarAngle, eccen, lmsRatio(2),lmsRatio(3),lmsRatio(4)); end
                         fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat',...
                             c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         if expParams.verbose;  fprintf('(%s): File will be saved as %s\n', mfilename, fname); end
@@ -204,18 +208,25 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         
                         %% ------------------- Classify absorptions  -------------------
-                        fname = sprintf(...
+                        fnameClassify = sprintf(...
                             'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
                             c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         
                         if expParams.verbose
                             fprintf('(%s): Classify cone absorption data..\n', mfilename);
-                            fprintf('(%s): File will be saved as %s\n', mfilename, fname);
+                            fprintf('(%s): File will be saved as %s\n', mfilename, fnameClassify);
                         end
                         
                         if expParams.currentFlag
                             accuracy(c==theseContrasts) = getClassifierAccuracy(current);
-                            fname = ['current_' fname]; %#ok<AGROW>
+                            fnameClassify = ['current_' fnameClassify]; %#ok<AGROW>
+                        elseif expParams.idealObserver
+                            
+                            
+                            fnameTemplate = 'OGconeOutputs_contrast0.100_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat';
+                            fnameClassify = ['ideal_' fnameClassify];
+                            solutionType = 'svm';
+                            accuracy(c==theseContrasts) = getIdealObserverAccuracy(absorptions, fnameTemplate, expParams, solutionType);
                         else
                             accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions); % truncate time samples (only include stimulus on period)
                         end
@@ -226,7 +237,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                 end % contrast
                 
                 % Save
-                parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fname)),'accuracy',accuracy);
+                parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
                 
                 % Visualize if verbose
                 if expParams.verbose; set(0, 'CurrentFigure', fH); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow; end
