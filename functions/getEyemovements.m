@@ -35,7 +35,7 @@ maxEyeMovementsNum = OG(1).maxEyeMovementsNumGivenIntegrationTime(cMosaic.integr
 
 % Lengthen the number of eyemovements such that the starting position
 % varies across trials and OIS'.
-paddingFactor = 2; % we multiply by two because we sample at 2 ms.
+paddingFactor = 2; % we multiply by two because we sample the cone absorptions at 2 ms.
 
 % Check what eyemovements to simulate:
 if all(expParams.eyemovement(:,emIdx) == [1;0])      % if only drift, no MS
@@ -46,14 +46,14 @@ elseif all(expParams.eyemovement(:,emIdx) == [0;0]) % if none
     emPaths = zeros(expParams.nTrials, maxEyeMovementsNum*paddingFactor, 2);
 elseif all(expParams.eyemovement(:,emIdx) == [2;0]) % if enhanced drift, no MS
     error('this condition is not implemented yet')
-    em = fixationalEM;
-    % todo: add line to adjust the velocity/speed/etc
-    emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', currSeed, 'emobj', em);    
-elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
-    error('this condition is not implemented yet')
-    em = fixationalEM;
-    % todo: add line to adjust the velocity/speed/etc
-    emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', currSeed, 'emobj', em);
+%     em = fixationalEM;
+%     % todo: add line to adjust the velocity/speed/etc
+%     emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', currSeed, 'emobj', em);    
+% elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
+%     error('this condition is not implemented yet')
+%     em = fixationalEM;
+%     % todo: add line to adjust the velocity/speed/etc
+%     emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', currSeed, 'emobj', em);
 
 end
 
