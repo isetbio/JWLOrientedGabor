@@ -96,8 +96,7 @@ switch lower(expName)
         expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
         expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
-        expParams.cparams.spatialDensity = [0 0.6 0.3 0.1; ...  % Blank, L, M, S cone probabilities; Using default
-                                            0 0   1   0; ...    % L:M = 1:0                             
+        expParams.cparams.spatialDensity = [ 0 1   0   0; ...   % L:M = 1:0,  % Blank, L, M, S cone probabilities                             
                                             0 0.9 0.1 0; ...    % L:M = 0.9:0.1 
                                             0 0.8 0.2 0; ...    % L:M = 0.8:0.2
                                             0 0.7 0.3 0; ...    % L:M = 0.7:0.3
