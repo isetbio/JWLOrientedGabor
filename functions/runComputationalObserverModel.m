@@ -152,6 +152,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         sparams.gabor.contrast  = c;  % Michelson, range = [0 1]
                         sparams.freqCPD         = sf; % Cycles/degree
+                        if expParams.sparams.noStimPhase; sparams.noStimPhase = expParams.sparams.noStimPhase; end
                         [OG,scenes,tseries]     = ogStimuli(sparams);
                         
                         
@@ -221,12 +222,10 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                             accuracy(c==theseContrasts) = getClassifierAccuracy(current);
                             fnameClassify = ['current_' fnameClassify]; %#ok<AGROW>
                         elseif expParams.idealObserver
-                            
-                            
-                            fnameTemplate = 'OGconeOutputs_contrast0.100_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat';
+                             
+                            fnameTemplate = 'OGconeOutputs_contrast1.000_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat';
                             fnameClassify = ['ideal_' fnameClassify];
-                            solutionType = 'svm';
-                            accuracy(c==theseContrasts) = getIdealObserverAccuracy(absorptions, fnameTemplate, expParams, solutionType);
+                            accuracy(c==theseContrasts) = getIdealObserverAccuracy(absorptions, fnameTemplate);
                         else
                             accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions); % truncate time samples (only include stimulus on period)
                         end
