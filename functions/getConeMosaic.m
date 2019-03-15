@@ -29,7 +29,7 @@ function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams, spatialDe
     cMosaic.setSizeToFOV(cparams.cmFOV);
     
     % Add photon noise
-    cMosaic.noiseFlag = 'random'; % 'random' 'frozen' 'none'
+    cMosaic.noiseFlag = expParams.cparams.noise; % 'random' 'frozen' 'none'
     
     % CURRENT: Set outer segment to be computed with linear filters
     cMosaic.os = osLinear;
