@@ -29,10 +29,10 @@ plotAvg       = p.Results.plotAvg;
 
 % Load specific experiment parameters
 expParams                   = loadExpParams(expName, false);
-[xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
+[xUnits, colors, labels, M, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName,'toPlot', subFolderName);
+dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, 'toPlot',subFolderName);
 figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
@@ -66,13 +66,6 @@ fn = fieldnames(expParams);
 
 count = 1;
 for em = 1:nrEyemovTypes
-    
-    if (em == 1) && (strcmp(subFolderName, 'average_noStimPhaseShift'))
-        expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
-    else
-        expParams.contrastLevels = [0:0.005:0.04, 0.05:0.01:0.1];
-    end
-    
     for lmsIdx = 1:nrLMSRatios
         for eccen = 1:nrEccen
             for df = 1:nrDefocusLevels
@@ -105,12 +98,15 @@ for em = 1:nrEyemovTypes
                     
                 else
                     
-                    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f.mat', ...
+                    fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
                         max(expParams.contrastLevels), ...
                         sprintf('%i',expParams.eyemovement(:,em)'), ...
                         expParams.eccentricities(eccen), ...
                         expParams.defocusLevels(df), ...
-                        expParams.spatFreq);
+                        expParams.spatFreq, ...
+                        expParams.cparams.spatialDensity(lmsIdx,2), ...
+                        expParams.cparams.spatialDensity(lmsIdx,3), ...
+                        expParams.cparams.spatialDensity(lmsIdx,4));
                 end
                 
                 
@@ -138,7 +134,6 @@ for em = 1:nrEyemovTypes
                 %% 5. Find contrast threshold
                 %             diff   = abs(fit.ctrpred{count} - fit.thresh);
                 %             minval = find(diff == min(diff));
-                %fit.ctrthresh{count} = xUnits(minval(1));
                 fit.ctrthresh{count} = fit.ctrvar{count}(2);
                 fit.data{count} = accuracy.P;
                 
@@ -154,30 +149,35 @@ end % eyemovements
 
 figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488], 'NumberTitle', 'off', 'Name', sprintf('Psychometric function condition: %s', expName)); hold all;
 
+% Remove empty cells
 idx = ~cellfun(@isempty, fit.ctrpred);
 fit.ctrpred = fit.ctrpred(idx);
 
+% Define a zero point (just a very small number), to plot the 0 contrast,
+% since a log-linear plot does not define 0.
 logzero = 3e-3;
 
-for ii = 1:length(fit.ctrpred)
-    dataToFit = fit.data{ii};
-   
-    if (ii == 1) && (strcmp(subFolderName, 'average_noStimPhaseShift'))
-        expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
-        logzero = 4e-4;
-    else
-        expParams.contrastLevels = [0:0.005:0.04, 0.05:0.01:0.1];
-    end
+% Only plot first 2 and last 2 functions for conetypesmixed experiment
+if strcmp(expName,'conetypesmixed')
+    plotIdx = [1,2, 6, nrLMSRatios-1, nrLMSRatios];
+else
+    plotIdx = 1:length(fit.ctrpred);
+end
 
+% Loop over all functions to plot
+for ii = plotIdx
     
+    % What to plot?
+    dataToPlot = fit.data{ii};
+    fitToPlot  = fit.ctrpred{ii}*100;
+
+    plot(xUnits(2:end), fitToPlot(2:end), 'Color', colors(ii,:), 'LineWidth',2, 'LineStyle', lineStyles{ii});
+    scatter(expParams.contrastLevels(2:end), dataToPlot(2:end), 80, colors(ii,:), 'filled');
     
-    plot(xUnits(2:end), fit.ctrpred{ii}(2:end)*100, 'Color', colors(ii,:), 'LineWidth',2);
-    scatter(expParams.contrastLevels(2:end), dataToFit(2:end), 80, colors(ii,:), 'filled');
-    
-    plot(logzero,dataToFit(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerFaceColor',colors(ii,:))
+    plot(logzero,dataToPlot(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerFaceColor',colors(ii,:))
     
     if plotAvg
-        errorbar([logzero, expParams.contrastLevels(2:end)], dataToFit, SE{ii}.P_SE,'Color', colors(ii,:), 'LineStyle','none');
+        errorbar([logzero, expParams.contrastLevels(2:end)], dataToPlot, SE{ii}.P_SE,'Color', colors(ii,:), 'LineStyle','none');
     end
 end
 
@@ -188,7 +188,7 @@ ylabel('Classifier Accuracy (% Correct)', 'FontSize',17)
 xlabel('Stimulus Contrast (%)', 'FontSize',17);
 
 h = findobj(gca,'Type','line');
-legend([h(end:-2:2)],labels, 'Location','bestoutside'); legend boxoff
+legend([h(end:-2:2)],labels{plotIdx}, 'Location','bestoutside'); legend boxoff
 
 if saveFig
     if ~exist(figurePth,'dir'); mkdir(figurePth); end
@@ -201,12 +201,15 @@ if strcmp('conedensity',expName) || strcmp('eccbasedcoverage',expName)
     
     thresh = cell2mat(fit.ctrthresh);
     lm = fitlm(log10(M),thresh);
+    range = unique(round(log10(M)));
+    xticks = [range(1)-1; range; range(end)+1];
+    for ii = 1:length(xticks); xticklbls{ii} = sprintf('10^%d', xticks(ii)'); end
     
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
     set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
     xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast threshold (%)','FontSize',25)
-    set(gca, 'XTick',[ 3 4 5],'XTickLabel',round([10e3, 10e4, 10e5]), 'XLim', [2 5],'YLim', [0 0.04]),
+    set(gca, 'XTick',xticks,'XTickLabel',xticklbls, 'XLim', [2 5],'YLim', [0 0.04]),
     set(gca, 'YTick',[ 0 .01 .02 .03 .04],'YTickLabel',[0 1 2 3 4]),
     legend off; title(sprintf('Contrast threshold vs level of cone density - R2: %1.2f', lm.Rsquared.ordinary))
     
@@ -278,13 +281,13 @@ elseif strcmp(expName,'defocus')
     fprintf('Total contribution of defocus according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDefocusPercent)
     
 elseif strcmp(expName,'conetypesmixed')
-
+  
     thresh = cell2mat(fit.ctrthresh);
     lm = fitlm(M,thresh, 'quadratic');
     
     figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
     plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
-    set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear', 'XLim', [-10,110])
+    set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear', 'XLim', [-10,110], 'YLim', [0,.016])
     xlabel('Probability of L-cones in L:M cone ratio ','FontSize',25); ylabel('Contrast threshold','FontSize',25)
     legend off; title(sprintf('Contrast threshold vs probability of L-cones - R2: %1.2f', lm.Rsquared.ordinary))
     
