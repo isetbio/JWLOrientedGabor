@@ -1,4 +1,4 @@
-function P = getIdealObserverAccuracy(data, fname, expParams, solutionType)
+function P = getIdealObserverAccuracy(data, fname)
 % Function to train and test linear SVM classifier on cone data with cross-validation:
 %       P = getClassifierAccuracy(data)
 %
@@ -31,7 +31,7 @@ data = reshape(data, [], nrows, ncols, tSamples);
 data  = permute(data, [2 3 1 4]);
 
 % Compute fourier transform the cone array outputs
-data  = abs(fft2(data));
+% data  = abs(fft2(data));
 
 % reshape to all trials x [rows x colums x time] for classification
 data = permute(data, [3 1 2 4]);
@@ -44,7 +44,7 @@ data = data(idx, :);
 
 %% 2. Transform and reshape template
 
-template = load(fullfile(ogRootPath, 'data', expParams.name, 'idealtemplate', fname));
+template = load(fullfile(ogRootPath, 'data', 'idealobserver', 'idealtemplate', fname));
 template = template.absorptions;
 
 %   permute to trials x stimuli x rows x cols x time points
@@ -57,39 +57,34 @@ template = reshape(template, [], nrows, ncols, tSamples);
 template  = permute(template, [2 3 1 4]);
 
 % Compute fourier transform the cone array outputs
-template  = abs(fft2(template));
+% template  = abs(fft2(template));
 
 % reshape to all trials x [rows x colums x time] for classification
 template = permute(template, [3 1 2 4]);
-template = reshape(template, nTrials*2, []);
+% template = reshape(template, nTrials*2, []);
 
 % Label clockwise and counterclockwise trials
 label = [ones(nTrials, 1); -ones(nTrials, 1)]; % First set is CW, second set is CCW
 
-if strcmp(solutionType, 'analytical')
 %% 3. Define CW and CCW templates, compute log difference
 
 % Get all trials with the same label and only take one trial (since data
 % are all the same across time, without any photon noise or eyemovement or
 % phase shifts)
-templateCW = template(label==1,:);
+templateCW = template(label==1,:,:,1);
 templateCW = templateCW(1,:);
 
-templateCCW = template(label==-1,:);
+templateCCW = template(label==-1,:,:,1);
 templateCCW = templateCCW(1,:);
 
 % Check where templates are different, only those datapoints will be used
 % for the calculation
 diffIdx = find(templateCW~=templateCCW);
 
-% Compute a log difference between CW and CCW
-logTemplateDiff = log(templateCW(diffIdx))-log(templateCCW(diffIdx));
-C = sum(templateCW(diffIdx)-templateCCW(diffIdx));
-
-%% 4. Get loglikelihood ratio of data using the template
-for ii = 1:nTrials*2
-    
-    logLikelihoodRatio(ii) = sum( data(ii,:) .* logTemplateDiff ) + C;
+for ii = 1:nTeObservations       
+    llCW(ii) = sum(log10(poisspdf(data(ii,diffIdx),templateCW(diffIdx))));
+    llCCW(ii) = sum(log10(poisspdf(data(ii,diffIdx),templateCCW(diffIdx))));
+    logLikelihoodRatio(ii) = llCW(ii)-llCCW(ii);
     
     if logLikelihoodRatio > 0
         predictedLabel(ii) = 1;
@@ -99,19 +94,33 @@ for ii = 1:nTrials*2
 end
 
 
-elseif strcmp(solutionType, 'svm')
-%% 5.Predict stimulus category with weights from ideal observer template
 
-% Fit the SVM model.
-cvmdl = fitcsvm(template, label, 'Standardize', true, 'KernelFunction', 'linear');
+% % Compute a log difference between CW and CCW
+% logTemplateDiff = log(templateCW(diffIdx))-log(templateCCW(diffIdx));
+% C = sum(templateCW(diffIdx)-templateCCW(diffIdx));
+% 
+% %% 4. Get loglikelihood ratio of data using the template
+% for ii = 1:nTrials*2
+%     
+%     logLikelihoodRatio(ii) = sum( data(ii,diffIdx) .* logTemplateDiff ) + C;
+%     
+%     
+% end
 
-% Predict new trials
-predictedLabel = predict(cvmdl, data);
 
-% Transpose
-predictedLabel = predictedLabel';
-
-end
+% elseif strcmp(solutionType, 'svm')
+% %% 5.Predict stimulus category with weights from ideal observer template
+% 
+% % Fit the SVM model.
+% cvmdl = fitcsvm(template, label, 'Standardize', true, 'KernelFunction', 'linear');
+% 
+% % Predict new trials
+% predictedLabel = predict(cvmdl, data);
+% 
+% % Transpose
+% predictedLabel = predictedLabel';
+% 
+% end
 
 % Get percent accuracy
 P = 100*(sum([predictedLabel(1:nTrials)>0, predictedLabel((nTrials+1):end)<0])/(nTrials*2));
