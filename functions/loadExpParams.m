@@ -36,6 +36,7 @@ expParams.verbose          = true;                                      % Print 
 expParams.contrastLevels   = [0:0.005:0.04, 0.05:0.01:0.1];             % Stimulus contrast levels (Michelson)
 expParams.contrastLevelsPC = [0:0.005:0.04, 0.05:0.01:.1, 0.2:0.1:1];   % Stimulus contrast levels when computing photo current (Michelson)
 expParams.cparams.spatialDensity = [0 0.6 0.3 0.1];                     % Blank, L, M, S cone probabilities; Using default
+expParams.cparams.noise    = 'random';
 
 switch lower(expName)
 
@@ -107,8 +108,26 @@ switch lower(expName)
                                             0 0.2 0.8 0; ...    % L:M = 0.2:0.8
                                             0 0.1 0.9 0; ...    % L:M = 0.1:0.9
                                             0 0   1   0];       % L:M = 0:1  
+    case 'idealobserver'        
+        expParams.eyemovement     = [0 0]';           % No eye movements
+        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.cparams.noise   = 'none';           % no photon noise
+        expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
+        expParams.contrastLevels   = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];             % Stimulus contrast levels (Michelson)
 
-        
+    case 'defaultnophaseshift'        
+        expParams.eyemovement     = [0 0]';           % No eye movements
+        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.cparams.noise   = 'random';           % no photon noise
+        expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
+        expParams.contrastLevels   = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];             % Stimulus contrast levels (Michelson)
+
     case 'conetypeseccen'   
         expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
         expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40];  % Eccentricity (deg);
@@ -116,7 +135,7 @@ switch lower(expName)
         expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
         expParams.cparams.spatialDensity = [0 1 0 0; 0 0 1 0; 0 0 0 1]; % Blank, L, M, S cone probabilities; Using default, or only one cone time at a time  
-        
+
     case 'spatfreq' 
         expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
         expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
