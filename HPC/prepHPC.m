@@ -31,13 +31,13 @@ switch taskID
         saveFolder = sprintf('run%d', taskID-20);
         seed      = taskID-20;
         
-    case {26, 27, 28, 29, 20}
+    case {26, 27, 28, 29, 30}
         expName   = 'defaultnophaseshift';
         saveFolder = sprintf('run%d', taskID-25);
         seed      = taskID-25;
         
     case {31, 32, 33, 34, 35}
-        expName   = 'defaultnophaseshift';
+        expName   = 'eyemovnophaseshift';
         saveFolder = sprintf('run%d', taskID-30);
         seed      = taskID-30;
 end
