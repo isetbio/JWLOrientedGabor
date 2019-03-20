@@ -1,15 +1,15 @@
-%% s_makeFigure8_EffectOfConeDensity
+%% s_makeFigure9_EffectOfConeDensity
 
-% Script to plot figure 8 (effect of cone density on computational observer
+% Script to plot figure 9 (effect of cone density on computational observer
 % performance
 
 % Requires computational model to be ran with 'conedensity' condition, 
 % absorptions to be classified and averaged across iterations.
 
 
-%% Visualize different cone mosaics (Figure 8A)
+%% Visualize different cone mosaics (Figure 9A)
 plotExampleAbsorptionsFromConeMosaic('conedensity')
 
 
-%% Plot effect of cone density on psychometric function (Figure 8B)
+%% Plot effect of cone density on psychometric function (Figure 9B)
 plotPsychometricFunctions('conedensity', false)

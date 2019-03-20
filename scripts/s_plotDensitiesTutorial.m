@@ -1,6 +1,7 @@
-%% s_plotDensities
+%% s_plotDensitiesTutorial
 
-% Cone Density, see new function coneDensityReadData.m
+% Tutorial script to plot cone Density as a function of eccentricity and polar
+% angle. See also new ISETBIO function coneDensityReadData.m
 
 
 % Note that there are multiple sources in the literature for Cone Density:

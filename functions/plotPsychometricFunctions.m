@@ -1,6 +1,5 @@
 function [] = plotPsychometricFunctions(expName, varargin)
 
-
 % Function to compute psychometric functions based on the computational
 % observer model.
 
@@ -28,8 +27,8 @@ saveFig       = p.Results.saveFig;
 plotAvg       = p.Results.plotAvg;
 
 % Load specific experiment parameters
-expParams                   = loadExpParams(expName, false);
-[xUnits, colors, labels, M, lineStyles] = loadWeibullPlottingParams(expName);
+expParams    = loadExpParams(expName, false);
+[xUnits, colors, labels, xThresh, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Where to find data and save figures
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, 'toPlot',subFolderName);
@@ -37,7 +36,6 @@ figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials;
-
 
 %% 1. Set Weibull fitting parameters
 
@@ -69,10 +67,8 @@ for em = 1:nrEyemovTypes
     for lmsIdx = 1:nrLMSRatios
         for eccen = 1:nrEccen
             for df = 1:nrDefocusLevels
-                
-                
+                                
                 %% 2. Get correct filename
-                
                 if plotAvg
                     fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
                         max(expParams.contrastLevels), ...
@@ -96,8 +92,7 @@ for em = 1:nrEyemovTypes
                     
                     SE{count} = load(fullfile(dataPth, fNameSE));
                     
-                else
-                    
+                else                    
                     fName   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
                         max(expParams.contrastLevels), ...
                         sprintf('%i',expParams.eyemovement(:,em)'), ...
@@ -132,8 +127,6 @@ for em = 1:nrEyemovTypes
                 fit.ctrpred{count} = ogWeibull(fit.ctrvar{count}, xUnits);
                 
                 %% 5. Find contrast threshold
-                %             diff   = abs(fit.ctrpred{count} - fit.thresh);
-                %             minval = find(diff == min(diff));
                 fit.ctrthresh{count} = fit.ctrvar{count}(2);
                 fit.data{count} = accuracy.P;
                 
@@ -157,11 +150,11 @@ fit.ctrpred = fit.ctrpred(idx);
 % since a log-linear plot does not define 0.
 logzero = 3e-3;
 
-% Only plot first 2 and last 2 functions for conetypesmixed experiment
+% Only plot first two, 50:50 and last 2 functions for conetypes mixed experiment
 if strcmp(expName,'conetypesmixed')
-    plotIdx = [1,2, 6, nrLMSRatios-1, nrLMSRatios];
+    plotIdx = [1,2, 6, nrLMSRatios-1, nrLMSRatios]; % plot L:M ratio's 100:0, 90:10, 50:50, 10:90, 0:100
 else
-    plotIdx = 1:length(fit.ctrpred);
+    plotIdx = 1:length(fit.ctrpred); 
 end
 
 % Loop over all functions to plot
@@ -199,102 +192,14 @@ end
 %% 7. Plot density thresholds
 if strcmp('conedensity',expName) || strcmp('eccbasedcoverage',expName)
     
-    thresh = cell2mat(fit.ctrthresh);
-    lm = fitlm(log10(M),thresh);
-    range = unique(round(log10(M)));
-    xticks = [range(1)-1; range; range(end)+1];
-    for ii = 1:length(xticks); xticklbls{ii} = sprintf('10^%d', xticks(ii)'); end
-    
-    figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
-    plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
-    set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
-    xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast threshold (%)','FontSize',25)
-    set(gca, 'XTick',xticks,'XTickLabel',xticklbls, 'XLim', [2 5],'YLim', [0 0.04]),
-    set(gca, 'YTick',[ 0 .01 .02 .03 .04],'YTickLabel',[0 1 2 3 4]),
-    legend off; title(sprintf('Contrast threshold vs level of cone density - R2: %1.2f', lm.Rsquared.ordinary))
-    
-    if saveFig
-        if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
-    end
-    
-    % Get intercept and slope of log-linear fit
-    b_intcpt = lm.Coefficients.Estimate(1);
-    a_coeff  = lm.Coefficients.Estimate(2);
-    
-    % Reconstruct log-linear function
-    cThreshold = @(x) (a_coeff* log10(x)) + b_intcpt;
-    predictedDensity = @(y) 10.^((y-b_intcpt)./a_coeff);
-    
-    % contrast thresholds reported in behavior, corresponding to horizontal versus upper vertical meridian
-    reportedBehavior = [0.02+0.015, 0.02]; % (thresholds in % contrast)
-    modelPredictionForPF = predictedDensity(reportedBehavior);
-    
-    ang = [0, 90, 180, 270]; % polar angles: nasal (HM), superior (LVM), temporal (HM), inferior (UVM) (radians)
-    for jj = 1:length(ang)
-        densityMM2 = coneDensityReadData('coneDensitySource', 'Song2011Young','eccentricity',4.5,'angle',ang(jj),'eccentricityUnits', 'deg','whichEye','left');
-        densityDeg2(jj) = densityMM2/((1/.3)^2);
-    end
-    
-    totalVariance.densityPredictedByModel = diff(modelPredictionForPF);
-    totalVariance.densityReportedInLiterature =  diff([densityDeg2(4), mean(densityDeg2([1 3]))]); % From Song's paper
-    totalVariance.contributionOfDensityPercent = (totalVariance.densityReportedInLiterature / totalVariance.densityPredictedByModel) * 100;
-        
-    fprintf('Total contribution of cone density according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDensityPercent)
-    
-    if saveFig
-        if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('expVar_modelVSLiterature%s',expName)))
-        hgexport(gcf,fullfile(figurePth,sprintf('expVar_modelVSLiterature%s.eps',expName)))
-    end
+    plotConeDensityVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
     
 elseif strcmp(expName,'defocus')
     
-    thresh = cell2mat(fit.ctrthresh);
-    lm = fitlm(M(idx),thresh);
-    
-    figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
-    plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
-    set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear')
-    xlabel('Defocus (Diopters)','FontSize',25); ylabel('Contrast threshold','FontSize',25)
-    legend off; title(sprintf('Contrast threshold vs level of defocus - R2: %1.2f', lm.Rsquared.ordinary))
-    
-    if saveFig
-        if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s.eps',expName)))
-    end
-    
-    b_intcpt = lm.Coefficients.Estimate(1);
-    a_coeff  = lm.Coefficients.Estimate(2);
-    
-    cThreshold = @(x) (a_coeff*x) + b_intcpt;
-    diopters = @(y) (y-b_intcpt)./a_coeff;
-    reportedBehavior = [b_intcpt; b_intcpt+0.015]; % contrast thresholds reported in behavior, corresponding to horizontal versus upper vertical meridian
-    modelPredictionForPF = diopters(reportedBehavior);
-    
-    totalVariance.dioptersPredictedByModel = diff(modelPredictionForPF);
-    totalVariance.dioptersReportedInLiterature = 0.2; % From Artal's papers
-    totalVariance.contributionOfDefocusPercent = (totalVariance.dioptersReportedInLiterature / totalVariance.dioptersPredictedByModel) * 100;
-    
-    fprintf('Total contribution of defocus according to computational observer model: %1.1f percent\n', totalVariance.contributionOfDefocusPercent)
+    plotDefocusVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
     
 elseif strcmp(expName,'conetypesmixed')
   
-    thresh = cell2mat(fit.ctrthresh);
-    lm = fitlm(M,thresh, 'quadratic');
-    
-    figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
-    plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
-    set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear', 'XLim', [-10,110], 'YLim', [0,.016])
-    xlabel('Probability of L-cones in L:M cone ratio ','FontSize',25); ylabel('Contrast threshold','FontSize',25)
-    legend off; title(sprintf('Contrast threshold vs probability of L-cones - R2: %1.2f', lm.Rsquared.ordinary))
-    
-    if saveFig
-        if ~exist(figurePth,'dir'); mkdir(figurePth); end
-        savefig(fullfile(figurePth,sprintf('contrastThresholdVS%s',expName)))
-        hgexport(gcf,fullfile(figurePth,sprintf('contrastThresholdVS%s.eps',expName)))
-    end
+    plotConeTypesVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
     
 end

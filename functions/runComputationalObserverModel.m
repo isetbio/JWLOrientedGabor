@@ -1,8 +1,9 @@
 function runComputationalObserverModel(expName, varargin)
 %% runComputationalObserverModel(expName, [saveFolder], [], [seed], 1, [currentFlag], 0)
 
+% ---------------------------------------------------------
 % ---------------------- Description ----------------------
-
+% ---------------------------------------------------------
 % Function based on the old script s_ogRGC.m
 % This function computes multiple stages of the front-end of the visual system
 % for a particular visual scene or psychophysical experiment.
@@ -19,9 +20,10 @@ function runComputationalObserverModel(expName, varargin)
 % variation in optics, cone density, and RGC density/RF size as a function
 % of visual field position.
 
-% ---------------------- Script outline ----------------------
-%
-%   Stages:
+% ---------------------------------------------------------
+% ---------------------- Script outline -------------------
+% ---------------------------------------------------------
+% Stages:
 %       * Check inputs and define experimental manipulation
 %       * Create default scene and achromatic Gabor patches (OIS, optical image sequence).
 %       * Create cone mosaic
@@ -31,8 +33,48 @@ function runComputationalObserverModel(expName, varargin)
 %       * Compute cone absorptions
 %       * Classify absorptions
 %
-% EK/JW/ NYU ISETBIO Team, Copyright 2018
+% ---------------------------------------------------------
+% ---------------------- Inputs ---------------------------
+% ---------------------------------------------------------
+% expName       : (string) name of experimental condition to simulate
+%                 following options are available:
+%                   - 'default' (4.5 deg eccen, typical optics, eye movements, and cone mosaic)
+%                   - 'eyemov'  (vary eye movements: no eye movement, drift or drift and microsaccades)
+%                   - 'defocus' (vary defocus levels in optics: 0-2 diopters)
+%                   - 'conedensity' (vary cone density levels in mosaic: from density at fovea up to 30 deg eccentricity)
+%                   - 'conetypes'   (vary homogeneity of cone types in mosaic: L-, M- or S-cone only vs default LMS)
+%                   - 'conetypesmixed' (vary mixture of LM cone ratio in mosaic: from 100% L-cones to 100% M-cones)
+%                   - 'idealobserver' simulate experiment without photon noise, eye movements or phase shifts in Gabor stimuli
+%                 for more info and options, see loadExpParams.m
+% [saveFolder]   : (string) name of folder to save simulated cone absorptions (default =[])
+% [seed]         : (int) integer to reset random number generator to reproduce results (default = 1)
+% [currentFlag]  : (bool) flag to compute cone current in addition to cone absorptions (default = false)
 
+
+% The results of the computational observer model are written to file and
+% can be then be used to reproduce several of the published figures from the
+% paper the paper:
+%
+% Eline R. Kupers, Marisa Carrasco, Jonathan Winawer. (XXXX) Modeling
+% visual performance differences 'around' the visual field: A computational
+% observer approach.
+
+% ---------------------------------------------------------
+% ---------------------- Examples -------------------------
+% ---------------------------------------------------------
+
+% Example 1: Compute and classify cone absorptions for CW and CCW Gabor 
+% stimuli, with a cone mosaic at 4.5 deg eccentricity, typical human optics 
+%   runComputationalObserverModel('default')
+% Example 2: Quantify the effect of defocus in human optics
+%   runComputationalObserverModel('defocus')
+% Example 3: Quantify the effect of cone density, with fixed rng seed
+%   runComputationalObserverModel('conedensity', 'saveFolder', 'rng1', 'seed', 1)
+% Example 4: Quantify the effect of cone types, with reset rng seed
+%   runComputationalObserverModel('conetypes', 'saveFolder', 'rng1', 'seed', 'shuffle')
+
+
+% EK/JW/ NYU ISETBIO Team, Copyright 2018
 
 %% 0. Check inputs and define experimental parameters
 p = inputParser;
@@ -204,9 +246,6 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                                 'expParams', expParams, ...
                                 'emPaths', emPaths);
                         end
-                        
-                        
-                        
                         
                         %% ------------------- Classify absorptions  -------------------
                         fnameClassify = sprintf(...

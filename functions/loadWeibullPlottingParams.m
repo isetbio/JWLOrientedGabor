@@ -1,4 +1,4 @@
-function [xUnits, colors, labels, M, lineStyles] = loadWeibullPlottingParams(expName)
+function [xUnits, colors, labels, xThresh, lineStyles] = loadWeibullPlottingParams(expName)
 
 % Define Weibull plotting parameters for a specific experiment
 
@@ -7,11 +7,13 @@ function [xUnits, colors, labels, M, lineStyles] = loadWeibullPlottingParams(exp
 % INPUTS: 
 %   expName        : String defining which type of experiment parameters to use. 
 %                       Choose from 'default',
+%                                   'conetypes',
+%                                   'conetypesmixed',
 %                                   'eyemov',
-%                                   'eyemovEnhanced',
-%                                   'coneDensity',
+%                                   'eyemovenhanced', [currently not implemented]
+%                                   'idealobserver',
 %                                   'defocus',
-%                                   'ConeTypes',
+%                                   'conedensity',
 %                     (default= 'default')
 
 %% Check input arguments
@@ -21,7 +23,8 @@ end
 
 % Get general condition parameters
 expParams                = loadExpParams(expName, false);
-M                        = [];
+xThresh                  = []; % x units for plotting thresholds 
+
 % Define plotting parameters
 switch lower(expName)
     case 'default'
@@ -44,13 +47,15 @@ switch lower(expName)
             labels{ii}      =  sprintf('LMS cone ratio = %1.1f:%1.1f:%1.1f', expParams.cparams.spatialDensity(ii,2:4));
         end
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        M                   = [100:-10:0];
-        lineStyles          = {'-',':', '-', ':', '-'};
+        xThresh              = 100:-10:0;
+        lineStyles          = {'-',':', ':', ':', '-'};
 
     case 'eyemov'
         colors              = [0 0 0;  0.5000, 1.0000, 0.5000; 1 0 0];
         lineStyles          = {'-', '-', ':'};
         labels              = cell(1,length(colors));
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+
         for emIdx = 1:size(expParams.eyemovement,2)
             thisCondition = expParams.eyemovement(:,emIdx)';
             if all(thisCondition == [0 0])
@@ -63,13 +68,14 @@ switch lower(expName)
                 labels{:,emIdx} = 'Drift and MS';
             end
         end
-        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
 
     case 'idealobserver'
         xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
         colors = [0 0 0; 0 0 0; 0.5 0.5 0.5];
         lineStyles = {'-', ':', '-'};
-        labels = {'Ideal observer (Analytical)', 'Ideal observer (Simulation, 200 trials per stimulus)', 'Computational observer (SVM Classifier)'};
+        labels = {'Ideal observer (Analytical)', ...
+                  'Ideal observer (Simulation, 200 trials per stimulus)', ...
+                  'Computational observer (SVM Classifier)'};
         
     case 'eyemovenhanced'
         colors              = copper(size(expParams.eyemovement,2));
@@ -96,7 +102,7 @@ switch lower(expName)
         
         colors              = jet(length(expParams.eccentricities));
         
-        % Change x labels to density
+        % Get parameters to compute cone density levels
         whichEye          = 'left';
         cparams.cmFOV     =  2; % degrees
         
@@ -125,29 +131,29 @@ switch lower(expName)
         end
         
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
-        M = allDensity;
+        xThresh             = allDensity;
         lineStyles          = repmat({'-'},size(colors));
 
     case 'defocus'
-        
-        for df = expParams.defocusLevels
-            
-            % compute defocus
-            pupilRadiusMM = 1.5; % mm
-            M(df==expParams.defocusLevels) = wvfDefocusMicronsToDiopters(df,pupilRadiusMM*2); % convert to diopters
-            labels{df==expParams.defocusLevels} = sprintf('%2.2f Diopters of Defocus',M(df==expParams.defocusLevels));
-        end
         
         colors              = jet(length(expParams.defocusLevels));
         xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
         lineStyles          = repmat({'-'},1,length(expParams.defocusLevels));
 
-        
+        % Compute defocus levels
+        for df = expParams.defocusLevels            
+            pupilRadiusMM = 1.5; % mm
+            xThresh(df==expParams.defocusLevels) = wvfDefocusMicronsToDiopters(df,pupilRadiusMM*2); % convert to diopters
+            labels{df==expParams.defocusLevels} = sprintf('%2.2f Diopters of Defocus',xThresh(df==expParams.defocusLevels));
+        end
+      
     case 'conetypeseccen'
         
         colors              = jet(length(expParams.eccentricities));
-        
-        % Change x labels to density
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200); % 
+        lineStyles          = repmat({'-'},size(colors));
+
+        % Get parameters to compute cone density levels
         whichEye          = 'left';
         cparams.cmFOV     =  1; % degrees
         
@@ -175,9 +181,7 @@ switch lower(expName)
             labels{ec==expParams.eccentricities} = sprintf('%1.2f x10^4 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^4);
         end
         
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200); % 
-        M = allDensity;
-        lineStyles          = repmat({'-'},size(colors));
+        xThresh              = allDensity;
 
 end
 

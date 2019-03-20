@@ -23,7 +23,7 @@ cparams.cmFOV     =  2; % degrees
 if strcmp(expName, 'conedensity')
     eccentricities    = [0, 4.5, 40]; % deg
     nrPlots = length(eccentricities);
-    figttl = 'Figure 8A - 2D absorptions for 3 cone density levels';
+    figttl = 'Figure 9A - 2D absorptions for 3 cone density levels';
 else
     eccentricities    = 4.5; % deg
     cparams.spatialDensity = expParams.cparams.spatialDensity;
