@@ -32,7 +32,7 @@ saveFig       = p.Results.saveFig;
 
 % Load specific experiment parameters
 expParams                   = loadExpParams(expName, false);
-[xUnits, colors, labels, M, lineStyles] = loadWeibullPlottingParams(expName);
+[xUnits, colors, labels, ~, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Define figurePth
 figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName{1});
