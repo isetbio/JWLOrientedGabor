@@ -5,7 +5,7 @@ expName = 'idealobserver';
 expParams = loadExpParams(expName, false);
 
 % save figures?
-saveFigs = true;
+saveFigs = false;
 figure(1); clf; hold all;
 
 for c = expParams.contrastLevels
@@ -46,9 +46,9 @@ for c = expParams.contrastLevels
     
     if templateCW==templateCCW
         dprimeA(c==expParams.contrastLevels) = 0;
-        percentCorrect(c==expParams.contrastLevels) = 0.5;
+        percentCorrectAnalytic(c==expParams.contrastLevels) = 0.5;
         
-        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeA(c==expParams.contrastLevels),percentCorrect(c==expParams.contrastLevels))
+        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeA(c==expParams.contrastLevels),percentCorrectAnalytic(c==expParams.contrastLevels))
         plot([1 0.5 0],[1 0.5 0],'LineWidth',4); drawnow;
     else
         numerator = sum( (templateCCW-templateCW).*log(templateCCW./templateCW) );
@@ -56,37 +56,39 @@ for c = expParams.contrastLevels
     
         dprime = numerator/denominator;
         
-        criteria = linspace(min([templateCW; templateCCW]), max([templateCW; templateCCW]), 1000);
-        
-        pCW = 1-normcdf(0, dprime, 1);
-        pCCW = 1-pCW;
+        percentCorrectAnalytic(c==expParams.contrastLevels) = normcdf(dprime/2);
+
+%         criteria = linspace(min([templateCW; templateCCW]), max([templateCW; templateCCW]), 1000);
+%         
+%         pCW = 1-normcdf(0, dprime, 1);
+%         pCCW = 1-pCW;
 
 %         pCW = 1-normcdf(criteria, sum( templateCW.*log(templateCCW./templateCW) ), sqrt(sum( templateCW .* (log(templateCCW./templateCW).^2) )));
 %         pCCW = 1-normcdf(criteria, sum( templateCCW.*log(templateCCW./templateCW) ), sqrt(sum( templateCCW.* (log(templateCCW./templateCW).^2) )));
         dprimeA(c==expParams.contrastLevels) = dprime;
-        percentCorrect(c==expParams.contrastLevels) = -trapz([1 pCCW 0],[1 pCW 0]);
+        % percentCorrect(c==expParams.contrastLevels) = -trapz([1 pCCW 0],[1 pCW 0]);
 %         plot([1 pCCW 0],[1 pCW 0],'LineWidth',4); drawnow;
         
-        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeA(c==expParams.contrastLevels),percentCorrect(c==expParams.contrastLevels))
+        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeA(c==expParams.contrastLevels),percentCorrectAnalytic(c==expParams.contrastLevels))
 
     end
 end
 
 saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, 'idealtemplate');
 fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
-accuracy = percentCorrect.*100;
-parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
+accuracy = percentCorrectAnalytic.*100;
+% parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
 
 logzero = 4e-4;
-figure; plot(expParams.contrastLevels(2:end), percentCorrect(2:end), 'o-'); hold on;
-plot(logzero, percentCorrect(1), 'o')
+figure; plot(expParams.contrastLevels(2:end), percentCorrectAnalytic(2:end), 'o-'); hold on;
+plot(logzero, percentCorrectAnalytic(1), 'o')
 set(gca, 'XScale', 'log', 'YLim', [.4, 1])
 
 %% Simulation
 
 % If absorption data are the same, it doesn't matter..
 if all(templateCW == templateCCW)
-    percentCorrect = 0.5;
+    percentCorrectAnalytic = 0.5;
     dPrime = 0;
     
     
@@ -104,6 +106,7 @@ else %% classify the template data
     
     for c = expParams.contrastLevels
         
+
         fnameData = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1.mat', c);
         data = load(fullfile(ogRootPath, 'data', expNameData, subFolderName, fnameData));
         data = data.absorptions;
@@ -127,9 +130,15 @@ else %% classify the template data
         
         % Compute loglikelihood per trial
         for ii = 1:nTrials
-            ZGivenCW(ii)= sum(CWData(ii,:)' .* log(templateCCW./templateCW));
+            ZGivenCW(ii) = sum(CWData(ii,:)'  .* log(templateCCW./templateCW));
             ZGivenCCW(ii)= sum(CCWData(ii,:)' .* log(templateCCW./templateCW));
         end
+        
+        criterion = sum(templateCCW-templateCW);
+
+        numberCorrect = sum((ZGivenCW < criterion)) + sum((ZGivenCCW > criterion));
+        
+        percentCorrectSim(c==expParams.contrastLevels) = (numberCorrect) / (nTrials*2) ;
         
         % Compute mean and varianec across trials
         meanZGivenCCW = mean(ZGivenCCW);
@@ -142,7 +151,7 @@ else %% classify the template data
         
         
         % Plot loglikelihood distributions of the two stimulus classes
-        figure(1); clf; set(gcf, 'Color', 'w', 'Position', [508, 820, 1052, 518]);
+        figure(2); clf; set(gcf, 'Color', 'w', 'Position', [508, 820, 1052, 518]);
         subplot(1,2,1); hold all;
         [nA,xA] = hist(ZGivenCW,40);
         bar(xA,nA, 'EdgeColor', 'k', 'FaceColor', 'w')
@@ -165,19 +174,19 @@ else %% classify the template data
         end
         
         % Get the percent correct
-        percentCorrect(c==expParams.contrastLevels) = -trapz([1 FARate 0],[1 HitRate 0]);
+        percentCorrectSim2(c==expParams.contrastLevels) = -trapz([1 FARate 0],[1 HitRate 0]);
         subplot(1,2,2);
         plot([1 FARate 0],[1 HitRate 0],'r','LineWidth',4);
         xlabel('False Alarm Rate');
         ylabel('Hit Rate');
-        title(sprintf('ROC Curve, d-prime: %2.2f, percent corrent: %2.2f',dprime,percentCorrect(c==expParams.contrastLevels)*100));
+        title(sprintf('ROC Curve, d-prime: %2.2f, percent corrent: %2.2f',dprime,percentCorrectSim2(c==expParams.contrastLevels)*100));
         axis('square'); axis([0 1 0 1]); set(gca, 'TickDir', 'out', 'FontSize', 14);
         drawnow;
         
         
         
         % Report percent correct
-        fprintf('For contrast %1.4f: d-prime is %2.2f  percent correct %2.2f%%\n',c, dprime,percentCorrect(c==expParams.contrastLevels)*100);
+        fprintf('For contrast %1.4f: d-prime is %2.2f  percent correct %2.2f%%\n',c, dprime,percentCorrectSim2(c==expParams.contrastLevels)*100);
         
         if saveFigs
             savefig(fullfile(figurePth,sprintf('Geisler_Ideal_dprime_%s_c%1.4f.fig',expName,c)))
@@ -187,7 +196,7 @@ else %% classify the template data
     
     saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expNameData, subFolderName);
     fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
-    accuracy = percentCorrect.*100;
-    parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
+    accuracy = percentCorrectAnalytic.*100;
+    % parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
     
 end
