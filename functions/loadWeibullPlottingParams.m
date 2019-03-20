@@ -59,7 +59,7 @@ switch lower(expName)
         for emIdx = 1:size(expParams.eyemovement,2)
             thisCondition = expParams.eyemovement(:,emIdx)';
             if all(thisCondition == [0 0])
-                labels{:,emIdx} = 'No eyemovements';
+                labels{:,emIdx} = 'No eye movements';
             elseif  all(thisCondition == [1 0])
                 labels{:,emIdx} = 'Drift';
             elseif  all(thisCondition == [0 1])
@@ -69,6 +69,15 @@ switch lower(expName)
             end
         end
 
+    case 'eyemovnophaseshift'
+        colors              = [0 0 0;  0.5000, 1.0000, 0.5000; 1 0 0];
+        lineStyles          = {'-', '-', ':'};
+        labels              = cell(1,length(colors));
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        labels = {'No eye movements, no stim phase shift', ...
+                  'Drift, no stim phase shift', ...
+                  'Drift and MS, no stim phase shift'};
+        
     case 'idealobserver'
         xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
         colors = [0 0 0; 0 0 0; 0.5 0.5 0.5];

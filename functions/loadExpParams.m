@@ -127,6 +127,16 @@ switch lower(expName)
         expParams.cparams.noise   = 'random';           % no photon noise
         expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
         expParams.contrastLevels   = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];             % Stimulus contrast levels (Michelson)
+    
+    case 'eyemovnophaseshift'        
+        expParams.eyemovement     = [0 0; 1 0; 1 1]'; % No eye movements, drift only, drift and MS
+        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.cparams.noise   = 'random';           % no photon noise
+        expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
+        expParams.contrastLevels   = [0:0.001:0.01, 0.015, 0.02:0.01:0.1];  % Stimulus contrast levels (Michelson)
 
     case 'conetypeseccen'   
         expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
