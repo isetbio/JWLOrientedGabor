@@ -7,35 +7,40 @@ function [] = plotPsychometricFunctionsIdeal(expName, varargin)
 % INPUTS:
 % expName         : string defining the condition you want to plot.
 %                   (See load expParams for possible conditions)
-% [subFolderName] : string defining the sub folder you want to plot from.
+% [subFolderNames] : string defining the sub folder you want to plot from.
 
 % [saveFig]       : boolean defining to save figures or not
 % [plotAvg]      : boolean defining to plot average across experiments runs or not
+
+
+% Example:
+% subFolderNames{1} = 'idealtemplate';
+% subFolderNames{2} = 'idealsimulation';
+% subFolderNames{3} = 'svm';
+% subFolderNames{4} = 'svmtemplate';
+% subFolderNames{5} = 'svm400trials';
+% expName = 'idealobserver';
+% plotPsychometricFunctionsIdeal(expName, 'subFolderNames', subFolderNames, 'saveFig', true)
 
 %% 0. Set general experiment parameters
 p = inputParser;
 p.KeepUnmatched = true;
 p.addRequired('expName', @ischar);
-p.addParameter('subFolderName1', 'idealtemplate', @ischar);
-p.addParameter('subFolderName2', 'idealsimulation', @ischar);
-p.addParameter('subFolderName3', 'idealsvm', @ischar);
-
+p.addParameter('subFolderNames', [], @iscell)
 p.addParameter('saveFig', false, @islogical);
 p.parse(expName, varargin{:});
 
 % Rename variables
-expName       = p.Results.expName;
-subFolderName{1} = p.Results.subFolderName1;
-subFolderName{2} = p.Results.subFolderName2;
-subFolderName{3} = p.Results.subFolderName3;
-saveFig       = p.Results.saveFig;
+expName        = p.Results.expName;
+subFolderNames = p.Results.subFolderNames;
+saveFig        = p.Results.saveFig;
 
 % Load specific experiment parameters
 expParams                   = loadExpParams(expName, false);
 [xUnits, colors, labels, ~, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Define figurePth
-figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName{1});
+figurePth   = fullfile(ogRootPath,'figs', expName, subFolderNames{1});
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials;
@@ -56,7 +61,7 @@ fit.thresh = 0.75;
 
 %% 2. Load classification accuracy
 
-% Load first filename
+% Load first filename: IDEAL ANALYTICAL
 fName{1}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-none_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
@@ -67,7 +72,7 @@ fName{1}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1
     expParams.cparams.spatialDensity(1,3), ...
     expParams.cparams.spatialDensity(1,4));
 
-% Load first filename
+% Load second filename: IDEAL SIMULATION
 fName{2}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
@@ -78,7 +83,7 @@ fName{2}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1
     expParams.cparams.spatialDensity(1,3), ...
     expParams.cparams.spatialDensity(1,4));
 
-% Load first filename
+% Load third filename: mean SVM standard - no phase shifts
 fName{3}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
@@ -102,16 +107,49 @@ fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_def
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
 SE{3} = load(fullfile(dataPth, 'svm', fNameSE));
 
+
+% Load fourth filename: SVM template - no phase shifts
+fName{4}   = sprintf('svmtemplate_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+    max(expParams.contrastLevels), ...
+    sprintf('%i',expParams.eyemovement'), ...
+    expParams.eccentricities, ...
+    expParams.defocusLevels, ...
+    expParams.spatFreq, ...
+    expParams.cparams.spatialDensity(1,2), ...
+    expParams.cparams.spatialDensity(1,3), ...
+    expParams.cparams.spatialDensity(1,4));
+
+% Load fifth filename: 800 trials per stim class SVM template - no phase shifts
+fName{5}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+    max(expParams.contrastLevels), ...
+    sprintf('%i',expParams.eyemovement'), ...
+    expParams.eccentricities, ...
+    expParams.defocusLevels, ...
+    expParams.spatFreq, ...
+    expParams.cparams.spatialDensity(1,2), ...
+    expParams.cparams.spatialDensity(1,3), ...
+    expParams.cparams.spatialDensity(1,4));
+
+
+%% Loop over filenames to fit the Weibull
 for ii = 1:length(fName)
     
-    dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderName{ii});
+    dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderNames{ii});
     if ii == 1
         fit.init   = [3, 0.0006]; % slope, threshold at ~80%
     elseif ii == 2
         fit.init   = [2, 0.005]; % slope, threshold at ~80%
     elseif ii == 3
-        fit.init   = [2, 0.005]; % slope, threshold at ~80%
+        fit.init   = [2, 0.005]; % slope, threshold at ~80% 
         expParams.contrastLevels =[0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
+        xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+    elseif ii == 4
+        fit.init   = [2, 0.01]; % slope, threshold at ~80%
+        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
+        xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+    elseif ii == 5
+        fit.init   = [2, 0.001]; % slope, threshold at ~80%
+        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
         xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
     end
     
@@ -167,16 +205,21 @@ for ii = 1:length(fName)
     % Reset contrasts and logzero point for one special case
     if ii==3
         expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
-        xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+    elseif ii==4
+        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
     else
         expParams.contrastLevels = [0:0.0001:0.001, 0.0015, 0.002, 0.003, 0.004];
-        xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
     end
     
-    %
+    % Redefine xUnits
+    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+
+    % Plot curve
     plot(xUnits(2:end), fitToPlot(2:end), 'Color', colors(ii,:), 'LineWidth',2, 'LineStyle', lineStyles{ii});
     scatter(expParams.contrastLevels(2:end), dataToPlot(2:end), 80, colors(ii,:),'MarkerEdgeColor',colors(ii,:), 'MarkerFaceColor', markerColors(ii,:));
     
+    % Plot zero point on arbitrary small 'logzero' point, since log axis
+    % does not have an actual origin point
     plot(logzero,dataToPlot(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerEdgeColor',colors(ii,:), 'MarkerFaceColor', markerColors(ii,:))
     
     if ii ==3
