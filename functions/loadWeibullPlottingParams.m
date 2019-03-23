@@ -80,11 +80,19 @@ switch lower(expName)
         
     case 'idealobserver'
         xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        colors = [0 0 0; 0 0 0; 0.5 0.5 0.5];
-        lineStyles = {'-', ':', '-'};
+        colors = [0 0 0; 0 0 0; hsv(3)];
+        lineStyles = {'-', ':', '-', '-', '-'};
         labels = {'Ideal observer (Analytical)', ...
                   'Ideal observer (Simulation, 200 trials per stimulus)', ...
-                  'Computational observer (SVM Classifier)'};
+                  'Computational observer (SVM Classifier)', ...
+                  'Computational observer with template, no FFT (SVM Classifier)', ...
+                  'Computational observer (SVM Classifier, 800 trials per stimulus)'};
+              
+     case 'defaultnophaseshift'
+        xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        colors = [0 0 0];
+        lineStyles = {'-'};
+        labels = {'No eye movements, no phase shift'};
         
     case 'eyemovenhanced'
         colors              = copper(size(expParams.eyemovement,2));
