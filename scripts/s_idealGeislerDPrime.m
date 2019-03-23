@@ -7,10 +7,6 @@ figure(1); clf; hold all;
 % Set arbitrary zero point for log-linear plot
 logzero = 5e-5;
 
-% preallocate space
-dprimeSimulation = NaN(size(expParams.contrastLevels));
-percentCorrectSimulation = NaN(size(expParams.contrastLevels));
-
  %% 1. Analytical solution
  
  % Load parameters
