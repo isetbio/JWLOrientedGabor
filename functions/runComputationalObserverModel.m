@@ -184,7 +184,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         %% ------------------- UPDATE SCENE and STIMULI (Contrast and SF) -------------------
                         if expParams.verbose; fprintf('(%s): Computing absorptions for stimulus contrast %1.3f, polar angle %d, eccen %1.2f, LMS ratio %1.1f:%1.1f:%1.1f\n', mfilename, c, expParams.polarAngle, eccen, lmsRatio(2),lmsRatio(3),lmsRatio(4)); end
-                        fname = sprintf('OGconeOutputs_contrast%1.3f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat',...
+                        fname = sprintf('OGconeOutputs_contrast%1.4f_pa%d_eye%d%d_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat',...
                             c,expParams.polarAngle,expParams.eyemovement(1,emIdx),expParams.eyemovement(2,emIdx), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         if expParams.verbose;  fprintf('(%s): File will be saved as %s\n', mfilename, fname); end
                         
@@ -249,7 +249,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         %% ------------------- Classify absorptions  -------------------
                         fnameClassify = sprintf(...
-                            'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
+                            'Classify_coneOutputs_contrast%1.4f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
                             c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         
                         if expParams.verbose
@@ -266,10 +266,10 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
 %                             fnameClassify = ['ideal_' fnameClassify];
 %                             accuracy(c==theseContrasts) = getIdealObserverAccuracy(absorptions, fnameTemplate);
                         else
-                            accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions); % 
+                            accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions); % truncate time samples (only include stimulus on period)
                         end
                         
-                        if expParams.verbose; fprintf('(%s): Classifier accuracy for stim contrast %1.3f is %3.2f..\n', mfilename, c, accuracy(c==theseContrasts)); end
+                        if expParams.verbose; fprintf('(%s): Classifier accuracy for stim contrast %1.4f is %3.2f..\n', mfilename, c, accuracy(c==theseContrasts)); end
                         
                     end % sf
                 end % contrast
