@@ -85,5 +85,5 @@ end
 % Save simulation results
 saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expNameData, subFolderName);
 fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
-accuracy = percentCorrectSimulation;
+accuracy = percentCorrectSimulation.*100;
 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
