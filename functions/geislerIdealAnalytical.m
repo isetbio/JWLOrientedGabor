@@ -7,10 +7,10 @@ percentCorrectAnalytic = NaN(size(expParams.contrastLevels));
 
 for c = expParams.contrastLevels
     % Get file name ideal template
-    fnameTemplate = sprintf('OGconeOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
+    fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
     
     % Load data
-    template = load(fullfile(ogRootPath, 'data', expNameTemplate, 'idealtemplate', fnameTemplate));
+    template = load(fullfile(ogRootPath, 'data', expParams.name, 'idealtemplate', fnameTemplate));
     template = template.absorptions;
     
     % Get the trials and samples (should be the data for all data sets though
@@ -43,7 +43,7 @@ for c = expParams.contrastLevels
         dprimeAnalytic(c==expParams.contrastLevels) = 0;
         percentCorrectAnalytic(c==expParams.contrastLevels) = 0.5;
         
-        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeAnalytic(c==expParams.contrastLevels),percentCorrectAnalytic(c==expParams.contrastLevels))
+        fprintf('Contrast %1.4f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeAnalytic(c==expParams.contrastLevels),percentCorrectAnalytic(c==expParams.contrastLevels))
     else
         numerator = sum( (templateCCW-templateCW).*log(templateCCW./templateCW) );
         denominator = sqrt( 0.5* sum( (templateCW+templateCCW) .* (log(templateCCW./templateCW)).^2 ));
@@ -53,12 +53,12 @@ for c = expParams.contrastLevels
         percentCorrectAnalytic(c==expParams.contrastLevels) = normcdf(dprime/2);
         dprimeAnalytic(c==expParams.contrastLevels) = dprime;
         
-        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeAnalytic(c==expParams.contrastLevels),percentCorrectAnalytic(c==expParams.contrastLevels))
+        fprintf('Contrast %1.4f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeAnalytic(c==expParams.contrastLevels),percentCorrectAnalytic(c==expParams.contrastLevels))
         
     end
 end
 
-saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expNameTemplate, 'idealtemplate');
+saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expParams.name, 'idealtemplate');
 fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
 accuracy = percentCorrectAnalytic;
 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);

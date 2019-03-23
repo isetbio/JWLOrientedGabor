@@ -116,7 +116,7 @@ switch lower(expName)
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.cparams.noise   = 'none';           % no photon noise
         expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
-        expParams.contrastLevels   = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];             % Stimulus contrast levels (Michelson)
+        expParams.contrastLevels   = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];             % Stimulus contrast levels (Michelson)
 
     case 'defaultnophaseshift'        
         expParams.eyemovement     = [0 0]';           % No eye movements
@@ -126,7 +126,7 @@ switch lower(expName)
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.cparams.noise   = 'random';           % no photon noise
         expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
-        expParams.contrastLevels   = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];             % Stimulus contrast levels (Michelson)
+        expParams.contrastLevels   = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];             % Stimulus contrast levels (Michelson)
     
     case 'eyemovnophaseshift'        
         expParams.eyemovement     = [0 0; 1 0; 1 1]'; % No eye movements, drift only, drift and MS
@@ -136,7 +136,7 @@ switch lower(expName)
         expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.cparams.noise   = 'random';           % no photon noise
         expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
-        expParams.contrastLevels   = [0:0.001:0.01, 0.015, 0.02:0.01:0.1];  % Stimulus contrast levels (Michelson)
+        expParams.contrastLevels   = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];  % Stimulus contrast levels (Michelson)
 
     case 'conetypeseccen'   
         expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades

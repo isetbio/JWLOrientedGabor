@@ -7,7 +7,7 @@ percentCorrectSVMDiffTemplate  = NaN(size(expParams.contrastLevels));
 for c = expParams.contrastLevels
     
     % Get file name ideal template
-    fnameTemplate = sprintf('OGconeOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
+    fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
     
     % Load template
     template = load(fullfile(ogRootPath, 'data', expNameTemplate, 'idealtemplate', fnameTemplate));
@@ -68,7 +68,7 @@ for c = expParams.contrastLevels
     label = [ones(nTrials, 1); -ones(nTrials, 1)];
 
     % Fit the SVM model.
-    cvmdl = fitcsvm(data2, label, 'Standardize', true, 'KernelFunction', 'linear', 'kFold', 10);
+    cvmdl = fitcsvm(data2, label, 'Standardize', false, 'KernelFunction', 'linear', 'kFold', 10);
 
     % predict the data not in the training set.
     classLoss = kfoldLoss(cvmdl);

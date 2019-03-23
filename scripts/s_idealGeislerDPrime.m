@@ -5,7 +5,7 @@ saveFigs = false;
 figure(1); clf; hold all;
 
 % Set arbitrary zero point for log-linear plot
-logzero = 4e-4;
+logzero = 5e-5;
 
 % preallocate space
 dprimeSimulation = NaN(size(expParams.contrastLevels));
@@ -18,7 +18,7 @@ expNameTemplate = 'idealobserver';
 expParams       = loadExpParams(expNameTemplate, false);
 
 % Get percent correct
-percentCorrectAnalytic = geislerAnalytical(expParams);
+percentCorrectAnalytic = geislerIdealAnalytical(expParams);
 
 % Plot it
 figure(1); plot(expParams.contrastLevels(2:end), percentCorrectAnalytic(2:end), 'ko-'); hold on;
@@ -33,7 +33,7 @@ expParams       = loadExpParams(expNameData, false);
 subFolderName   = 'run1';
 
 % Get percent correct
-percentCorrectSVMDiffTemplate = geislerIdealSimulation(expNameData, subFolderName);
+percentCorrectSVMDiffTemplate = geislerIdealSimulation(expParams, expNameTemplate, expNameData, subFolderName);
 
 % Plot it
 figure(1); plot(expParams.contrastLevels(2:end), percentCorrectSVMDiffTemplate(2:end), 'ko-'); hold on;

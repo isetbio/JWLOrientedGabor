@@ -1,4 +1,4 @@
-function accuracy = geislerIdealSimulation(expNameData, subFolderName)
+function accuracy = geislerIdealSimulation(expParams, expNameTemplate, expNameData, subFolderName)
 
 % preallocate space
 percentCorrectSimulation = NaN(size(expParams.contrastLevels));
@@ -6,7 +6,7 @@ percentCorrectSimulation = NaN(size(expParams.contrastLevels));
 for c = expParams.contrastLevels
     
     % Get file name ideal template
-    fnameTemplate = sprintf('OGconeOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
+    fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
     
     % Load template
     template = load(fullfile(ogRootPath, 'data', expNameTemplate, 'idealtemplate', fnameTemplate));

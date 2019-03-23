@@ -137,22 +137,24 @@ for ii = 1:length(fName)
     dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderNames{ii});
     if ii == 1
         fit.init   = [3, 0.0006]; % slope, threshold at ~80%
+        expParams = loadExpParams('idealobserver',false);
     elseif ii == 2
         fit.init   = [2, 0.005]; % slope, threshold at ~80%
+        expParams = loadExpParams('defaultnophaseshift',false);
     elseif ii == 3
         fit.init   = [2, 0.005]; % slope, threshold at ~80% 
-        expParams.contrastLevels =[0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
-        xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+        expParams = loadExpParams('defaultnophaseshift',false);
+        expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
     elseif ii == 4
         fit.init   = [2, 0.01]; % slope, threshold at ~80%
-        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
-        xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+        expParams = loadExpParams('defaultnophaseshift',false);
     elseif ii == 5
         fit.init   = [2, 0.001]; % slope, threshold at ~80%
-        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
-        xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+        expParams = loadExpParams('defaultnophaseshift',false);
     end
     
+    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+
     % load model performance
     accuracy = load(fullfile(dataPth, fName{ii}));
     fn = fieldnames(accuracy);
@@ -203,14 +205,24 @@ for ii = 1:length(fName)
     fitToPlot  = fit.ctrpred{ii}*100;
     
     % Reset contrasts and logzero point for one special case
-    if ii==3
+    if ii == 1
+        fit.init   = [3, 0.0006]; % slope, threshold at ~80%
+        expParams = loadExpParams('idealobserver',false);
+    elseif ii == 2
+        fit.init   = [2, 0.005]; % slope, threshold at ~80%
+        expParams = loadExpParams('idealobserver',false);
+    elseif ii == 3
+        fit.init   = [2, 0.005]; % slope, threshold at ~80% 
+        expParams = loadExpParams('defaultnophaseshift',false);
         expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
-    elseif ii==4
-        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
-    else
-        expParams.contrastLevels = [0:0.0001:0.001, 0.0015, 0.002, 0.003, 0.004];
+    elseif ii == 4
+        fit.init   = [2, 0.01]; % slope, threshold at ~80%
+        expParams = loadExpParams('defaultnophaseshift',false);
+    elseif ii == 5
+        fit.init   = [2, 0.001]; % slope, threshold at ~80%
+        expParams = loadExpParams('defaultnophaseshift',false);
     end
-    
+       
     % Redefine xUnits
     xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
 
