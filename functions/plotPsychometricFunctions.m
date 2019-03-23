@@ -52,6 +52,10 @@ fit.data    = cell(size(colors,1),1);
 fit.init   = [2, 0.01]; % slope, threshold at ~80%
 fit.thresh = 0.75;
 
+if strcmp(expName,'eyemovnophaseshift')
+    fit.init   = [2, 0.001];
+end
+
 % Get nr of conditions
 nrEyemovTypes    = size(expParams.eyemovement,2);
 nrEccen          = length(expParams.eccentricities);
