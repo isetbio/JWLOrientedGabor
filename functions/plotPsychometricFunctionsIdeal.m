@@ -107,20 +107,20 @@ fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_def
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
 SE{3} = load(fullfile(dataPth, 'svm', fNameSE));
 
-
-% Load fourth filename: SVM template - no phase shifts
-fName{4}   = sprintf('svmtemplate_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
-    max(expParams.contrastLevels), ...
-    sprintf('%i',expParams.eyemovement'), ...
-    expParams.eccentricities, ...
-    expParams.defocusLevels, ...
-    expParams.spatFreq, ...
-    expParams.cparams.spatialDensity(1,2), ...
-    expParams.cparams.spatialDensity(1,3), ...
-    expParams.cparams.spatialDensity(1,4));
+% 
+% % Load fourth filename: SVM template - no phase shifts
+% fName{4}   = sprintf('svmtemplate_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+%     max(expParams.contrastLevels), ...
+%     sprintf('%i',expParams.eyemovement'), ...
+%     expParams.eccentricities, ...
+%     expParams.defocusLevels, ...
+%     expParams.spatFreq, ...
+%     expParams.cparams.spatialDensity(1,2), ...
+%     expParams.cparams.spatialDensity(1,3), ...
+%     expParams.cparams.spatialDensity(1,4));
 
 % Load fifth filename: 800 trials per stim class SVM template - no phase shifts
-fName{5}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+fName{4}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
     expParams.eccentricities, ...
@@ -129,6 +129,19 @@ fName{5}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_de
     expParams.cparams.spatialDensity(1,2), ...
     expParams.cparams.spatialDensity(1,3), ...
     expParams.cparams.spatialDensity(1,4));
+
+fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
+    max(expParams.contrastLevels), ...
+    sprintf('%i',expParams.eyemovement'), ...
+    expParams.eccentricities, ...
+    expParams.defocusLevels, ...
+    expParams.spatFreq, ...
+    expParams.cparams.spatialDensity(1,2), ...
+    expParams.cparams.spatialDensity(1,3), ...
+    expParams.cparams.spatialDensity(1,4));
+
+dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
+SE{4} = load(fullfile(dataPth, 'svm400trials', fNameSE));
 
 
 %% Loop over filenames to fit the Weibull
@@ -136,24 +149,20 @@ for ii = 1:length(fName)
     
     dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderNames{ii});
     if ii == 1
-        fit.init   = [3, 0.0006]; % slope, threshold at ~80%
+        fit.init   = [3, 0.005]; % slope, threshold at ~80%
         expParams = loadExpParams('idealobserver',false);
     elseif ii == 2
-        fit.init   = [2, 0.005]; % slope, threshold at ~80%
-        expParams = loadExpParams('defaultnophaseshift',false);
+        fit.init   = [3, 0.005]; % slope, threshold at ~80%
+        expParams = loadExpParams('idealobserver',false);
     elseif ii == 3
-        fit.init   = [2, 0.005]; % slope, threshold at ~80% 
+        fit.init   = [2, 0.01]; % slope, threshold at ~80% 
         expParams = loadExpParams('defaultnophaseshift',false);
-        expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
     elseif ii == 4
         fit.init   = [2, 0.01]; % slope, threshold at ~80%
         expParams = loadExpParams('defaultnophaseshift',false);
-    elseif ii == 5
-        fit.init   = [2, 0.001]; % slope, threshold at ~80%
-        expParams = loadExpParams('defaultnophaseshift',false);
     end
     
-    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),1000);
 
     % load model performance
     accuracy = load(fullfile(dataPth, fName{ii}));
@@ -177,7 +186,7 @@ for ii = 1:length(fName)
     %% 4. Find contrast threshold
     %             diff   = abs(fit.ctrpred{count} - fit.thresh);
     %             minval = find(diff == min(diff));
-    fit.ctrthresh{ii} = fit.ctrvar{ii}(2);
+   fit.ctrthresh{ii} = fit.ctrvar{ii}(2);
     fit.data{ii} = accuracy.P;
     
 end
@@ -206,25 +215,17 @@ for ii = 1:length(fName)
     
     % Reset contrasts and logzero point for one special case
     if ii == 1
-        fit.init   = [3, 0.0006]; % slope, threshold at ~80%
         expParams = loadExpParams('idealobserver',false);
     elseif ii == 2
-        fit.init   = [2, 0.005]; % slope, threshold at ~80%
         expParams = loadExpParams('idealobserver',false);
     elseif ii == 3
-        fit.init   = [2, 0.005]; % slope, threshold at ~80% 
         expParams = loadExpParams('defaultnophaseshift',false);
-        expParams.contrastLevels = [0:0.001:0.01, 0.015:0.005:0.04, 0.05:0.01:0.1];
     elseif ii == 4
-        fit.init   = [2, 0.01]; % slope, threshold at ~80%
-        expParams = loadExpParams('defaultnophaseshift',false);
-    elseif ii == 5
-        fit.init   = [2, 0.001]; % slope, threshold at ~80%
         expParams = loadExpParams('defaultnophaseshift',false);
     end
        
     % Redefine xUnits
-    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),200);
+    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),1000);
 
     % Plot curve
     plot(xUnits(2:end), fitToPlot(2:end), 'Color', colors(ii,:), 'LineWidth',2, 'LineStyle', lineStyles{ii});
@@ -234,16 +235,17 @@ for ii = 1:length(fName)
     % does not have an actual origin point
     plot(logzero,dataToPlot(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerEdgeColor',colors(ii,:), 'MarkerFaceColor', markerColors(ii,:))
     
-    if ii ==3
+    if ~isempty(SE{ii})
         errorbar([logzero, expParams.contrastLevels(2:end)], dataToPlot, SE{ii}.P_SE,'Color', colors(ii,:), 'LineStyle','none');
     end
 end
 
-expParams.contrastLevels = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];
-xmax = 0.04;
+% expParams.contrastLevels = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];
+xmax = 0.1;
+xticks = [logzero, expParams.contrastLevels(2), 0.001, 0.01, 0.05, 0.1]; 
 
 set(gca, 'XScale','log','XLim',[logzero, xmax],'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
-set(gca, 'XTick', [logzero, expParams.contrastLevels(2), 0.001, 0.01, 0.04], 'XTickLabel',sprintfc('%1.2f',[0 expParams.contrastLevels(2), 0.001, 0.01, 0.04]*100))
+set(gca, 'XTick', xticks, 'XTickLabel',sprintfc('%1.2f',xticks.*100))
 
 ylabel('Classifier Accuracy (% Correct)', 'FontSize',17)
 xlabel('Stimulus Contrast (%)', 'FontSize',17);
