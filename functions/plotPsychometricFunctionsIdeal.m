@@ -17,8 +17,8 @@ function [] = plotPsychometricFunctionsIdeal(expName, varargin)
 % subFolderNames{1} = 'idealtemplate';
 % subFolderNames{2} = 'idealsimulation';
 % subFolderNames{3} = 'svm';
-% subFolderNames{4} = 'svmtemplate';
-% subFolderNames{5} = 'svm400trials';
+% subFolderNames{4} = 'svm400trials';
+
 % expName = 'idealobserver';
 % plotPsychometricFunctionsIdeal(expName, 'subFolderNames', subFolderNames, 'saveFig', true)
 
@@ -62,7 +62,7 @@ fit.thresh = 0.75;
 %% 2. Load classification accuracy
 
 % Load first filename: IDEAL ANALYTICAL
-fName{1}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-none_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+fName{1}   = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-none_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
     expParams.eccentricities, ...
@@ -73,7 +73,7 @@ fName{1}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1
     expParams.cparams.spatialDensity(1,4));
 
 % Load second filename: IDEAL SIMULATION
-fName{2}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+fName{2}   = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
     expParams.eccentricities, ...
@@ -84,7 +84,7 @@ fName{2}   = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1
     expParams.cparams.spatialDensity(1,4));
 
 % Load third filename: mean SVM standard - no phase shifts
-fName{3}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
+fName{3}   = sprintf('Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
     expParams.eccentricities, ...
@@ -94,7 +94,7 @@ fName{3}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_de
     expParams.cparams.spatialDensity(1,3), ...
     expParams.cparams.spatialDensity(1,4));
 
-fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
+fNameSE   = sprintf('Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
     max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
     expParams.eccentricities, ...
@@ -119,9 +119,9 @@ SE{3} = load(fullfile(dataPth, 'svm', fNameSE));
 %     expParams.cparams.spatialDensity(1,3), ...
 %     expParams.cparams.spatialDensity(1,4));
 
-% Load fifth filename: 800 trials per stim class SVM template - no phase shifts
+% Load fifth filename: 800 trials per stim class  - no phase shifts
 fName{4}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
-    max(expParams.contrastLevels), ...
+    0.04, ...max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
     expParams.eccentricities, ...
     expParams.defocusLevels, ...
@@ -131,7 +131,7 @@ fName{4}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_de
     expParams.cparams.spatialDensity(1,4));
 
 fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
-    max(expParams.contrastLevels), ...
+    0.04, ...max(expParams.contrastLevels), ...
     sprintf('%i',expParams.eyemovement'), ...
     expParams.eccentricities, ...
     expParams.defocusLevels, ...
@@ -153,13 +153,14 @@ for ii = 1:length(fName)
         expParams = loadExpParams('idealobserver',false);
     elseif ii == 2
         fit.init   = [3, 0.005]; % slope, threshold at ~80%
-        expParams = loadExpParams('idealobserver',false);
+        expParams = loadExpParams('defaultnophaseshift',false);
     elseif ii == 3
         fit.init   = [2, 0.01]; % slope, threshold at ~80% 
         expParams = loadExpParams('defaultnophaseshift',false);
     elseif ii == 4
         fit.init   = [2, 0.01]; % slope, threshold at ~80%
         expParams = loadExpParams('defaultnophaseshift',false);
+        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
     end
     
     xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),1000);
@@ -187,7 +188,7 @@ for ii = 1:length(fName)
     %             diff   = abs(fit.ctrpred{count} - fit.thresh);
     %             minval = find(diff == min(diff));
    fit.ctrthresh{ii} = fit.ctrvar{ii}(2);
-    fit.data{ii} = accuracy.P;
+   fit.data{ii} = accuracy.P;
     
 end
 
@@ -217,11 +218,12 @@ for ii = 1:length(fName)
     if ii == 1
         expParams = loadExpParams('idealobserver',false);
     elseif ii == 2
-        expParams = loadExpParams('idealobserver',false);
+        expParams = loadExpParams('defaultnophaseshift',false);
     elseif ii == 3
         expParams = loadExpParams('defaultnophaseshift',false);
     elseif ii == 4
         expParams = loadExpParams('defaultnophaseshift',false);
+        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
     end
        
     % Redefine xUnits
@@ -240,6 +242,7 @@ for ii = 1:length(fName)
     end
 end
 
+expParams = loadExpParams('idealobserver',false);
 % expParams.contrastLevels = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];
 xmax = 0.1;
 xticks = [logzero, expParams.contrastLevels(2), 0.001, 0.01, 0.05, 0.1]; 
