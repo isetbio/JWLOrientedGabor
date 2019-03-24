@@ -28,11 +28,11 @@ for c = expParams.contrastLevels
     % Label clockwise and counterclockwise trials
     label = [ones(nTrials, 1); -ones(nTrials, 1)]; % First set is CW, second set is CCW
     
-    alphaMean = template(label==1,:,:,:);
-    templateCW = alphaMean(1,:,:,1);
-    templateCW = templateCW(:);
-    betaMean = template(label==-1,:,:,:);
-    templateCCW = betaMean(1,:,:,1);
+    alphaMean  = template(label==1,:,:,:);
+    templateCW  = sum(alphaMean(1,:,:,:),4);
+    templateCW  = templateCW(:);
+    betaMean    = template(label==-1,:,:,:);
+    templateCCW = sum(betaMean(1,:,:,:),4);
     templateCCW = templateCCW(:);
     
     % If one can't distinguish between templates, then don't calculate the
@@ -61,9 +61,9 @@ for c = expParams.contrastLevels
         % reshape to all trials x [rows x colums x time] for classification
         data = permute(data, [3 1 2 4]);
         
-        CWData = data(label==1,:,:,1);
-        CWData = CWData(1:200,:);
-        CCWData = data(label==-1,:,:,1);
+        CWData  = sum(data(label==1,:,:,:),4);
+        CWData  = CWData(1:200,:);
+        CCWData = sum(data(label==-1,:,:,:),4);
         CCWData = CCWData(1:200,:);
         
         % Compute loglikelihood per trial
@@ -84,6 +84,9 @@ end
 
 % Save simulation results
 saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expNameData, subFolderName);
+
+if ~exist(saveFolderClassification, 'dir'), mkdir(saveFolderClassification); end
+
 fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
 accuracy = percentCorrectSimulation.*100;
 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);

@@ -19,7 +19,7 @@ percentCorrectAnalytic = geislerIdealAnalytical(expParams);
 % Plot it
 figure(1); plot(expParams.contrastLevels(2:end), percentCorrectAnalytic(2:end), 'ko-'); hold on;
 plot(logzero, percentCorrectAnalytic(1), 'ko')
-set(gca, 'XScale', 'log', 'YLim', [.4, 1])
+set(gca, 'XScale', 'log', 'YLim', [40, 100])
 
 %% 2. Simulation of analytic solution
 

@@ -32,11 +32,11 @@ for c = expParams.contrastLevels
     % Get all trials with the same label and only take one trial and one time point
     % (since data are all the same across time, without any photon noise or eyemovement or
     % phase shifts)
-    alphaMean = template(label==1,:,:,:);
-    templateCW = alphaMean(1,:,:,1);
-    templateCW = templateCW(:);
-    betaMean = template(label==-1,:,:,:);
-    templateCCW = betaMean(1,:,:,1);
+    alphaMean  = template(label==1,:,:,:);
+    templateCW  = sum(alphaMean(1,:,:,:),4);
+    templateCW  = templateCW(:);
+    betaMean    = template(label==-1,:,:,:);
+    templateCCW = sum(betaMean(1,:,:,:),4);
     templateCCW = templateCCW(:);
     
     if templateCW==templateCCW
