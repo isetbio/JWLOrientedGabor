@@ -80,8 +80,8 @@ switch lower(expName)
         
     case 'idealobserver'
         xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        colors = [0 0 0; 0 0 0; hsv(3)];
-        lineStyles = {'-', ':', '-', '-', '-'};
+        colors = [0 0 0; 0 0 0; hsv(2)];
+        lineStyles = {'-', ':', '-', '-'};
         labels = {'Ideal observer (Analytical)', ...
                   'Ideal observer (Simulation, 200 trials per stimulus)', ...
                   'Computational observer (SVM Classifier)', ...
