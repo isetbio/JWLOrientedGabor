@@ -149,10 +149,10 @@ for ii = 1:length(fName)
     
     dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderNames{ii});
     if ii == 1
-        fit.init   = [3, 0.005]; % slope, threshold at ~80%
+        fit.init   = [3, 0.01]; % slope, threshold at ~80%
         expParams = loadExpParams('idealobserver',false);
     elseif ii == 2
-        fit.init   = [3, 0.005]; % slope, threshold at ~80%
+        fit.init   = [3, 0.01]; % slope, threshold at ~80%
         expParams = loadExpParams('defaultnophaseshift',false);
     elseif ii == 3
         fit.init   = [2, 0.01]; % slope, threshold at ~80% 
