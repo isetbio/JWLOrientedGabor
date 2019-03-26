@@ -1,4 +1,7 @@
-% Combine low and high contrast and compute mean over no eyemovements, no stim phase shift
+%% s_CombineContrasts_MeanAccuracyAcrossNoPhaseShiftExperiment.m
+%
+% Combine low and high contrast and compute mean over no eyemovements, no
+% stim phase shift
 
 %% 0. Set general experiment parameters
 expName                  = 'eyemov';

@@ -1,12 +1,11 @@
 function [] = plotDefocusVSThreshold(expName, fit, xThresh, varargin)
-
 % Function to plot defocus levels versus stimulus contrast thresholds.
-
+%
 % INPUTS:
 % expName         : string defining the condition you want to plot.
 %                   (See load expParams for possible conditions)
 % fit             : struct with fit data
-
+%
 % xThresh         : vector with x units for plot
 % [saveFig]       : boolean defining to save figure or not
 % [figurePth]     : boolean defining directory where to save figure

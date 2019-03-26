@@ -1,9 +1,41 @@
 function accuracy = geislerIdealSimulation(expParams, expNameTemplate, expNameData, subFolderName)
+% Function to simulate ideal observer model as in Geisler (1984).
+%
+% accuracy = geislerIdealSimulation(expParams, expNameTemplate, expNameData, subFolderName)
+%
+% INPUTS:
+%   expParams       : struct with experiment parameters (from loadExpParams)
+%   expNameTemplate : string with name of folder where noiseless cone
+%                       absorption trials live
+%   expNameData     : string with name of folder where noisy cone
+%                       absorption trials live per simulated experiment
+%   subFolderName   : string with name of subfolder where expNameData lives
+%                       for one particular simulated experiment run 
+
+%% Derive variables from parsed inputs
+p = inputParser;
+
+p.KeepUnmatched = true;   % Sometimes we overload p for SVM and cMosaic
+
+p.addParameter('expParams', @isstruct);
+p.addParameter('expNameTemplate', @isstring);
+p.addParameter('expNameData', @isstring); 
+p.addParameter('subFolderName',@isstring); 
+
+p.parse(varargin{:});
+
+expParams        = p.Results.expParams; 
+expNameTemplate  = p.Results.expNameTemplate;
+expNameData      = p.Results.expNameData;
+subFolderName    = p.Results.subFolderName;
 
 % preallocate space
 percentCorrectSimulation = NaN(size(expParams.contrastLevels));
+
+% use data path alias
 dataPathAlias = 'PF_data_alias';
 
+%% Get d' and percent correct for every contrast level
 for c = expParams.contrastLevels
     
     % Get file name ideal template
@@ -89,9 +121,7 @@ end
 
 % Save simulation results
 saveFolderClassification = fullfile(ogRootPath, 'data', dataPathAlias, 'classification', expNameTemplate, 'idealsimulation', subFolderName);
-
 if ~exist(saveFolderClassification, 'dir'), mkdir(saveFolderClassification); end
-
 fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
 accuracy = percentCorrectSimulation.*100;
-parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
+parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy, 'expParams', expParams);

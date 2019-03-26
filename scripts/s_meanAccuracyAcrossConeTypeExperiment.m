@@ -1,4 +1,4 @@
-% Compute mean over cone type runs with percent correct as a function of
+%% Compute mean over cone type runs with percent correct as a function of
 % contrast
 
 %% 0. Set general experiment parameters

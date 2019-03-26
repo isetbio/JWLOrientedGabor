@@ -1,11 +1,27 @@
 function accuracy = geislerIdealAnalytical(expParams)
+% Function to compute closed form solution of ideal observer model as in Geisler (1984).
+%
+% accuracy = geislerIdealAnalytical(expParams)
+%
+% INPUTS:
+%   expParams       : struct with experiment parameters (from loadExpParams)
+
+%% Derive variables from parsed inputs
+p = inputParser;
+p.KeepUnmatched = true;  
+p.addParameter('expParams', @isstruct);
+p.parse(varargin{:});
+
+expParams        = p.Results.expParams; 
 
 % preallocate space
 dprimeAnalytic = NaN(size(expParams.contrastLevels));
 percentCorrectAnalytic = NaN(size(expParams.contrastLevels));
 
+% define data alias
 dataPathAlias = 'PF_data_alias';
 
+%% Get d' and percent correct for every contrast level
 for c = expParams.contrastLevels
     % Get file name ideal template
     fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
@@ -60,7 +76,10 @@ for c = expParams.contrastLevels
     end
 end
 
+%% Save data
 saveFolderClassification = fullfile(ogRootPath, 'data', dataPathAlias, 'classification', expParams.name, 'idealtemplate');
+if ~exist(saveFolderClassification, 'dir'), mkdir(saveFolderClassification); end
+
 fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
 accuracy = percentCorrectAnalytic.*100;
-parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
+parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy, 'expParams', expParams);

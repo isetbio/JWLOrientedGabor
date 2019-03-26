@@ -1,15 +1,16 @@
 function s = ogFitWeibull(vars, levels, nCorrect, nTotal)
+% Function to fit Weibull function to Oriented Gabor (og) data.
 % There are two parameters to be fitted slope and threshold
-
+%
 % INPUTS: 
 % vars
 %     vars.b = slope
 %     vars.t = threshold yeilding ~80% correct
-
+%
 % levels     = independent variable tested on
 % nCorrect   = number of correct trials per level
 % nTotal     = amount of trials per level
-
+%
 % OUTPUTS:
 % s          = -loglikelihood between data and weibull fit
 

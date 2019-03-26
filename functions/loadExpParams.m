@@ -1,10 +1,9 @@
 function expParams = loadExpParams(expName, saveParams)
-
-% Define parameters for a specific experiment, and possibility to save in a mat file 
-% so it can be reproduced later:
-
+% Function to define parameters for a specific experiment, and possibility
+% to save in a mat file so it can be reproduced later:
+%
 %       expParams = loadExpParams(expName, saveParams)
-
+%
 % INPUTS: 
 %   ExpNames        : String defining which type of experiment parameters to use. 
 %                       Choose from:
@@ -19,7 +18,14 @@ function expParams = loadExpParams(expName, saveParams)
 %                     (default= 'default')
 %   saveParams      : Boolean defining whether to save or not expParams in
 %                      matfile (default = true)
-
+% OUTPUTS:
+%   expParams       : struct with parameters to run a specific simulated
+%                       experiment with the given 'expName'
+%
+% Example:
+%   expParams = loadExpParams('default', false)
+%
+%
 %% Check input arguments
 if isempty(expName) || ~exist('expName', 'var')
     expName = 'default'; 
@@ -69,7 +75,7 @@ switch lower(expName)
         expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??) 
         
      case 'eyemovenhanced'
-         error('(%s): Experiment with enhanced eyemovements is currently not implemented', mfilename);
+         error('(%s): Experiment with enhanced eye movements is currently not implemented', mfilename);
 %         expParams.eyemovement     = [0 0; 2 0; 2 2]';           % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
 %         expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
 %         expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);

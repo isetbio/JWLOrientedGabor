@@ -1,25 +1,25 @@
 function runComputationalObserverModel(expName, varargin)
 %% runComputationalObserverModel(expName, [saveFolder], [], [seed], 1, [currentFlag], 0)
-
+%
 % ---------------------------------------------------------
 % ---------------------- Description ----------------------
 % ---------------------------------------------------------
 % Function based on the old script s_ogRGC.m
 % This function computes multiple stages of the front-end of the visual system
 % for a particular visual scene or psychophysical experiment.
-
+%
 % In this case we construct a scene with 2 Gabor stimuli (oriented clockwise
 % or counter-clockwise), that goes through the optics and gets sampled by
 % a small cone mosaic patch. The cone absorptions are then used to simulate
 % a 2-AFC orientation discrimination task with a linear classifier.
-
+%
 % Long-term goals:
 %   Model cone current, bipolar, RGC, cortical, and behavioral (computational
 % observer) responses for the experiment on measuring orientation
 % discrimination thresholds of an achromatic, peripheral Gabor. Account for
 % variation in optics, cone density, and RGC density/RF size as a function
 % of visual field position.
-
+%
 % ---------------------------------------------------------
 % ---------------------- Script outline -------------------
 % ---------------------------------------------------------
@@ -49,8 +49,8 @@ function runComputationalObserverModel(expName, varargin)
 % [saveFolder]   : (string) name of folder to save simulated cone absorptions (default =[])
 % [seed]         : (int) integer to reset random number generator to reproduce results (default = 1)
 % [currentFlag]  : (bool) flag to compute cone current in addition to cone absorptions (default = false)
-
-
+%
+%
 % The results of the computational observer model are written to file and
 % can be then be used to reproduce several of the published figures from the
 % paper the paper:
@@ -58,11 +58,11 @@ function runComputationalObserverModel(expName, varargin)
 % Eline R. Kupers, Marisa Carrasco, Jonathan Winawer. (XXXX) Modeling
 % visual performance differences 'around' the visual field: A computational
 % observer approach.
-
+%
 % ---------------------------------------------------------
 % ---------------------- Examples -------------------------
 % ---------------------------------------------------------
-
+%
 % Example 1: Compute and classify cone absorptions for CW and CCW Gabor 
 % stimuli, with a cone mosaic at 4.5 deg eccentricity, typical human optics 
 %   runComputationalObserverModel('default')
@@ -72,8 +72,8 @@ function runComputationalObserverModel(expName, varargin)
 %   runComputationalObserverModel('conedensity', 'saveFolder', 'rng1', 'seed', 1)
 % Example 4: Quantify the effect of cone types, with reset rng seed
 %   runComputationalObserverModel('conetypes', 'saveFolder', 'rng1', 'seed', 'shuffle')
-
-
+%
+%
 % EK/JW/ NYU ISETBIO Team, Copyright 2018
 
 %% 0. Check inputs and define experimental parameters
@@ -83,7 +83,6 @@ p.addRequired('expName', @ischar);
 p.addParameter('saveFolder', [], @ischar);
 p.addParameter('seed', 1, @(x) (isstring(x) | isscalar(x)));
 p.addParameter('currentFlag', false, @islogical);
-p.addParameter('idealObserver', false, @islogical);
 p.parse(expName, varargin{:});
 
 % Check and create folder to save absorption data
@@ -260,11 +259,6 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         if expParams.currentFlag
                             accuracy(c==theseContrasts) = getClassifierAccuracy(current);
                             fnameClassify = ['current_' fnameClassify]; %#ok<AGROW>
-%                         elseif expParams.idealObserver
-%                              
-%                             fnameTemplate = 'OGconeOutputs_contrast1.000_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat';
-%                             fnameClassify = ['ideal_' fnameClassify];
-%                             accuracy(c==theseContrasts) = getIdealObserverAccuracy(absorptions, fnameTemplate);
                         else
                             accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions); % truncate time samples (only include stimulus on period)
                         end
@@ -275,7 +269,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                 end % contrast
                 
                 % Save
-                parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
+                parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy, 'expParams', expParams);
                 
                 % Visualize if verbose
                 if expParams.verbose; set(0, 'CurrentFigure', fH); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow; end

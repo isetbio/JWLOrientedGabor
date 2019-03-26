@@ -1,9 +1,9 @@
 %% s_makeFigure5_ModelOverview.m
-
+%
 % Script to plot from stimulus (radiance, to photon absorptions).
-
-% Requires s_ogRGC.m to be ran, and have save absorptions.
-
+%
+% Requires runComputationalObserverModel.m to be ran, and have saved absorptions.
+%
 %% Set parameters
 
 % Save figures?

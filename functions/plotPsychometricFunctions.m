@@ -1,16 +1,20 @@
 function [] = plotPsychometricFunctions(expName, varargin)
-
 % Function to compute psychometric functions based on the computational
 % observer model.
-
+%
 % INPUTS:
 % expName         : string defining the condition you want to plot.
 %                   (See load expParams for possible conditions)
 % [subFolderName] : string defining the sub folder you want to plot from.
-
 % [saveFig]       : boolean defining to save figures or not
 % [plotAvg]      : boolean defining to plot average across experiments runs or not
-
+%
+% OUTPUTS:
+% none
+%
+% Example:
+% plotPsychometricFunctions('default', 'subFolderName', 'run1', 'saveFig', 'true', 'plotAvg', false)
+%
 %% 0. Set general experiment parameters
 p = inputParser;
 p.KeepUnmatched = true;

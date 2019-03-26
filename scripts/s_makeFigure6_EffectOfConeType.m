@@ -1,8 +1,8 @@
-%% s_makeFigureXX_EffectOfConeType
-
-% Script to plot figure xx (effect of cone type on computational observer
+%% s_makeFigure7_EffectOfConeType
+%
+% Script to plot figure 7 (effect of cone type on computational observer
 % performance
-
+%
 % Requires computational model to be ran with 'conetypes' condition, 
 % absorptions to be classified and averaged across iterations.
 

@@ -1,4 +1,4 @@
-% Compute mean over eyemovement percent correct
+%% Compute mean over eyemovement percent correct
 
 %% 0. Set general experiment parameters
 expName                  = 'eyemov';

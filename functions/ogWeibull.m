@@ -1,9 +1,14 @@
 function y = ogWeibull(vals,x)
-%y = Weibull(vals,x)
+% Function to fit weibul function from slope and threshold
+%   y = Weibull(vals,x)
 %
-%Parameters:  vals.b slope
-%             vals.t threshold yeilding ~80% correct
-%             x   intensity values.
+% INPUTS:
+%   vals.b  : slope
+%   vals.t  : threshold yeilding ~80% correct
+%   x       : intensity values.
+%
+% OUTPUTS:
+%   y       : percent correct estimated by weibull fit for each x
 
 %% Examples
 

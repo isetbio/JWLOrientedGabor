@@ -1,20 +1,25 @@
 function [xUnits, colors, labels, xThresh, lineStyles] = loadWeibullPlottingParams(expName)
-
 % Define Weibull plotting parameters for a specific experiment
-
+%
 %       [xUnits, colors, labels, M] = loadWeibullPlottingParams(expName)
-
+%
 % INPUTS: 
 %   expName        : String defining which type of experiment parameters to use. 
-%                       Choose from 'default',
+%                       Choose from 'default', [=default]
 %                                   'conetypes',
 %                                   'conetypesmixed',
 %                                   'eyemov',
-%                                   'eyemovenhanced', [currently not implemented]
+%                                   'eyemovnophaseshift',
+%                                   'eyemovenhanced' [NB: currently not implemented as an experiment] 
 %                                   'idealobserver',
+%                                   'defaultnophaseshift',
 %                                   'defocus',
 %                                   'conedensity',
-%                     (default= 'default')
+%                                   'conetypeseccen', [NB: currently not implemented as an experiment] 
+%  
+%
+% Example:
+% [xUnits, colors, labels, xThresh, lineStyles] = loadWeibullPlottingParams('conetypes')
 
 %% Check input arguments
 if isempty(expName) || ~exist('expName', 'var')
@@ -22,38 +27,38 @@ if isempty(expName) || ~exist('expName', 'var')
 end
 
 % Get general condition parameters
-expParams                = loadExpParams(expName, false);
-xThresh                  = []; % x units for plotting thresholds 
+expParams    = loadExpParams(expName, false);
+xThresh      = []; % x units for plotting thresholds 
 
 % Define plotting parameters
 switch lower(expName)
     case 'default'
-        colors              = [0 0 0];
-        labels              = {'Fit','data'};
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        lineStyles          = repmat({'-'},size(colors));
+        colors          = [0 0 0];
+        labels          = {'Fit','data'};
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        lineStyles      = repmat({'-'},size(colors));
 
     case 'conetypes'
-        colors              = [0 0 0; 1 0 0; 0 0.5 0.25; 0 0 1];
-        labels              = {'LMS default cone mosaic','L only cone mosaic','M only cone mosaic','S only cone mosaic'};
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        lineStyles          = repmat({'-'},size(colors));
+        colors          = [0 0 0; 1 0 0; 0 0.5 0.25; 0 0 1];
+        labels          = {'LMS default cone mosaic','L only cone mosaic','M only cone mosaic','S only cone mosaic'};
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        lineStyles      = repmat({'-'},size(colors));
 
     case 'conetypesmixed'
-        nrMixtures          = size(expParams.cparams.spatialDensity,1);
-        colors              = [linspace(1,0,nrMixtures); linspace(0,.5,nrMixtures); linspace(0, .25, nrMixtures)]';
-        labels              = cell(nrMixtures,1);
+        nrMixtures      = size(expParams.cparams.spatialDensity,1);
+        colors          = [linspace(1,0,nrMixtures); linspace(0,.5,nrMixtures); linspace(0, .25, nrMixtures)]';
+        labels          = cell(nrMixtures,1);
         for ii = 1:nrMixtures
-            labels{ii}      =  sprintf('LMS cone ratio = %1.1f:%1.1f:%1.1f', expParams.cparams.spatialDensity(ii,2:4));
+            labels{ii}  =  sprintf('LMS cone ratio = %1.1f:%1.1f:%1.1f', expParams.cparams.spatialDensity(ii,2:4));
         end
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        xThresh              = 100:-10:0;
-        lineStyles          = {'-',':', ':', ':', '-'};
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        xThresh         = 100:-10:0;
+        lineStyles      = {'-',':', ':', ':', '-'};
 
     case 'eyemov'
-        colors              = [0 0 0; 1 0 0; 0.5000, 1.0000, 0.5000];
-        lineStyles          = {'-', '-', ':'};
-        labels              = cell(1,length(colors));
+        colors          = [0 0 0; 1 0 0; 0.5000, 1.0000, 0.5000];
+        lineStyles      = {'-', '-', ':'};
+        labels          = cell(1,length(colors));
         xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
 
         for emIdx = 1:size(expParams.eyemovement,2)
@@ -70,32 +75,34 @@ switch lower(expName)
         end
 
     case 'eyemovnophaseshift'
-        colors              = [0 0 0; 1 0 0; 0.5000, 1.0000, 0.5000];
-        lineStyles          = {'-', '-', ':'};
-        labels              = cell(1,length(colors));
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
-        labels = {'No eye movements, no stim phase shift', ...
-                  'Drift, no stim phase shift', ...
-                  'Drift and MS, no stim phase shift'};
+        colors          = [0 0 0; 1 0 0; 0.5000, 1.0000, 0.5000];
+        lineStyles      = {'-', '-', ':'};
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
+        labels          = {'No eye movements, no stim phase shift', ...
+                            'Drift, no stim phase shift', ...
+                            'Drift and MS, no stim phase shift'};
         
     case 'idealobserver'
-        xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
-        colors = [0 0 0; 0 0 0; 0.5000, 1.0000, 0.5000; 1 0 0];
-        lineStyles = {'-', ':', '-', '-'};
-        labels = {'Ideal observer (Analytical)', ...
-                  'Ideal observer (Simulation, 200 trials per stimulus class)', ...
-                  'Computational observer (SVM Classifier, 200 trials per stimulus class)', ...
-                  'Computational observer (SVM Classifier, 800 trials per stimulus class)'};
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
+        colors          = [0 0 0; 0 0 0; 0.5000, 1.0000, 0.5000; 1 0 0];
+        lineStyles      = {'-', ':', '-', '-'};
+        labels          = {'Ideal observer (Analytical)', ...
+                            'Ideal observer (Simulation, 200 trials per stimulus class)', ...
+                            'Computational observer (SVM Classifier, 200 trials per stimulus class)', ...
+                            'Computational observer (SVM Classifier, 800 trials per stimulus class)'};
               
      case 'defaultnophaseshift'
-        xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
-        colors = [0 0 0];
-        lineStyles = {'-'};
-        labels = {'No eye movements, no phase shift'};
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
+        colors          = [0 0 0];
+        lineStyles      = {'-'};
+        labels          = {'No eye movements, no phase shift'};
         
     case 'eyemovenhanced'
-        colors              = copper(size(expParams.eyemovement,2));
-        labels              = cell(1,length(colors));
+        colors          = copper(size(expParams.eyemovement,2));
+        labels          = cell(1,length(colors));
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
+        lineStyles      = repmat({'-'},size(colors));
+        
         for emIdx = 1:length(colors)
             thisCondition = expParams.eyemovement(:,emIdx)';
             if all(thisCondition == [0 0 0])
@@ -110,17 +117,15 @@ switch lower(expName)
                 labels{:,emIdx} = '2xMicrosaccades';
             end
         end
-        
-        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100);
-        lineStyles          = repmat({'-'},size(colors));
 
     case {'conedensity','conedensitynoeyemov','eccbasedcoverage'}
         
-        colors              = jet(length(expParams.eccentricities));
+        colors          = jet(length(expParams.eccentricities));
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
         
         % Get parameters to compute cone density levels
-        whichEye          = 'left';
-        cparams.cmFOV     =  2; % degrees
+        whichEye        = 'left';
+        cparams.cmFOV   =  2; % degrees
         
         % Convertion deg to m
         deg2m  = 0.3 * 0.001; % .3 deg per mm, .001 mm per meter
@@ -146,15 +151,14 @@ switch lower(expName)
             labels{ec==expParams.eccentricities} = sprintf('%1.3f x10^4 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^4);
         end
         
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 100); % 
-        xThresh             = allDensity;
-        lineStyles          = repmat({'-'},size(colors));
+        xThresh         = allDensity;
+        lineStyles      = repmat({'-'},size(colors));
 
     case 'defocus'
         
-        colors              = jet(length(expParams.defocusLevels));
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        lineStyles          = repmat({'-'},1,length(expParams.defocusLevels));
+        colors          = jet(length(expParams.defocusLevels));
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        lineStyles      = repmat({'-'},1,length(expParams.defocusLevels));
 
         % Compute defocus levels
         for df = expParams.defocusLevels            
@@ -165,13 +169,13 @@ switch lower(expName)
       
     case 'conetypeseccen'
         
-        colors              = jet(length(expParams.eccentricities));
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200); % 
-        lineStyles          = repmat({'-'},size(colors));
+        colors           = jet(length(expParams.eccentricities));
+        xUnits           = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200); % 
+        lineStyles       = repmat({'-'},size(colors));
 
         % Get parameters to compute cone density levels
-        whichEye          = 'left';
-        cparams.cmFOV     =  1; % degrees
+        whichEye         = 'left';
+        cparams.cmFOV    =  1; % degrees
         
         % Convertion deg to m
         deg2m  = 0.3 * 0.001; % .3 deg per mm, .001 mm per meter
@@ -197,7 +201,7 @@ switch lower(expName)
             labels{ec==expParams.eccentricities} = sprintf('%1.2f x10^4 cells/deg2', allDensity(ec==expParams.eccentricities)/10.^4);
         end
         
-        xThresh              = allDensity;
+        xThresh           = allDensity;
 
 end
 

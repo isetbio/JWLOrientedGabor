@@ -1,5 +1,4 @@
 function [cMosaic, cparams] = getConeMosaic(eccen, expParams, sparams, spatialDensity)
-
 % ----- CONE MOSAIC -----------------------------------------
     % Update ratio of cone types in mosaic if requested:
     if nargin < 4

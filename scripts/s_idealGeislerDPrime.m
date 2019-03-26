@@ -1,4 +1,14 @@
 %% s_idealGeislerDPrime
+% 
+% Script to compute analytical (closed form solution) of ideal observer
+% model as in Geisler (1984).Then compute simulation of analytical solution
+% from cone absorption data with photon noise.
+
+% This scripts relies on observer model to be run without and with photon
+% noise, and no eye movements of stimulus phase shifts:
+% (1) runComputationalObserverModel('idealobserver', 'subFolderName', 'idealtemplate', 'seed',1)
+% (2) runComputationalObserverModel('defaultnophaseshift', 'subFolderName', 'run1', 'seed',1)
+
 
 % save figures?
 saveFigs = false;

@@ -1,5 +1,4 @@
 function [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, emIdx, currSeed)
-
 % Create eye movements for individual trials. Eye movement paths are defined 
 % in units of cones along the horizontal (x, first dimension), vertical (y,
 % second dimension), for every time step t. This code relies on the
@@ -25,8 +24,10 @@ function [emPaths, cMosaic] = getEyemovements(OG, cMosaic, expParams, sparams, e
 %   currSeed        : Integer containing the current random number generator
 %                       seed used to produce eye movement paths  
 %
-% INPUTS: 
+% OUTPUTS: 
 %   emPaths         : 3 dimensional array contains trials x position (x,y) x time
+%   cMosaic         : ISETBIO cone mosaic object
+
 
 if expParams.verbose; fprintf('(%s): Defining eyemovements as %s (=drift, ms)..\n', mfilename, mat2str(expParams.eyemovement(:,emIdx))); end
 
@@ -46,15 +47,14 @@ elseif all(expParams.eyemovement(:,emIdx) == [0;0]) % if none
     emPaths = zeros(expParams.nTrials, maxEyeMovementsNum*paddingFactor, 2);
 elseif all(expParams.eyemovement(:,emIdx) == [2;0]) % if enhanced drift, no MS
     error('this condition is not implemented yet')
-%     em = fixationalEM;
-%     % todo: add line to adjust the velocity/speed/etc
-%     emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', currSeed, 'emobj', em);    
-% elseif all(expParams.eyemovement(:,emIdx) == [1;1])  % if drift and MS
-%     error('this condition is not implemented yet')
-%     em = fixationalEM;
-%     % todo: add line to adjust the velocity/speed/etc
-%     emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', currSeed, 'emobj', em);
-
+    % todo: add line to adjust the velocity/speed/etc
+    %     em = fixationalEM;    
+    %     emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'none', 'rSeed', currSeed, 'emobj', em);    
+    % elseif all(expParams.eyemovement(:,emIdx) == [2;2])  % if enhanced drift and MS
+    %     error('this condition is not implemented yet')
+    %     em = fixationalEM;
+    %     % todo: add line to adjust the velocity/speed/etc
+    %     emPaths = cMosaic.emGenSequence(maxEyeMovementsNum*paddingFactor, 'nTrials', expParams.nTrials, 'microsaccadeType', 'stats based', 'rSeed', currSeed, 'emobj', em);
 end
 
 % Truncate warm up period

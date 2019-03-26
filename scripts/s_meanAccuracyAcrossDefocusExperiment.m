@@ -1,4 +1,4 @@
-% Compute mean over defocus percent correct as a function of contrast
+%% Compute mean over defocus percent correct as a function of contrast
 
 %% 0. Set general experiment parameters
 expName                  = 'defocus';
