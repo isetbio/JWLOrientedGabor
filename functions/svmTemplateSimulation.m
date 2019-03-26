@@ -3,6 +3,7 @@ function accuracy = svmTemplateSimulation(expParams, expNameTemplate, expNameDat
 
 % Preallocate space
 percentCorrectSVMDiffTemplate  = NaN(size(expParams.contrastLevels));
+dataPathAlias = 'PF_data_alias';
 
 for c = expParams.contrastLevels
     
@@ -10,7 +11,7 @@ for c = expParams.contrastLevels
     fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
     
     % Load template
-    template = load(fullfile(ogRootPath, 'data', expNameTemplate, 'idealtemplate', fnameTemplate));
+    template = load(fullfile(ogRootPath, 'data', dataPathAlias, expNameTemplate, 'idealtemplate', fnameTemplate));
     template = template.absorptions;
     
     % Get the trials and samples (should be the data for all data sets though
@@ -36,7 +37,7 @@ for c = expParams.contrastLevels
     
     % Get data
     fnameData = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1.mat', c);
-    data = load(fullfile(ogRootPath, 'data', expNameData, subFolderName, fnameData));
+    data = load(fullfile(ogRootPath, 'data', dataPathAlias, expNameData, subFolderName, fnameData));
     data = data.absorptions;
 
     %   permute to trials x stimuli x rows x cols x time points
@@ -83,7 +84,7 @@ for c = expParams.contrastLevels
 end
 
 % Save simulation results
-saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expNameData, subFolderName);
+saveFolderClassification = fullfile(ogRootPath, 'data', dataPathAlias, 'classification', expNameTemplate, 'svmtemplate', subFolderName);
 fnameClassify = sprintf('svmtemplate_Classify_coneOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
 accuracy = percentCorrectSVMDiffTemplate.*100;
 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
