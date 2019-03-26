@@ -3,15 +3,15 @@
 %% 0. Set general experiment parameters
 expName                  = 'eyemov';
 expParams                = loadExpParams(expName, false);
-[xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
+[xUnits, colors, labels, ~, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Use cone current (flag = true) or cone absorptions (flag = false)
 polarAngles = expParams.polarAngle;
 FFTflag     = true;
 
 % Where to find data and save figures
-subFolderName = 'averageRuns';
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
+subFolderName = 'average';
+dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, 'HPC');
 savePth     = fullfile(dataPth, subFolderName);
 figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
@@ -28,7 +28,7 @@ figure(3); clf;  hold all;
 xlabel('Contrast (%)'); ylabel('Accuracy (% correct)'); title('HPC classifier performance')
 set(gca, 'TickDir', 'out', 'FontSize', 15, 'XScale','log', 'LineWidth',2); box off; 
 for em = 1:nrEyemovTypes
-    fNamePre   = sprintf('Classify_coneOutputs_contrast%1.4f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
+    fNamePre   = sprintf('Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
         max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement(:,em)'),expParams.eccentricities,expParams.defocusLevels,expParams.spatFreq,lmsRatio(2),lmsRatio(3),lmsRatio(4));    
     
     d = dir(fullfile(dataPth, 'run*'));
@@ -49,7 +49,7 @@ for em = 1:nrEyemovTypes
     
     for plotIdx = 1:size(P,2)
         plot(expParams.contrastLevels(2:end),P(2:end,plotIdx), 'LineWidth',1,'Color', cmap(em,:)'); 
-        plot(10.^(-2.5),P(1,plotIdx), 'o', 'LineWidth',1,'Color', cmap(em,:)'); 
+        plot(10.^(-5),P(1,plotIdx), 'o', 'LineWidth',1,'Color', cmap(em,:)'); 
     end
     
     P_SE = std(P,[],2)./sqrt(size(P,2));
@@ -63,7 +63,7 @@ for em = 1:nrEyemovTypes
     
     % plot mean in thick line
     plot(expParams.contrastLevels(2:end), P(2:end), 'LineWidth', 4, 'Color', cmap(em,:)'); 
-    plot(10.^(-2.5), P(1), 'o', 'LineWidth', 4, 'Color', cmap(em,:)'); 
+    plot(10.^(-5), P(1), 'o', 'LineWidth', 4, 'Color', cmap(em,:)'); 
     
     if ~exist(savePth,'dir'), mkdir(savePth); end
     save(fullfile(dataPth, subFolderName, fNamePostMean),'P');
