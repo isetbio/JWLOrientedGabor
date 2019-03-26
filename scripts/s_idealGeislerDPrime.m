@@ -28,14 +28,15 @@ expNameData     = 'defaultnophaseshift';
 expParams       = loadExpParams(expNameData, false);
 subFolderName   = 'run1';
 
-% Get percent correct
-percentCorrectSVMDiffTemplate = geislerIdealSimulation(expParams, expNameTemplate, expNameData, subFolderName);
+% Get percent correctexp
+percentCorrectSimulation = geislerIdealSimulation(expParams, expNameTemplate, expNameData, subFolderName);
 
 % Plot it
-figure(1); plot(expParams.contrastLevels(2:end), percentCorrectSVMDiffTemplate(2:end), 'ko-'); hold on;
-plot(logzero, percentCorrectSVMDiffTemplate(1), 'ko')
+figure(1); plot(expParams.contrastLevels(2:end), percentCorrectSimulation(2:end), 'ko-'); hold on;
+plot(logzero, percentCorrectSimulation(1), 'ko')
 set(gca, 'XScale', 'log', 'YLim', [.4, 1])
 
+return
 %% 3. SVM with data sample match to template
 
 % Load data parameters

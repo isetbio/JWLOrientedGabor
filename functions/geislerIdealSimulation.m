@@ -2,6 +2,7 @@ function accuracy = geislerIdealSimulation(expParams, expNameTemplate, expNameDa
 
 % preallocate space
 percentCorrectSimulation = NaN(size(expParams.contrastLevels));
+dataPathAlias = 'PF_data_alias';
 
 for c = expParams.contrastLevels
     
@@ -9,7 +10,7 @@ for c = expParams.contrastLevels
     fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
     
     % Load template
-    template = load(fullfile(ogRootPath, 'data', expNameTemplate, 'idealtemplate', fnameTemplate));
+    template = load(fullfile(ogRootPath, 'data', dataPathAlias, expNameTemplate, 'idealtemplate', fnameTemplate));
     template = template.absorptions;
     
     % Get the trials and samples (should be the data for all data sets though
@@ -28,6 +29,10 @@ for c = expParams.contrastLevels
     % Label clockwise and counterclockwise trials
     label = [ones(nTrials, 1); -ones(nTrials, 1)]; % First set is CW, second set is CCW
     
+    % Since all trials are without photon noise, phase shifts or eye
+    % movements, they have the same cone absorptions. However, we need to
+    % sum across all time points to have a fair comparison to the SVM
+    % results.
     alphaMean  = template(label==1,:,:,:);
     templateCW  = sum(alphaMean(1,:,:,:),4);
     templateCW  = templateCW(:);
@@ -46,7 +51,7 @@ for c = expParams.contrastLevels
         
         % Get data
         fnameData = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-random_sf4.00_lms-0.60.30.1.mat', c);
-        data = load(fullfile(ogRootPath, 'data', expNameData, subFolderName, fnameData));
+        data = load(fullfile(ogRootPath, 'data', dataPathAlias, expNameData, subFolderName, fnameData));
         data = data.absorptions;
         
         %   permute to trials x stimuli x rows x cols x time points
@@ -62,9 +67,9 @@ for c = expParams.contrastLevels
         data = permute(data, [3 1 2 4]);
         
         CWData  = sum(data(label==1,:,:,:),4);
-        CWData  = CWData(1:200,:);
+        CWData  = CWData(1:nTrials,:);
         CCWData = sum(data(label==-1,:,:,:),4);
-        CCWData = CCWData(1:200,:);
+        CCWData = CCWData(1:nTrials,:);
         
         % Compute loglikelihood per trial
         for ii = 1:nTrials
@@ -83,7 +88,7 @@ for c = expParams.contrastLevels
 end
 
 % Save simulation results
-saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expNameData, subFolderName);
+saveFolderClassification = fullfile(ogRootPath, 'data', dataPathAlias, 'classification', expNameTemplate, 'idealsimulation', subFolderName);
 
 if ~exist(saveFolderClassification, 'dir'), mkdir(saveFolderClassification); end
 

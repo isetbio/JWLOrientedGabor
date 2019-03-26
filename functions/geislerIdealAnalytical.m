@@ -4,13 +4,14 @@ function accuracy = geislerIdealAnalytical(expParams)
 dprimeAnalytic = NaN(size(expParams.contrastLevels));
 percentCorrectAnalytic = NaN(size(expParams.contrastLevels));
 
+dataPathAlias = 'PF_data_alias';
 
 for c = expParams.contrastLevels
     % Get file name ideal template
     fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
     
     % Load data
-    template = load(fullfile(ogRootPath, 'data', expParams.name, 'idealtemplate', fnameTemplate));
+    template = load(fullfile(ogRootPath, 'data', dataPathAlias, expParams.name, 'idealtemplate', fnameTemplate));
     template = template.absorptions;
     
     % Get the trials and samples (should be the data for all data sets though
@@ -29,9 +30,10 @@ for c = expParams.contrastLevels
     % Label clockwise and counterclockwise trials
     label = [ones(nTrials, 1); -ones(nTrials, 1)]; % First set is CW, second set is CCW
 
-    % Get all trials with the same label and only take one trial and one time point
-    % (since data are all the same across time, without any photon noise or eyemovement or
-    % phase shifts)
+    % Since all trials are without photon noise, phase shifts or eye
+    % movements, they have the same cone absorptions. However, we need to
+    % sum across all time points to have a fair comparison to the SVM
+    % results.
     alphaMean  = template(label==1,:,:,:);
     templateCW  = sum(alphaMean(1,:,:,:),4);
     templateCW  = templateCW(:);
@@ -58,7 +60,7 @@ for c = expParams.contrastLevels
     end
 end
 
-saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expParams.name, 'idealtemplate');
+saveFolderClassification = fullfile(ogRootPath, 'data', dataPathAlias, 'classification', expParams.name, 'idealtemplate');
 fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
 accuracy = percentCorrectAnalytic.*100;
 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
