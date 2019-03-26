@@ -3,7 +3,7 @@
 %% 0. Set general experiment parameters
 expName                  = 'defocus';
 expParams                = loadExpParams(expName, false);
-[xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
+[xUnits, colors, labels, ~, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Use cone current (flag = true) or cone absorptions (flag = false)
 polarAngles = expParams.polarAngle;
