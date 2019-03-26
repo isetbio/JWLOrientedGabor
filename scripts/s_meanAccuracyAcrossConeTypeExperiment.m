@@ -4,7 +4,7 @@
 %% 0. Set general experiment parameters
 expName                  = 'conetypesmixed'; % choose from 'conetypesmixed' for L:M = 0.1:0.09 to 0.5:0.5 and vv, or 'conetypes' for single cone type mosaic
 expParams                = loadExpParams(expName, false);
-[xUnits, colors, labels, M] = loadWeibullPlottingParams(expName);
+[xUnits, colors, labels, ~, lineStyles]] = loadWeibullPlottingParams(expName);
 
 % Use cone current (flag = true) or cone absorptions (flag = false)
 polarAngles = expParams.polarAngle;
