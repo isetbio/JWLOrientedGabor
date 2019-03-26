@@ -1,24 +1,22 @@
 function [] = plotPsychometricFunctionsIdeal(expName, varargin)
-
-
 % Function to compute psychometric functions based on the computational
 % observer model.
-
+%
 % INPUTS:
 % expName         : string defining the condition you want to plot.
 %                   (See load expParams for possible conditions)
 % [subFolderNames] : string defining the sub folder you want to plot from.
-
+%
 % [saveFig]       : boolean defining to save figures or not
 % [plotAvg]      : boolean defining to plot average across experiments runs or not
-
-
+%
+%
 % Example:
 % subFolderNames{1} = 'idealtemplate';
 % subFolderNames{2} = 'idealsimulation';
 % subFolderNames{3} = 'svm';
 % subFolderNames{4} = 'svm400trials';
-
+%
 % expName = 'idealobserver';
 % plotPsychometricFunctionsIdeal(expName, 'subFolderNames', subFolderNames, 'saveFig', true)
 
@@ -59,113 +57,73 @@ fit.data    = cell(size(colors,1),1);
 % Set inital slope, threshold for first stage fitting
 fit.thresh = 0.75;
 
-%% 2. Load classification accuracy
+%% 2. Set up figure
+figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488], 'NumberTitle', 'off', 'Name', sprintf('Psychometric function condition: %s', expName)); hold all;
 
-% Load first filename: IDEAL ANALYTICAL
-fName{1}   = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-none_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
-    max(expParams.contrastLevels), ...
-    sprintf('%i',expParams.eyemovement'), ...
-    expParams.eccentricities, ...
-    expParams.defocusLevels, ...
-    expParams.spatFreq, ...
-    expParams.cparams.spatialDensity(1,2), ...
-    expParams.cparams.spatialDensity(1,3), ...
-    expParams.cparams.spatialDensity(1,4));
+% Define a zero point (just a very small number), to plot the 0 contrast,
+% since a log-linear plot does not define 0.
+logzero = 1e-5;
+markerColors = colors;
+markerColors(2,:) = [1 1 1];
 
-% Load second filename: IDEAL SIMULATION
-fName{2}   = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
-    max(expParams.contrastLevels), ...
-    sprintf('%i',expParams.eyemovement'), ...
-    expParams.eccentricities, ...
-    expParams.defocusLevels, ...
-    expParams.spatFreq, ...
-    expParams.cparams.spatialDensity(1,2), ...
-    expParams.cparams.spatialDensity(1,3), ...
-    expParams.cparams.spatialDensity(1,4));
-
-% Load third filename: mean SVM standard - no phase shifts
-fName{3}   = sprintf('Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
-    max(expParams.contrastLevels), ...
-    sprintf('%i',expParams.eyemovement'), ...
-    expParams.eccentricities, ...
-    expParams.defocusLevels, ...
-    expParams.spatFreq, ...
-    expParams.cparams.spatialDensity(1,2), ...
-    expParams.cparams.spatialDensity(1,3), ...
-    expParams.cparams.spatialDensity(1,4));
-
-fNameSE   = sprintf('Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
-    max(expParams.contrastLevels), ...
-    sprintf('%i',expParams.eyemovement'), ...
-    expParams.eccentricities, ...
-    expParams.defocusLevels, ...
-    expParams.spatFreq, ...
-    expParams.cparams.spatialDensity(1,2), ...
-    expParams.cparams.spatialDensity(1,3), ...
-    expParams.cparams.spatialDensity(1,4));
-
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
-SE{3} = load(fullfile(dataPth, 'svm', fNameSE));
-
-% 
-% % Load fourth filename: SVM template - no phase shifts
-% fName{4}   = sprintf('svmtemplate_Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f.mat', ...
-%     max(expParams.contrastLevels), ...
-%     sprintf('%i',expParams.eyemovement'), ...
-%     expParams.eccentricities, ...
-%     expParams.defocusLevels, ...
-%     expParams.spatFreq, ...
-%     expParams.cparams.spatialDensity(1,2), ...
-%     expParams.cparams.spatialDensity(1,3), ...
-%     expParams.cparams.spatialDensity(1,4));
-
-% Load fifth filename: 800 trials per stim class  - no phase shifts
-fName{4}   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_AVERAGE.mat', ...
-    0.04, ...max(expParams.contrastLevels), ...
-    sprintf('%i',expParams.eyemovement'), ...
-    expParams.eccentricities, ...
-    expParams.defocusLevels, ...
-    expParams.spatFreq, ...
-    expParams.cparams.spatialDensity(1,2), ...
-    expParams.cparams.spatialDensity(1,3), ...
-    expParams.cparams.spatialDensity(1,4));
-
-fNameSE   = sprintf('Classify_coneOutputs_contrast%1.3f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f_lms-%1.1f%1.1f%1.1f_SE.mat', ...
-    0.04, ...max(expParams.contrastLevels), ...
-    sprintf('%i',expParams.eyemovement'), ...
-    expParams.eccentricities, ...
-    expParams.defocusLevels, ...
-    expParams.spatFreq, ...
-    expParams.cparams.spatialDensity(1,2), ...
-    expParams.cparams.spatialDensity(1,3), ...
-    expParams.cparams.spatialDensity(1,4));
-
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
-SE{4} = load(fullfile(dataPth, 'svm400trials', fNameSE));
-
-
-%% Loop over filenames to fit the Weibull
-for ii = 1:length(fName)
+for ii = 1:length(subFolderNames)
     
+    %% 3. Load data
+    % Define data path
     dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderNames{ii});
-    if ii == 1
-        fit.init   = [3, 0.01]; % slope, threshold at ~80%
-        expParams = loadExpParams('idealobserver',false);
-    elseif ii == 2
-        fit.init   = [3, 0.01]; % slope, threshold at ~80%
-        expParams = loadExpParams('defaultnophaseshift',false);
-    elseif ii == 3
-        fit.init   = [2, 0.01]; % slope, threshold at ~80% 
-        expParams = loadExpParams('defaultnophaseshift',false);
-    elseif ii == 4
-        fit.init   = [2, 0.01]; % slope, threshold at ~80%
-        expParams = loadExpParams('defaultnophaseshift',false);
-        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
+    
+    % Reload exp params
+    switch subFolderNames{ii}
+        case 'idealtemplate'
+            expParams = loadExpParams('idealobserver',false);
+            fit.init   = [2, 0.0005]; % slope, threshold at ~80%
+        case 'idealsimulation'
+            expParams = loadExpParams('defaultnophaseshift',false);
+            fit.init   = [2, 0.0005]; % slope, threshold at ~80%
+        case 'svm'
+            expParams = loadExpParams('defaultnophaseshift',false);
+            fit.init   = [2, 0.01]; % slope, threshold at ~80% 
+        case 'svm400trials'
+           expParams = loadExpParams('defaultnophaseshift',false);
+           fit.init   = [2, 0.01]; % slope, threshold at ~80% 
+           expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
     end
     
-    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),1000);
+   
 
-    % load model performance
+    % Get file name
+    fName{ii}   = sprintf('Classify_coneOutputs_contrast%1.4f_pa0_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f', ...
+        max(expParams.contrastLevels), ...
+        sprintf('%i',expParams.eyemovement'), ...
+        expParams.eccentricities, ...
+        expParams.defocusLevels, ...
+        expParams.cparams.noise, ...
+        expParams.spatFreq, ...
+        expParams.cparams.spatialDensity(1,2), ...
+        expParams.cparams.spatialDensity(1,3), ...
+        expParams.cparams.spatialDensity(1,4));
+
+    % Check if ideal observer model or computational model was used to
+    % classify
+    if regexp(subFolderNames{ii}, 'ideal', 'ONCE')
+        % change file name
+        fName{ii} = ['ideal_' fName{ii}];
+    end
+    
+    % Check if average or not was used    
+    d = dir(fullfile(dataPth, [fName{ii} '_AVERAGE.mat']));
+    if ~isempty(d)
+        if exist(fullfile(d.folder, d.name), 'file')
+            fNameSE{ii} = [fName{ii} '_SE.mat'];
+            fName{ii}   = d.name;
+        end
+        
+    else
+        fNameSE{ii} = [];
+        fName{ii} = [fName{ii} '.mat'];
+    end
+        
+    % Load model performance
     accuracy = load(fullfile(dataPth, fName{ii}));
     fn = fieldnames(accuracy);
     accuracy.P = squeeze(accuracy.(fn{1}));
@@ -175,7 +133,7 @@ for ii = 1:length(fName)
         accuracy.P = accuracy.P';
     end
     
-    %% 3. Fit Weibull
+    %% 4. Fit Weibull
     % Make a Weibull function first with contrast levels and then search for
     % the best fit with the classifier data
     fit.ctrvar{ii} = fminsearch(@(x) ogFitWeibull(x, expParams.contrastLevels, accuracy.P, nTotal), fit.init);
@@ -184,50 +142,15 @@ for ii = 1:length(fName)
     % from the previous step.
     fit.ctrpred{ii} = ogWeibull(fit.ctrvar{ii}, xUnits);
     
-    %% 4. Find contrast threshold
-    %             diff   = abs(fit.ctrpred{count} - fit.thresh);
-    %             minval = find(diff == min(diff));
-   fit.ctrthresh{ii} = fit.ctrvar{ii}(2);
-   fit.data{ii} = accuracy.P;
+    % Find contrast threshold
+    fit.ctrthresh{ii} = fit.ctrvar{ii}(2);
+    fit.data{ii} = accuracy.P;
     
-end
+    %% 5. Visualize psychometric curves
 
-
-%% 5. Visualize psychometric curves
-
-figure(3); clf; set(gcf,'Color','w', 'Position',  [1000, 850, 986, 488], 'NumberTitle', 'off', 'Name', sprintf('Psychometric function condition: %s', expName)); hold all;
-
-% Remove empty cells
-idx = ~cellfun(@isempty, fit.ctrpred);
-fit.ctrpred = fit.ctrpred(idx);
-
-% Define a zero point (just a very small number), to plot the 0 contrast,
-% since a log-linear plot does not define 0.
-logzero = 1e-5;
-markerColors = colors;
-markerColors(2,:) = [1 1 1];
-
-% Loop over all functions to plot
-for ii = 1:length(fName)
-    
     % What to plot?
     dataToPlot = fit.data{ii};
     fitToPlot  = fit.ctrpred{ii}*100;
-    
-    % Reset contrasts and logzero point for one special case
-    if ii == 1
-        expParams = loadExpParams('idealobserver',false);
-    elseif ii == 2
-        expParams = loadExpParams('defaultnophaseshift',false);
-    elseif ii == 3
-        expParams = loadExpParams('defaultnophaseshift',false);
-    elseif ii == 4
-        expParams = loadExpParams('defaultnophaseshift',false);
-        expParams.contrastLevels = [0:0.001:0.01, 0.015, 0.02, 0.03, 0.04];
-    end
-       
-    % Redefine xUnits
-    xUnits =  linspace(min(expParams.contrastLevels),max(expParams.contrastLevels),1000);
 
     % Plot curve
     plot(xUnits(2:end), fitToPlot(2:end), 'Color', colors(ii,:), 'LineWidth',2, 'LineStyle', lineStyles{ii});
@@ -237,15 +160,14 @@ for ii = 1:length(fName)
     % does not have an actual origin point
     plot(logzero,dataToPlot(1),'o','Color',colors(ii,:), 'MarkerSize', 8, 'MarkerEdgeColor',colors(ii,:), 'MarkerFaceColor', markerColors(ii,:))
     
-    if ~isempty(SE{ii})
+    if ~isempty(fNameSE{ii})
+        SE{ii} = load(fullfile(dataPth, fNameSE{ii}));
         errorbar([logzero, expParams.contrastLevels(2:end)], dataToPlot, SE{ii}.P_SE,'Color', colors(ii,:), 'LineStyle','none');
     end
 end
 
-expParams = loadExpParams('idealobserver',false);
-% expParams.contrastLevels = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];
-xmax = 0.1;
-xticks = [logzero, expParams.contrastLevels(2), 0.001, 0.01, 0.05, 0.1]; 
+xmax = 0.04;
+xticks = [logzero, expParams.contrastLevels(2:9:end)]; 
 
 set(gca, 'XScale','log','XLim',[logzero, xmax],'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015],'FontSize',17, 'LineWidth',2);
 set(gca, 'XTick', xticks, 'XTickLabel',sprintfc('%1.2f',xticks.*100))
