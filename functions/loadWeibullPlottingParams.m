@@ -51,7 +51,7 @@ switch lower(expName)
         lineStyles          = {'-',':', ':', ':', '-'};
 
     case 'eyemov'
-        colors              = [0 0 0;  0.5000, 1.0000, 0.5000; 1 0 0];
+        colors              = [0 0 0; 1 0 0; 0.5000, 1.0000, 0.5000];
         lineStyles          = {'-', '-', ':'};
         labels              = cell(1,length(colors));
         xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
@@ -70,25 +70,25 @@ switch lower(expName)
         end
 
     case 'eyemovnophaseshift'
-        colors              = [0 0 0;  0.5000, 1.0000, 0.5000; 1 0 0];
+        colors              = [0 0 0; 1 0 0; 0.5000, 1.0000, 0.5000];
         lineStyles          = {'-', '-', ':'};
         labels              = cell(1,length(colors));
-        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        xUnits              = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
         labels = {'No eye movements, no stim phase shift', ...
                   'Drift, no stim phase shift', ...
                   'Drift and MS, no stim phase shift'};
         
     case 'idealobserver'
-        xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
-        colors = [0 0 0; 0 0 0; hsv(2)];
+        xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
+        colors = [0 0 0; 0 0 0; 0.5000, 1.0000, 0.5000; 1 0 0];
         lineStyles = {'-', ':', '-', '-'};
         labels = {'Ideal observer (Analytical)', ...
-                  'Ideal observer (Simulation, 200 trials per stimulus)', ...
-                  'Computational observer (SVM Classifier)', ...
-                  'Computational observer (SVM Classifier, 800 trials per stimulus)'};
+                  'Ideal observer (Simulation, 200 trials per stimulus class)', ...
+                  'Computational observer (SVM Classifier, 200 trials per stimulus class)', ...
+                  'Computational observer (SVM Classifier, 800 trials per stimulus class)'};
               
      case 'defaultnophaseshift'
-        xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        xUnits = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 1000);
         colors = [0 0 0];
         lineStyles = {'-'};
         labels = {'No eye movements, no phase shift'};
