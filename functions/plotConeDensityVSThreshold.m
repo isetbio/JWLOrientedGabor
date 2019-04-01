@@ -17,8 +17,8 @@ p.addRequired('expName', @ischar);
 p.addRequired('fit', @isstruct);
 p.addRequired('xThresh', @isvector);
 p.addParameter('saveFig', false, @islogical);
-p.addParameter('figurePth', fullfile(ogRootpath, 'figs'), @isdir);
-p.parse(expName, varargin{:});
+p.addParameter('figurePth', fullfile(ogRootPath, 'figs'), @isdir);
+p.parse(expName, fit, xThresh, varargin{:});
 
 % Rename variables
 expName       = p.Results.expName;
@@ -44,7 +44,7 @@ set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',2
 xlabel('Cone Density (cones/deg^2)','FontSize',25); ylabel('Contrast threshold (%)','FontSize',25)
 set(gca, 'XTick',xticks,'XTickLabel',xticklbls, 'XLim', [2 5],'YLim', [0 0.04]),
 set(gca, 'YTick',[ 0 .01 .02 .03 .04],'YTickLabel',[0 1 2 3 4]),
-legend off; title(sprintf('Contrast threshold vs level of cone density - R2: %1.2f', lm.Rsquared.ordinary))
+legend off; title(sprintf('Contrast threshold vs level of cone density - r2: %1.2f', lm.Rsquared.ordinary))
 
 % Save fig if requested
 if saveFig

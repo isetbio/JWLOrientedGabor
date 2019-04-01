@@ -37,7 +37,7 @@ figure(2); clf; set(gcf, 'Color', 'w', 'Position', [1318, 696, 836, 649])
 plot(lm, 'LineWidth', 3, 'MarkerSize',10, 'Marker','o','Color',[0 0 0]); box off;
 set(gca, 'TickDir', 'out','TickLength',[0.015 0.015], 'LineWidth',1,'Fontsize',25,'XScale','linear', 'XLim', [-10,110], 'YLim', [0,.016])
 xlabel('Probability of L-cones in L:M cone ratio ','FontSize',25); ylabel('Contrast threshold','FontSize',25)
-legend off; title(sprintf('Contrast threshold vs probability of L-cones - R2: %1.2f', lm.Rsquared.ordinary))
+legend off; title(sprintf('Contrast threshold vs probability of L-cones - r2: %1.2f', lm.Rsquared.ordinary))
 
 % Save figure if requested
 if saveFig
