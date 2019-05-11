@@ -4,6 +4,8 @@ Welcome to the JWLOrientedGabor repository!
 
 This repository runs on the ISETBIO toolbox and is created by the NYU ISETBIO team (JWL stands for Jonathan Winawer Lab): Eline Kupers & Jonathan Winawer. This project is funded by the NEI grant: 'Linking brain and behavior 'around' the visual field' by Marisa Carrasco (NYU) and Jonathan Winawer (NYU)
 
+The paper related to this project can be found on bioRxiv (https://www.biorxiv.org/content/10.1101/434514v2) and is now accepted in PLOS Computational Biology!
+
 ## Short term goals
 This repository creates a computational observer model, containing multiple
 stages of the front-end of the visual system for a particular visual scene 
@@ -30,7 +32,7 @@ the stimulus.
 
 ## Dependencies
 This repository is MATLAB-based (v9.1) and depends on the following toolboxes:
-* ISETBIO (https://github.com/isetbio/isetbio/, works at least until version commit c752bc5 - Oct 12, 2018)
+* ISETBIO (https://github.com/isetbio/isetbio/, works at least until version commit e620d97 - Feb 12, 2019)
 
 MATLAB Toolboxes:
 * Bioinformatics Toolbox, 4.7
