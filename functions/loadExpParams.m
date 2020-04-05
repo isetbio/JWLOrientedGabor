@@ -47,33 +47,37 @@ expParams.cparams.noise    = 'random';
 switch lower(expName)
 
     case 'default'  
-        expParams.eyemovement     = [1 1]';           % Type of eye movements: tremor, drift or ms?
-        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
-        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-
-     case 'eyemov'
-        expParams.eyemovement     = [0 0; 1 0; 1 1]'; % None, only drift, both drift and MS
-        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
-        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.eyemovement         = [1 1]';           % Type of eye movements: tremor, drift or ms?
+        expParams.eccentricities      = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq            = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.sparams.noStimPhase = false;            % Do NOT remove difference in phase of CCW and CW Gabor stimuli
      
+    case 'eyemov'
+        expParams.eyemovement         = [0 0; 1 0; 1 1]'; % None, only drift, both drift and MS
+        expParams.eccentricities      = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq            = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.sparams.noStimPhase = false;            % Do NOT remove difference in phase of CCW and CW Gabor stimuli
+
       case 'conedensity'
-        expParams.eyemovement     = [1 1]';           % Which type of eye movements, drift and microsaccades
-        expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40]; % Eccentricity (deg);
-        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??)         
-          
+        expParams.eyemovement         = [1 1]';                    % Which type of eye movements, drift and microsaccades
+        expParams.eccentricities      = [0 0.5 1 2 4.5 5 10:5:40]; % Eccentricity (deg);
+        expParams.spatFreq            = 4;                         % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                         % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                         % Value of first Zernike coeff (= defocus in units of ??)         
+        expParams.sparams.noStimPhase = false;                     % Do NOT remove difference in phase of CCW and CW Gabor stimuli
+ 
       case 'conedensitynoeyemov'
-        expParams.eyemovement     = [0 0]';                     % Type of eye movements
-        expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40];  % Eccentricity (deg);
-        expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??) 
-        
+        expParams.eyemovement         = [0 0]';                     % Type of eye movements
+        expParams.eccentricities      = [0 0.5 1 2 4.5 5 10:5:40];  % Eccentricity (deg);
+        expParams.spatFreq            = 4;                          % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                          % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.sparams.noStimPhase = false;                      % Do NOT remove difference in phase of CCW and CW Gabor stimuli
+
      case 'eyemovenhanced'
          error('(%s): Experiment with enhanced eye movements is currently not implemented', mfilename);
 %         expParams.eyemovement     = [0 0; 2 0; 2 2]';           % Which type of eye movments, emFlag will be turned into doubling amplitude or speed
@@ -83,26 +87,29 @@ switch lower(expName)
 %         expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
 %      
     case 'defocus'
-        expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
-        expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
-        expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = [0:0.25:2];                 % Value of first Zernike coeff (= defocus in units of um)  
-        
+        expParams.eyemovement         = [1 1]';           % Which type of eye movements: drift and microsaccades
+        expParams.eccentricities      = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq            = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = [0:0.25:2];       % Value of first Zernike coeff (= defocus in units of um)  
+        expParams.sparams.noStimPhase = false;            % Do NOT remove difference in phase of CCW and CW Gabor stimuli
+
      case 'conetypes'
-        expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
-        expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
-        expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.eyemovement            = [1 1]';        % Which type of eye movements: drift and microsaccades
+        expParams.eccentricities         = 4.5;           % Eccentricity (deg);
+        expParams.spatFreq               = 4;             % Spatial frequency (cycles/deg);
+        expParams.polarAngle             = 0;             % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels          = 0;             % Value of first Zernike coeff (= defocus in units of ??)  
         expParams.cparams.spatialDensity = [0 0.6 0.3 0.1; 0 1 0 0; 0 0 1 0; 0 0 0 1]; % Blank, L, M, S cone probabilities; Using default, or only one cone time at a time              
+        expParams.sparams.noStimPhase    = false;         % Do NOT remove difference in phase of CCW and CW Gabor stimuli
 
      case 'conetypesmixed'
-        expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
-        expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
-        expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.eyemovement            = [1 1]';              % Which type of eye movements: drift and microsaccades
+        expParams.eccentricities         = 4.5;                 % Eccentricity (deg);
+        expParams.spatFreq               = 4;                   % Spatial frequency (cycles/deg);
+        expParams.polarAngle             = 0;                   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels          = 0;                   % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.sparams.noStimPhase    = false;               % Do NOT remove difference in phase of CCW and CW Gabor stimuli
         expParams.cparams.spatialDensity = [ 0 1   0   0; ...   % L:M = 1:0,  % Blank, L, M, S cone probabilities                             
                                             0 0.9 0.1 0; ...    % L:M = 0.9:0.1 
                                             0 0.8 0.2 0; ...    % L:M = 0.8:0.2
@@ -115,51 +122,52 @@ switch lower(expName)
                                             0 0.1 0.9 0; ...    % L:M = 0.1:0.9
                                             0 0   1   0];       % L:M = 0:1  
     case 'idealobserver'        
-        expParams.eyemovement     = [0 0]';           % No eye movements
-        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
-        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-        expParams.cparams.noise   = 'none';           % no photon noise
-        expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
-        expParams.contrastLevels   = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];             % Stimulus contrast levels (Michelson)
+        expParams.eyemovement         = [0 0]';           % No eye movements
+        expParams.eccentricities      = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq            = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.cparams.noise       = 'none';           % no photon noise
+        expParams.sparams.noStimPhase = true;             % Remove difference in phase of CCW and CW Gabor stimuli
+        expParams.contrastLevels      = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1]; % Stimulus contrast levels (Michelson)
 
     case 'defaultnophaseshift'        
-        expParams.eyemovement     = [0 0]';           % No eye movements
-        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
-        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-        expParams.cparams.noise   = 'random';           % poisson photon noise
-        expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
-        expParams.contrastLevels   = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];             % Stimulus contrast levels (Michelson)
-    
+        expParams.eyemovement         = [0 0]';           % No eye movements
+        expParams.eccentricities  	  = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq            = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.cparams.noise       = 'random';         % poisson photon noise
+        expParams.sparams.noStimPhase = true;             % Remove difference in phase of CCW and CW Gabor stimuli
+        expParams.contrastLevels      = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevelsPC    = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1]; % Stimulus contrast levels (Michelson)
+        
     case 'eyemovnophaseshift'        
-        expParams.eyemovement     = [0 0; 1 0; 1 1]'; % No eye movements, drift only, drift and MS
-        expParams.eccentricities  = 4.5;              % Eccentricity (deg);
-        expParams.spatFreq        = 4;                % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
-        expParams.cparams.noise   = 'random';           % no photon noise
-        expParams.sparams.noStimPhase = true;         % Remove difference in phase of CCW and CW Gabor stimuli
-        expParams.contrastLevels   = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];  % Stimulus contrast levels (Michelson)
+        expParams.eyemovement         = [0 0; 1 0; 1 1]'; % No eye movements, drift only, drift and MS
+        expParams.eccentricities      = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq            = 4;                % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
+        expParams.cparams.noise       = 'random';         % no photon noise
+        expParams.sparams.noStimPhase = true;             % Remove difference in phase of CCW and CW Gabor stimuli
+        expParams.contrastLevels      = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1];  % Stimulus contrast levels (Michelson)
 
     case 'conetypeseccen'   
-        expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
-        expParams.eccentricities  = [0 0.5 1 2 4.5 5 10:5:40];  % Eccentricity (deg);
-        expParams.spatFreq        = 4;                          % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.eyemovement            = [1 1]';                      % Which type of eye movements: drift and microsaccades
+        expParams.eccentricities         = [0 0.5 1 2 4.5 5 10:5:40];   % Eccentricity (deg);
+        expParams.spatFreq               = 4;                           % Spatial frequency (cycles/deg);
+        expParams.polarAngle             = 0;                           % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels          = 0;                           % Value of first Zernike coeff (= defocus in units of ??)  
         expParams.cparams.spatialDensity = [0 1 0 0; 0 0 1 0; 0 0 0 1]; % Blank, L, M, S cone probabilities; Using default, or only one cone time at a time  
+        expParams.sparams.noStimPhase    = false;                       % Do NOT remove difference in phase of CCW and CW Gabor stimuli
 
     case 'spatfreq' 
-        expParams.eyemovement     = [1 1]';                     % Which type of eye movements: drift and microsaccades
-        expParams.eccentricities  = 4.5;                        % Eccentricity (deg);
-        expParams.spatFreq        = [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26]; % Spatial frequency (cycles/deg);
-        expParams.polarAngle      = 0;                          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
-        expParams.defocusLevels   = 0;                          % Value of first Zernike coeff (= defocus in units of ??)  
-
-
+        expParams.eyemovement         = [1 1]';           % Which type of eye movements: drift and microsaccades
+        expParams.eccentricities      = 4.5;              % Eccentricity (deg);
+        expParams.spatFreq            = [0.25, 0.4, 0.65, 1, 1.6, 2.6, 4, 8, 10, 16, 26]; % Spatial frequency (cycles/deg);
+        expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+        expParams.defocusLevels       = 0;                % Value of first Zernike coeff (= defocus in units of ??)  
+        expParams.sparams.noStimPhase = false;            % Do NOT remove difference in phase of CCW and CW Gabor stimuli
 end
 
 % Save stimulus mat-file
