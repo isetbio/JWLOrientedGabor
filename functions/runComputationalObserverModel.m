@@ -55,9 +55,10 @@ function runComputationalObserverModel(expName, varargin)
 % can be then be used to reproduce several of the published figures from the
 % paper the paper:
 %
-% Eline R. Kupers, Marisa Carrasco, Jonathan Winawer. (XXXX) Modeling
-% visual performance differences 'around' the visual field: A computational
-% observer approach.
+% Kupers ER, Carrasco M, Winawer J (2019) Modeling visual performance
+% differences ?around? the visual field: A computational observer approach.
+% PLoS Comput Biol 15(5): e1007063.
+% https://doi.org/10.1371/journal.pcbi.1007063
 %
 % ---------------------------------------------------------
 % ---------------------- Examples -------------------------
@@ -104,7 +105,7 @@ if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); e
 expParams = loadExpParams(expName, false);   % (false argument is for not saving params in separate matfile)
 
 % Define deg2m converter
-expParams.deg2m   = 0.3 * 0.001;     % (default in isetbio)
+expParams.deg2m   = 0.3 * 0.001;             % (default in isetbio)
 
 % Set random number generator seed for reproducibility
 rng(p.Results.seed);
@@ -120,7 +121,8 @@ else
 end
 
 % Check if ideal observer is requested
-expParams.idealObserver = p.Results.idealObserver;
+%(is in a new script, check: s_idealGeislerDPrime.m)
+% expParams.idealObserver = p.Results.idealObserver;
 
 if expParams.verbose
     fH = figure(99); clf; hold all;
@@ -196,7 +198,13 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         if expParams.sparams.noStimPhase; sparams.noStimPhase = expParams.sparams.noStimPhase; end
                         [OG,scenes,tseries]     = ogStimuli(sparams);
                         
-                        
+%                          parsave(fullfile(saveFolder,'stimulus', sprintf('stimulus_contrast%1.4f_pa%d_eccen%1.2f_defocus%1.2f_sf%1.2f.mat',c,expParams.polarAngle, eccen, defocus, sf)), ...
+%                              'scenes', scenes, ...
+%                              'OG', OG, ...
+%                              'tseries', tseries, ...
+%                              'sparams', sparams, ...
+%                              'expParams', expParams);
+                    
                         %% ------------------- COMPUTE ABSORPTIONS  -------------------
                         if expParams.verbose;  fprintf('(%s): Compute absorptions.\n', mfilename); end
                         
@@ -247,20 +255,22 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         end
                         
                         %% ------------------- Classify absorptions  -------------------
-                        fnameClassify = sprintf(...
+                         fnameClassify = sprintf(...
                             'Classify_coneOutputs_contrast%1.4f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
                             c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         
+                        % Classify absorptions
+                        accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions);
+                         
                         if expParams.verbose
                             fprintf('(%s): Classify cone absorption data..\n', mfilename);
                             fprintf('(%s): File will be saved as %s\n', mfilename, fnameClassify);
                         end
                         
+                        % Classify current if requested
                         if expParams.currentFlag
-                            accuracy(c==theseContrasts) = getClassifierAccuracy(current);
-                            fnameClassify = ['current_' fnameClassify]; %#ok<AGROW>
-                        else
-                            accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions); % truncate time samples (only include stimulus on period)
+                            accuracyCurrent(c==theseContrasts) = getClassifierAccuracy(current);
+                            fnameClassifyCurrent = ['current_' fnameClassify]; %#ok<AGROW>
                         end
                         
                         if expParams.verbose; fprintf('(%s): Classifier accuracy for stim contrast %1.4f is %3.2f..\n', mfilename, c, accuracy(c==theseContrasts)); end
@@ -270,6 +280,10 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                 
                 % Save
                 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy, 'expParams', expParams);
+                
+                if expParams.currentFlag
+                    parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassifyCurrent)),'accuracy',accuracyCurrent, 'expParams', expParams);
+                end
                 
                 % Visualize if verbose
                 if expParams.verbose; set(0, 'CurrentFigure', fH); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow; end
