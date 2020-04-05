@@ -2,7 +2,7 @@
 
 expName = 'defocus';
 subFolderName_toSave = 'VisualizedClassifierWeights';
-subFolderName_toLoad = 'paddedStim';
+subFolderName_toLoad = 'run1';
 
 % Load experiment parameters
 expParams = loadExpParams(expName, false);
