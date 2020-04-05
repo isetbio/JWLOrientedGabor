@@ -34,7 +34,7 @@ end
 
 for pa = 1:length(ang)
     
-    mRFDensitySqDegVisual(pa) = calcWatsonMidgetRFDensityByEccenDegVisual(posVisualField_inDeg, polarAngle(pa));
+    mRFDensitySqDegVisual(pa) = calcWatsonMidgetRFDensityByEccenDegVisual(posVisualField_inDeg, ang(pa));
 
 end
 
