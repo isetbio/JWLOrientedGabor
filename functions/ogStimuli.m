@@ -156,7 +156,8 @@ end
 for ii = 1:4
 
     P.testParameters = ogparams([1 ii+1]);
-    [OG(ii), scenes] = oisCreate('harmonic','blend', tseries, P);
+    [OG(ii), scenes{ii}] = oisCreate('harmonic','blend', tseries, P);
+    
     % OG.visualize;
     % ieAddObject(OG.oiFixed); ieAddObject(OG.oiModulated); oiWindow;
     % ieAddObject(scenes{2}); sceneWindow;
