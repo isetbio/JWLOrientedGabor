@@ -1,22 +1,27 @@
-%% s_ogRGC_Classify
+%% s_ogConeAbsorptions_Classify
+%
+% Script to classify cone absorption rates for clockwise and counter-
+% clockwise oriented gabors simulated at different contrast levels.
+% 
+% Absorption data are simulated with script: s_ogConeAbsorptions.m
+% using the ISETBIO toolbox.
+%
+% By Eline Kupers & Jonathan Winawer, NYU (2018)
+%
+%% Set params
 
-% Script with first attempt to classify oriented gabors simulated at
-% 7 different contrast levels, 4 polar angles.
-
-%% Classify
-
-% reset rng seed
+% Reset random number generator seed
 rng;
 
 % Load experiment parameters
-expName = 'eyemov';
-subFolderName_toLoad = 'frozenSeed_diffEyemov';
-subFolderName_toSave = 'frozenSeed_diffEyemov'; 
+expName = 'conedensity';
+subFolderName_toLoad = 'run1_4.5deg_inferior_current';
+subFolderName_toSave = 'run1_4.5deg_inferior_current'; 
 expParams = loadExpParams(expName, false);
-noiseFlag = 'frozen'; % photon noise properties, saved in file name, could also be 'none' or 'random'
+noiseFlag = 'random'; % photon noise properties, saved in file name, could also be 'none' or 'random'
 
 % Compute accuracy for cone current as well
-currentFlag    = false;
+currentFlag    = true;
 
 % Compute accuracy on fft component of cone absorptions
 fftFlag        = true;
@@ -28,8 +33,10 @@ nrEccen          = length(expParams.eccentricities);
 nrSpatFreq       = length(expParams.spatFreq);
 nrDefocusLevels  = length(expParams.defocusLevels);
 
+% Preallocate space
 P = nan(nrContrasts,1);
 
+% Folder to save data
 savePth = fullfile(ogRootPath, 'data', 'classification', expName, subFolderName_toSave);
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
@@ -62,9 +69,14 @@ for eccen = 1:nrEccen
                     
                     if currentFlag
                         data = getfield(tmp,'current');
+                        % photocurrent responses are temporally delayed, 
+                        % select same nr of time samples as for absorptions 
+                        % that include stimulus "on" period.
+                        data = data(:,:,:,51:78,:); 
                     else
                         data = getfield(tmp,'absorptions');
-                        data = data(:,:,:,1:28,:); % truncate time samples (only include stimulus on period)
+                        % truncate time samples (only include stimulus "on" period)
+                        data = data(:,:,:,1:28,:);
                     end
                     
                     
