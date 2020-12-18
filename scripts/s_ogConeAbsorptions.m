@@ -1,4 +1,4 @@
-%% Oriented Gabor Discrimination
+%% s_ogConeAbsorptions.m
 % This script supercedes t_orientedGaborDiscrimination.m, which no longer runs,
 % due to changes in isetbio.
 %
@@ -71,20 +71,20 @@
 %% Specify experiment parameters
 
 % Load experiment parameters
-expName = 'eyemov';
-subFolderName = 'frozen_s1';
+expName = 'conedensity';
+subFolderName = 'run5_4.5deg_nasal_current';
 expParams = loadExpParams(expName, false);
 
 % Set if we want to compute cone current from cone absorptions
-currentFlag = false;
+currentFlag = true;
 
 % Set fixed seed
-fixedSeed = 1; % could be any integer or 'default'
+fixedSeed = 5; % could be any integer or 'default'
 rng(fixedSeed);
 
 % Temporal properties of one trial
-tStep             = 0.002;                % Time step for optical image sequence (seconds)
-sparams.tsamples  = (0:tStep:(0.054*4));      % seconds
+tStep             = 0.002;                  % Time step for optical image sequence (seconds)
+sparams.tsamples  = (0:tStep:(0.054*4));    % seconds
 % sparams.timesd    = 1000.00;              % sd of temporal Gaussian window
 
 % Scene field of view
@@ -116,7 +116,7 @@ tSamples         = OG(1).length;
 %% Loop over conditions, generating cone absorptions for each condition
 
 % Eccentricity loop
-for eccen = expParams.eccentricities
+for eccen = expParams.eccentricities(5)
     
     % ----- CONE MOSAIC -----------------------------------------
     % Make CONE MOSAIC for a given eccentricity and polar angle
@@ -124,7 +124,7 @@ for eccen = expParams.eccentricities
     
     % Specify retinal location where stimulus is presented
     cparams.eccentricity      = eccen;             % Visual angle of stimulus center, in deg
-    cparams.polarAngle        = expParams.polarAngle; % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+    cparams.polarAngle        = 0;          % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
     
     % Cone mosaic field of view in degrees
     cparams.cmFOV        = sparams.sceneFOV; % degrees
@@ -140,7 +140,7 @@ for eccen = expParams.eccentricities
     cMosaic.setSizeToFOV(cparams.cmFOV);
     
     % Add photon noise
-    cMosaic.noiseFlag = 'frozen'; % 'random' 'frozen' 'none'
+    cMosaic.noiseFlag = expParams.cparams.noise; %'random'; % 'random' 'frozen' 'none'
     
     % CURRENT: Set outer segment to be computed with linear filters
     cMosaic.os = osLinear;
@@ -148,10 +148,10 @@ for eccen = expParams.eccentricities
     for defocus = expParams.defocusLevels
         
         % ---- Add optics blur or defocus if requested
-        sparams.oi = oiDefocus(defocus); % input is Zernicke defocus coeff
+        sparams.oi = oiDefocus(defocus, expParams.verbose); % input is Zernicke defocus coeff
         
         % Change cone spacing based on eccentricity
-        if strcmp(expName,'eccbasedcoverage')
+        if strcmp(expName,'conedensity')
             propCovered = getBanks1991ConeCoverage(eccen);
 
             cMosaic.pigment.pdWidth  = cMosaic.pigment.width*propCovered;

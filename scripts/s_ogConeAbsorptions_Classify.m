@@ -15,8 +15,8 @@ rng;
 
 % Load experiment parameters
 expName = 'conedensity';
-subFolderName_toLoad = 'run1_4.5deg_inferior_current';
-subFolderName_toSave = 'run1_4.5deg_inferior_current'; 
+subFolderName_toLoad = 'run1_4.5deg_superior_current';
+subFolderName_toSave = 'run1_4.5deg_superior_current'; 
 expParams = loadExpParams(expName, false);
 noiseFlag = 'random'; % photon noise properties, saved in file name, could also be 'none' or 'random'
 
@@ -27,7 +27,12 @@ currentFlag    = true;
 fftFlag        = true;
 
 % Predefine matrix for predictions
-nrContrasts      = length(expParams.contrastLevels);
+if currentFlag
+    contrasts    = expParams.contrastLevelsPC;
+else
+    contrasts    = expParams.contrastLevels;
+end
+nrContrasts      = length(contrasts);
 nrEyemovTypes    = size(expParams.eyemovement,2);
 nrEccen          = length(expParams.eccentricities);
 nrSpatFreq       = length(expParams.spatFreq);
@@ -37,17 +42,18 @@ nrDefocusLevels  = length(expParams.defocusLevels);
 P = nan(nrContrasts,1);
 
 % Folder to save data
-savePth = fullfile(ogRootPath, 'data', 'classification', expName, subFolderName_toSave);
+serverPth = '/Volumes/server/Projects/PerformanceFieldsIsetBio';
+savePth = fullfile(serverPth, 'data', 'classification', expName, subFolderName_toSave);
 if ~exist('savePth', 'dir'); mkdir(savePth); end;
 
 % Init figure
 figure; clf; set(gcf,'Color','w'); hold all;
-set(gca, 'XScale','log', 'XLim', [.005 max(expParams.contrastLevels)], 'XTick', [1:7, 10:10:100]/100, ...
+set(gca, 'XScale','log', 'XLim', [.005 max(contrasts)], 'XTick', [1:7, 10:10:100]/100, ...
     'YLim', [40 100], 'TickDir','out','TickLength',[.015 .015]);
 ylabel('Classifier Accuracy')
 xlabel('Contrast level (Michelson)')
 
-for eccen = 1:nrEccen
+for eccen = 5 %1:nrEccen
     for df = 1:nrDefocusLevels
         for em = 1:max(nrEyemovTypes)
             for sf = expParams.spatFreq
@@ -56,13 +62,12 @@ for eccen = 1:nrEccen
                     % Load dataset
                     fname = sprintf(...
                         'OGconeOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f.mat',...
-                        expParams.contrastLevels(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), noiseFlag, sf);
+                        contrasts(c),expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), noiseFlag, sf);
                     
                     if currentFlag
                         fname = ['current_' fname];
                     end
-                    
-                    pth = fullfile(ogRootPath, 'data', expName, subFolderName_toLoad, fname);
+                    pth = fullfile(serverPth, 'data', 'conecurrent', expName, subFolderName_toLoad, fname);
                     if ~exist(pth, 'file'), error('The file %s is not found', fname); end
                     
                     tmp = load(pth);
@@ -149,13 +154,13 @@ for eccen = 1:nrEccen
                 % Save classifier accuracy
                 fname = sprintf(...
                     'Classify_coneOutputs_contrast%1.3f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-random_sf%1.2f',...
-                    expParams.contrastLevels(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
+                    contrasts(c), expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,em)), expParams.eccentricities(eccen), expParams.defocusLevels(df), sf);
                 if currentFlag; fname = ['current_' fname]; end
                 parsave(fullfile(savePth, sprintf('%s.mat', fname)),'P',P)
                 
                 
                 % Visualize
-                plot(expParams.contrastLevels, P,'o-', 'LineWidth',2); drawnow;
+                plot(contrasts, P,'o-', 'LineWidth',2); drawnow;
             end
         end
     end
