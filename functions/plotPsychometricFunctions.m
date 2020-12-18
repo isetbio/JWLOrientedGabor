@@ -35,7 +35,7 @@ expParams    = loadExpParams(expName, false);
 [xUnits, colors, labels, xThresh, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, 'toPlot',subFolderName);
+dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderName);
 figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
@@ -199,8 +199,9 @@ end
 
 %% 7. Plot density thresholds
 if strcmp('conedensity',expName) || strcmp('eccbasedcoverage',expName)
-    
-    plotConeDensityVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
+    baseFolder = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model';
+    load(fullfile(baseFolder,'data',expName,'thresholds', sprintf('varThresh_coneResponse_absorptionrate_13_conedensity')), 'varThresh');
+    plotConeDensityVSThreshold(expName, fit, xThresh, 'varThresh', varThresh','saveFig', saveFig, 'figurePth', figurePth);
     
 elseif strcmp(expName,'defocus')
     
