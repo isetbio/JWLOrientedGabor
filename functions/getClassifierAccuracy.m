@@ -51,4 +51,17 @@ classLoss = kfoldLoss(cvmdl);
 % Get percent accuracy
 P = (1-classLoss) * 100;
 
+% visualize beta's
+% betas = reshape(cvmdl.Trained{1}.Beta, [nrows, ncols, tSamples]);
+% mn_betas = squeeze(mean(betas,3));
+% imagesc(fftshift(mn_betas)); box off; set(gca, 'TickDir', 'out', 'FontSize',12); 
+% colormap gray; axis image; colorbar;
+% 
+% title(sprintf('FFT at input freq: %1.3f x10^6', mn_betas(8,3)*10^6));
+% set(gca,'CLim', 1.0e-03 .*[-0.3624,0.3624]);
+%     savePth = fullfile(pfRV1rootPath, 'figures');
+%     print(fullfile(savePth, 'classifierWeights_averagedAcrossTime.eps'),'-depsc')
+
+       
+
 return
