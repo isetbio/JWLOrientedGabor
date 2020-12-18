@@ -1,4 +1,4 @@
-function P = getIdealObserverAccuracy(data, expParams)
+function percentCorrect = getIdealObserverAccuracy(data, expName, subFolder, baseFolder, cone2RGCRatio)
 % Function to train and test linear SVM classifier on cone data with cross-validation:
 %       P = getClassifierAccuracy(data)
 %
@@ -15,18 +15,24 @@ function P = getIdealObserverAccuracy(data, expParams)
 fprintf('(%s): Loading and classifying\n', mfilename);
 
 % Load parameters
-expName = 'idealobserver';
+% expName = 'idealobserver';
+% subFolder = 'idealtemplate';
 expParams = loadExpParams(expName, false);
 
 
 %% Analytical solution
 for c = expParams.contrastLevels
-    % Get file name 100% contrast (i.e. ideal template)
-    fnameTemplate = sprintf('OGconeOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1.mat',c);
-    
+%     fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-1.00.00.0.mat',c);
+%     template = load(fullfile(baseFolder, 'data', expName, subFolder, fnameTemplate));
+%     template = template.absorptions;   
+
+%     fnameTemplate = sprintf('rgcResponse_Cones2RGC%d_absorptionrate',cone2RGCRatio);
+
     % Load data
-    template = load(fullfile(ogRootPath, 'data', expName, 'idealtemplate', fnameTemplate));
-    template = template.absorptions;
+%     template = load(fullfile(baseFolder, 'data', expName, 'rgc', fnameTemplate));
+%     template = template.rgcResponse;
+    
+    template = data{c==expParams.contrastLevels};
     
     % Get the trials and samples (should be the data for all data sets though
     nStimuli = size(template,5);
@@ -49,54 +55,48 @@ for c = expParams.contrastLevels
     % Get all trials with the same label and only take one trial and one time point
     % (since data are all the same across time, without any photon noise or eyemovement or
     % phase shifts)
-    alphaMean = template(label==1,:,:,:);
-    templateCW = alphaMean(1,:,:,1);
+    alphaMean = template(label==1,:,:,1:28);
+    templateCW = sum(alphaMean(1,:,:,:),4); % sum across all time points to have a fair comparison to the SVM results.
     templateCW = templateCW(:);
-    betaMean = template(label==-1,:,:,:);
-    templateCCW = betaMean(1,:,:,1);
+    betaMean = template(label==-1,:,:,1:28);
+    templateCCW = sum(betaMean(1,:,:,:),4); % sum across all time points to have a fair comparison to the SVM results.
     templateCCW = templateCCW(:);
     
     if templateCW==templateCCW
-        dprimeA(c==expParams.contrastLevels) = 0;
+        dprimeAnalytical(c==expParams.contrastLevels) = 0;
         percentCorrect(c==expParams.contrastLevels) = 0.5;
         
-        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeA(c==expParams.contrastLevels),percentCorrect(c==expParams.contrastLevels))
-        plot([1 0.5 0],[1 0.5 0],'LineWidth',4); drawnow;
+        fprintf('Contrast %1.4f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeAnalytical(c==expParams.contrastLevels),percentCorrect(c==expParams.contrastLevels))
+
     else
         numerator = sum( (templateCCW-templateCW).*log(templateCCW./templateCW) );
         denominator = sqrt( 0.5* sum( (templateCW+templateCCW) .* (log(templateCCW./templateCW)).^2 ));
     
         dprime = numerator/denominator;
-        
-        criteria = linspace(min([templateCW; templateCCW]), max([templateCW; templateCCW]), 1000);
-        
-        pCW = 1-normcdf(0, dprime, 1);
-        pCCW = 1-pCW;
 
-%         pCW = 1-normcdf(criteria, sum( templateCW.*log(templateCCW./templateCW) ), sqrt(sum( templateCW .* (log(templateCCW./templateCW).^2) )));
-%         pCCW = 1-normcdf(criteria, sum( templateCCW.*log(templateCCW./templateCW) ), sqrt(sum( templateCCW.* (log(templateCCW./templateCW).^2) )));
-        dprimeA(c==expParams.contrastLevels) = dprime;
-        percentCorrect(c==expParams.contrastLevels) = -trapz([1 pCCW 0],[1 pCW 0]);
-%         plot([1 pCCW 0],[1 pCW 0],'LineWidth',4); drawnow;
+        dprimeAnalytical(c==expParams.contrastLevels) = dprime;
+        percentCorrect(c==expParams.contrastLevels) = normcdf(dprime/2);
         
-        fprintf('Contrast %1.3f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeA(c==expParams.contrastLevels),percentCorrect(c==expParams.contrastLevels))
+        fprintf('Contrast %1.4f \t d-prime: %2.3f,  percent correct: %2.3f\n', c, dprimeAnalytical(c==expParams.contrastLevels),percentCorrect(c==expParams.contrastLevels))
 
     end
 end
 
-saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, 'idealtemplate');
+saveFolderClassification = fullfile(baseFolder, 'data', 'classification', 'rgc', expName, subFolder);
 if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); end;
 
-fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.3f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-0.60.30.1', max(expParams.contrastLevels));
+fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-1.00.00.0_RGC%d', max(expParams.contrastLevels), cone2RGCRatio);
 accuracy = percentCorrect.*100;
 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
 
-if expParams.verbose;
-    logzero = 4e-4;
+if expParams.verbose
+    logzero = 4e-5;
     figure; plot(expParams.contrastLevels(2:end), percentCorrect(2:end), 'o-'); hold on;
     plot(logzero, percentCorrect(1), 'o')
     set(gca, 'XScale', 'log', 'YLim', [.4, 1])
 end
+
+return
 %% Simulation
 
 % If absorption data are the same, it doesn't matter..
