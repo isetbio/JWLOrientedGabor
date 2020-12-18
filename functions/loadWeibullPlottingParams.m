@@ -202,6 +202,25 @@ switch lower(expName)
         end
         
         xThresh           = allDensity;
+        
+     case 'rgcratios'
+        cone2RGCRatios  = 1:5;
+        colors          = parula(length(cone2RGCRatios)+1);
+        xUnits          = linspace(min(expParams.contrastLevels),max(expParams.contrastLevels), 200);
+        lineStyles      = repmat({'-'},1,5);
 
+        % Compute defocus levels
+        for r = cone2RGCRatios   
+            ratio = 2/r; % mm
+            xThresh(r) = ratio; % convert to diopters
+            labels{r} = sprintf('mRGC:Cone = %2.1f : 1.0',xThresh(r));
+        end
+
+        case 'current'
+            labels = {'1590 cones/deg^2', '1560 cones/deg^2', '1300 cones/deg^2', '1382 cones/deg^2'};
+        colors          = parula(length(labels)+1);
+        xUnits          = linspace(min(expParams.contrastLevelsPC),max(expParams.contrastLevelsPC), 200);
+        lineStyles      = repmat({'-'},1,5);
+        
 end
 
