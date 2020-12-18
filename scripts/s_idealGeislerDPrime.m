@@ -24,7 +24,7 @@ expNameTemplate = 'idealobserver';
 expParams       = loadExpParams(expNameTemplate, false);
 
 % Get percent correct
-percentCorrectAnalytic = geislerIdealAnalytical(expParams);
+percentCorrectAnalytic = geislerIdealAnalytical('expParams', expParams);
 
 % Plot it
 figure(1); plot(expParams.contrastLevels(2:end), percentCorrectAnalytic(2:end), 'ko-'); hold on;
