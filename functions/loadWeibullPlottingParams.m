@@ -217,10 +217,39 @@ switch lower(expName)
         end
 
         case 'current'
-            labels = {'1590 cones/deg^2', '1560 cones/deg^2', '1300 cones/deg^2', '1382 cones/deg^2'};
+            
+        polarAngles = [0, pi/2, pi, 3*pi/2];
+        polarAngleLabels = {'nasal','superior','temporal','inferior'};
+        
+        % Get parameters to compute cone density levels
+        whichEye         = 'left';
+        cparams.cmFOV    =  1; % degrees
+        
+        % Convertion deg to m
+        deg2m  = 0.3 * 0.001; % .3 deg per mm, .001 mm per meter
+        
+        for pa = 1:length(polarAngles)
+            % Specify retinal location where stimulus is presented
+            cparams.eccentricity = 4.5;                     % Visual angle of stimulus center, in deg
+            cparams.polarAngle   = polarAngles(pa);   % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
+            
+            % Compute x,y position in m of center of retinal patch from ecc and angle
+            [x, y] = pol2cart(cparams.polarAngle, cparams.eccentricity);
+            x = x * deg2m;  y = y * deg2m;
+            cMosaic = coneMosaic('center', [x, y], 'whichEye', whichEye);
+            
+            % Set the field of view (degrees)
+            cMosaic.setSizeToFOV(cparams.cmFOV);
+            allDensity(pa) = eccen2density(cMosaic, 'deg');
+            
+            labels{pa} = sprintf('%s (%d cells/deg2)', polarAngleLabels{pa}, round(allDensity(pa)));
+        end
+            
         colors          = parula(length(labels)+1);
+        colors          = colors(1:length(labels),:);
         xUnits          = linspace(min(expParams.contrastLevelsPC),max(expParams.contrastLevelsPC), 200);
         lineStyles      = repmat({'-'},1,5);
+        xThresh           = allDensity;
         
 end
 
