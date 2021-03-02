@@ -86,13 +86,13 @@ p.addParameter('seed', 1, @(x) (isstring(x) | isscalar(x)));
 p.addParameter('currentFlag', false, @islogical);
 p.parse(expName, varargin{:});
 
-% Check and create folder to save absorption data
-currDate = datestr(datetime,'yyyymmdd_HHMMSS');
 
 if ~isempty(p.Results.saveFolder)
     saveFolder = fullfile(ogRootPath, 'data', expName, p.Results.saveFolder);
     saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, p.Results.saveFolder);
 else
+    % Create folder to save absorption data if no saveFolder was defined
+    currDate = datestr(datetime,'yyyymmdd_HHMMSS');
     saveFolder = fullfile(ogRootPath, 'data', expName, currDate);
     saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, currDate);
 end
@@ -115,9 +115,11 @@ expParams.seed = p.Results.seed;
 if p.Results.currentFlag
     theseContrasts = expParams.contrastLevelsPC;
     expParams.currentFlag = p.Results.currentFlag;
+    selectTimePoints = 1:109; % use all timepoints, as cone current responses are temporally delayed
 else
     theseContrasts = expParams.contrastLevels;
     expParams.currentFlag = p.Results.currentFlag;
+    selectTimePoints = 1:28; % only use stim on time points
 end
 
 % Check if ideal observer is requested
@@ -125,7 +127,8 @@ end
 % expParams.idealObserver = p.Results.idealObserver;
 
 if expParams.verbose
-    fH = figure(99); clf; hold all;
+    fH1 = figure(99); clf; hold all;
+    fH2 = figure(98); clf; hold all;
 end
 
 %% ------------------- DEFAULT SCENE and STIMULI -------------------
@@ -239,7 +242,8 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                             'sparams', sparams, ...
                             'cparams', cparams, ...
                             'expParams', expParams, ...
-                            'emPaths', emPaths);
+                            'emPaths', emPaths, ...
+                            'cMosaic', cMosaic);
                         
                         % If cone current was requested, also save this array
                         if expParams.currentFlag
@@ -251,7 +255,8 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                                 'sparams', sparams, ...
                                 'cparams', cparams, ...
                                 'expParams', expParams, ...
-                                'emPaths', emPaths);
+                                'emPaths', emPaths, ...
+                                'cMosaic', cMosaic);
                         end
                         
                         %% ------------------- Classify absorptions  -------------------
@@ -260,7 +265,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                             c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
                         
                         % Classify absorptions
-                        accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions);
+                        accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions(:,:,:,selectTimePoints,:));
                          
                         if expParams.verbose
                             fprintf('(%s): Classify cone absorption data..\n', mfilename);
@@ -269,8 +274,8 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         % Classify current if requested
                         if expParams.currentFlag
-                            accuracyCurrent(c==theseContrasts) = getClassifierAccuracy(current);
-                            fnameClassifyCurrent = ['current_' fnameClassify]; %#ok<AGROW>
+                            accuracyCurrent(c==theseContrasts) = getClassifierAccuracy(current(:,:,:,selectTimePoints,:)); %#ok<AGROW>
+                            fnameClassifyCurrent = ['current_' fnameClassify]; 
                         end
                         
                         if expParams.verbose; fprintf('(%s): Classifier accuracy for stim contrast %1.4f is %3.2f..\n', mfilename, c, accuracy(c==theseContrasts)); end
@@ -286,7 +291,20 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                 end
                 
                 % Visualize if verbose
-                if expParams.verbose; set(0, 'CurrentFigure', fH); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow; end
+                if expParams.verbose 
+                    set(0, 'CurrentFigure', fH1); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow;
+                    title('Classifier accuracy cone absorptions'); 
+                    xlabel('Stimulus contrast (fraction)'); 
+                    ylabel('Accuracy (fraction)'); 
+
+                    if expParams.currentFlag
+                        set(0, 'CurrentFigure', fH2); 
+                        plot(theseContrasts, accuracyCurrent,'o-', 'LineWidth',2); drawnow; 
+                        title('Classifier accuracy cone current'); 
+                        xlabel('Stimulus contrast (fraction)'); 
+                        ylabel('Accuracy (fraction)');
+                    end % current flag plotting
+                end % verbose
                 
             end % eyemovements
         end % defocus
