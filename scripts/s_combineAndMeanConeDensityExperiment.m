@@ -7,7 +7,7 @@ expParams                = loadExpParams(expName, false);
 
 % Use cone current (flag = true) or cone absorptions (flag = false)
 polarAngles = expParams.polarAngle;
-FFTflag     = true;
+% FFTflag     = true;
 
 % Where to find data and save figures
 dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName);
