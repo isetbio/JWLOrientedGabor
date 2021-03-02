@@ -131,7 +131,7 @@ switch lower(expName)
         expParams.sparams.noStimPhase = true;             % Remove difference in phase of CCW and CW Gabor stimuli
         expParams.contrastLevels      = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1]; % Stimulus contrast levels (Michelson)
 
-        % L-only Delete me
+        % L-only
         expParams.cparams.spatialDensity = [ 0 1 0 0];   
         
     case 'defaultnophaseshift'        
@@ -145,7 +145,7 @@ switch lower(expName)
         expParams.contrastLevels      = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
         expParams.contrastLevelsPC    = [0:0.0001:0.001, 0.002:0.001:0.01, 0.02:0.01:0.1]; % Stimulus contrast levels (Michelson)
         
-        % L-only Delete me
+        % L-only
         expParams.cparams.spatialDensity = [ 0 1 0 0]; 
         
      case 'conedensitynonoise'        
@@ -155,7 +155,7 @@ switch lower(expName)
         expParams.polarAngle          = 0;                % Polar angle (radians): 0 is right, pi/2 is superior, pi is left, 3*pi/2 inferior
         expParams.defocusLevels       = 0;                % Value of first Zernike coeff (= defocus in units of ??) 
         expParams.cparams.noise       = 'none';           % poisson photon noise
-        expParams.sparams.noStimPhase = true;             % Remove difference in phase of CCW and CW Gabor stimuli
+        expParams.sparams.noStimPhase = false;             % Remove difference in phase of CCW and CW Gabor stimuli
                   
     case 'eyemovnophaseshift'        
         expParams.eyemovement         = [0 0; 1 0; 1 1]'; % No eye movements, drift only, drift and MS
