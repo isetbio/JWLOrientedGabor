@@ -197,8 +197,8 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         
                         sparams.gabor.contrast  = c;  % Michelson, range = [0 1]
-                        sparams.freqCPD         = sf; % Cycles/degree
-                        if expParams.sparams.noStimPhase; sparams.noStimPhase = expParams.sparams.noStimPhase; end
+                        sparams.freqCPD         = sf; % Cycles/degree                        
+                        sparams.phases          = expParams.sparams.phases;
                         [OG,scenes,tseries]     = ogStimuli(sparams);
                         
 %                          parsave(fullfile(saveFolder,'stimulus', sprintf('stimulus_contrast%1.4f_pa%d_eccen%1.2f_defocus%1.2f_sf%1.2f.mat',c,expParams.polarAngle, eccen, defocus, sf)), ...

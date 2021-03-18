@@ -80,7 +80,7 @@ p.addParameter('timesd', 20,@isscalar);           % Time standard deviation
 p.addParameter('sceneFOV',2,@isscalar);           % Degrees
 p.addParameter('distance',0.57,@isscalar);        % Meters
 p.addParameter('bgColor',0.5,@isscalar);          % 0 to 1 (assumed grayscale) | currently not used
-p.addParameter('noStimPhase',false, @islogical);          % introduce stimulus phase shift or not
+p.addParameter('phases',[pi/2 3*pi/2], @isnumeric); % stimulus phases 
 
 p.parse(varargin{:});
 
@@ -91,7 +91,9 @@ tsamples  = p.Results.tsamples;
 timesd    = p.Results.timesd;
 sceneFOV  = p.Results.sceneFOV;
 distance  = p.Results.distance;
-noStimPhase  = p.Results.noStimPhase;
+phases    = p.Results.phases;
+
+if length(phases) == 1, phases(2) = phases(1); end
 
 % Currently not being used because bgColor doesn't exist in sceneSet!
 bgColor   = p.Results.bgColor;
@@ -122,26 +124,20 @@ ogparams(1).contrast = 0;
 % CCW oriented Gabor on a zero background. The function which makes the
 % Gabors, harmonicP, treats 0 as vertical and clockwise as positive.
 ogparams(2).name     = 'ccw_sin_OG';  
-ogparams(2).ang      = -oGabor.ang;
+ogparams(2).ang      = -oGabor.ang; % ccw
+ogparams(3).ang      = -oGabor.ang; % ccw
+ogparams(4).ang      =  oGabor.ang; % cw
+ogparams(5).ang      =  oGabor.ang; % cw
 
-ogparams(3).ang      = -oGabor.ang;
+ogparams(2).ph       =  phases(1); 
+ogparams(3).ph       =  phases(2); 
+ogparams(4).ph       =  phases(1); 
+ogparams(5).ph       =  phases(2); 
 
-if noStimPhase == true
-    ogparams(3).name     = 'ccw_sin_OG';  
-else
-    ogparams(3).name     = 'ccw_cos_OG';  
-    ogparams(3).ph       =  oGabor.ph - pi;
-end
-
-% CW oriented Gabor on a zero background
-ogparams(4).name     = 'cw_sin_OG'; 
-
-if noStimPhase == true
-    ogparams(5).name     = 'cw_sin_OG'; 
-else
-    ogparams(5).name     = 'cw_cos_OG'; 
-    ogparams(5).ph       =  oGabor.ph - pi;
-end
+ogparams(2).name     = sprintf('ccw_%d', rad2deg(phases(1)));
+ogparams(3).name     = sprintf('ccw_%d', rad2deg(phases(2)));
+ogparams(4).name     = sprintf('cw_%d', rad2deg(phases(1)));
+ogparams(5).name     = sprintf('cw_%d', rad2deg(phases(2)));
 
 
 % Put test params and scene params into P for use with oisCreate
