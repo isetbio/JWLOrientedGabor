@@ -67,6 +67,10 @@ if size(yData,1) > size(yData,2)
     yData = yData';
 end
 
+if size(xThresh,1) > size(xThresh,2)
+    xThresh = xThresh';
+end
+
 % fit linear or second polynomial to log density (x) vs log contrast threshold (y)
 if strcmp(fitTypeName, 'linear')
     [fitResult, err]  = polyfit(log10(xThresh),yData,1);
@@ -82,9 +86,9 @@ end
     
 %% 2. Visualize plot
 xrange = unique(round(log10(xThresh)));
-xticks = [xrange(1)-1; xrange; xrange(end)+1];
+xticks = [xrange(1)-1, xrange, xrange(end)+1];
 
-for ii = 1:length(xticks); xticklbls{ii} = sprintf('10^%d', xticks(ii)'); end % get x axis range
+for ii = 1:length(xticks); xticklbls{ii} = sprintf('10^%d', xticks(ii)); end % get x axis range
 
 % Plot it!
 figure(2); clf; set(gcf, 'Color', 'w', 'Position', [ 394   156   836   649])
