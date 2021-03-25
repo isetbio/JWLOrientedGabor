@@ -179,6 +179,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
             %% ------------------- EYE MOVEMENTS -------------------
             for emIdx = 1:size(expParams.eyemovement,2) % loop over eye movement conditions
                 
+                if any(eccen==[10:13]); theseContrasts = [theseContrasts, 0.2:0.1:1]; end
                 accuracy = NaN(size(theseContrasts));
                 
                 for c = theseContrasts % loop over contrasts
