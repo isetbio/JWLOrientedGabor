@@ -13,7 +13,8 @@ function [] = plotPsychometricFunctions(expName, varargin)
 % none
 %
 % Example:
-% plotPsychometricFunctions('default', 'subFolderName', 'run1', 'saveFig', 'true', 'plotAvg', false)
+% plotPsychometricFunctions('default', 'subFolderName', 'run1', 'saveFig', true, 'plotAvg', false)
+% plotPsychometricFunctions('default', 'subFolderName', 'average_svmEnergy', 'saveFig', true, 'plotAvg', true, 'stimTemplateFlag', true)
 %
 %% 0. Set general experiment parameters
 p = inputParser;
@@ -22,6 +23,7 @@ p.addRequired('expName', @ischar);
 p.addParameter('subFolderName', 'average', @ischar);
 p.addParameter('saveFig', false, @islogical);
 p.addParameter('plotAvg', true, @islogical);
+p.addParameter('stimTemplateFlag', false, @islogical);
 p.parse(expName, varargin{:});
 
 % Rename variables
@@ -29,14 +31,21 @@ expName       = p.Results.expName;
 subFolderName = p.Results.subFolderName;
 saveFig       = p.Results.saveFig;
 plotAvg       = p.Results.plotAvg;
+stimTemplateFlag = p.Results.stimTemplateFlag;
 
 % Load specific experiment parameters
 expParams    = loadExpParams(expName, false);
 [xUnits, colors, labels, xThresh, lineStyles] = loadWeibullPlottingParams(expName);
 
 % Where to find data and save figures
-dataPth     = fullfile(ogRootPath,'data','PF_data_alias','classification',expName, subFolderName);
-figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
+if stimTemplateFlag
+    baseFolder = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model/';
+    dataPth     = fullfile(baseFolder,'data',expName,'classification','absorptions', 'stimTemplate', subFolderName);
+    figurePth     = fullfile(baseFolder,'figures','psychometricCurves', expName, 'absorptions','stimTemplate', subFolderName);
+else 
+    dataPth     = fullfile(ogRootPath,'data','classification',expName, subFolderName);
+    figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
+end
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials;
@@ -200,7 +209,12 @@ end
 %% 7. Plot density thresholds
 if strcmp('conedensity',expName) || strcmp('eccbasedcoverage',expName)
     baseFolder = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model';
-    load(fullfile(baseFolder,'data',expName,'thresholds', sprintf('varThresh_coneResponse_absorptionrate_13_conedensity')), 'varThresh');
+    if stimTemplateFlag
+        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds','meanPoissonPadded/stimTemplate');
+    else
+        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds');
+    end
+    load(fullfile(thresholdDir, sprintf('varThresh_coneResponse_absorptionrate_13_conedensity')), 'varThresh');
     plotConeDensityVSThreshold(expName, fit, xThresh, 'varThresh', varThresh','saveFig', saveFig, 'figurePth', figurePth);
     
 elseif strcmp(expName,'defocus')
