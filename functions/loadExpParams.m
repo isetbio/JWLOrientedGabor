@@ -1,4 +1,4 @@
-function expParams = loadExpParams(expName, saveParams)
+function expParams = loadExpParams(expName, varargin)
 % Function to define parameters for a specific experiment, and possibility
 % to save in a mat file so it can be reproduced later:
 %
@@ -31,8 +31,10 @@ if isempty(expName) || ~exist('expName', 'var')
     expName = 'default';
 end
 
-if isempty(saveParams) || ~exist('saveParams', 'var')
-    saveParams = true;
+if nargin==2
+    saveParams = varargin{1};
+else
+    saveParams = false;
 end
 
 expParams                  = struct;
@@ -61,7 +63,7 @@ switch lower(expName)
         
     case 'conedensity'
         expParams.eccentricities      = [0 0.5 1 2 4.5 5 10:5:40];  % Eccentricity (deg);
-        
+
     case 'conedensitynoeyemov'
         expParams.eyemovement         = [0 0]';                     % Type of eye movements
         expParams.eccentricities      = [0 0.5 1 2 4.5 5 10:5:40];  % Eccentricity (deg);
