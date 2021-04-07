@@ -45,9 +45,9 @@ for runNr = 1:5
     %     P = nan(nrContrasts,1);
     
     % Folder to save data
-    % serverPth = '/Volumes/server/Projects/PerformanceFieldsIsetBio';
-%     serverPth = '/Volumes/server-1/Projects/PerformanceFields_RetinaV1Model';
-    serverPth = '/scratch/ek99/JWLOrientedGabor/';
+    serverPth = '/Volumes/server/Projects/PerformanceFieldsIsetBio';
+    % serverPth = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model';
+    %serverPth = '/scratch/ek99/JWLOrientedGabor/';
     savePth = fullfile(serverPth, 'data', expName, 'classification', 'current', subFolderName_toSave);
     if ~exist('savePth', 'dir'); mkdir(savePth); end
     
@@ -74,7 +74,7 @@ for runNr = 1:5
             if currentFlag
                 fname = ['current_' fname];
             end
-            pth = fullfile(serverPth, 'data', expName,'current', expName, subFolderName_toLoad, fname);
+            pth = fullfile(serverPth, 'data','conecurrent', expName, subFolderName_toLoad, fname);
             if ~exist(pth, 'file'), error('The file %s is not found', fname); end
             tmp = load(pth);
             
