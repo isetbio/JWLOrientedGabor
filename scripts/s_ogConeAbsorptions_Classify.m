@@ -79,13 +79,13 @@ for runNr = 1:5
             tmp = load(pth);
             
             if currentFlag
-                data = getfield(tmp,'current');
+                data = getfield(tmp,'current'); clear tmp;
                 % photocurrent responses are temporally delayed,
                 % select same nr of time samples as for absorptions
                 % that include stimulus "on" period.
                 data = data(:,:,:,selectTimePoints,:);
             else
-                data = getfield(tmp,'absorptions');
+                data = getfield(tmp,'absorptions'); clear tmp;
                 % truncate time samples (only include stimulus "on" period)
                 data = data(:,:,:,selectTimePoints,:);
             end
