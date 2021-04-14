@@ -10,13 +10,13 @@ polarAngles = expParams.polarAngle;
 
 % Where to find data
 if stimTemplateFlag 
-    subFolder = 'stimTemplate'; 
+    subFolder = 'SVM-Energy'; 
     templateName = '_svmEnergy'; % choose from '_svmEnergy' or '_svmLinear'
-    baseFolder = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model/';
+    baseFolder = '/Volumes/server-1/Projects/PerformanceFields_RetinaV1Model/';
     dataPth     = fullfile(baseFolder,'data',expName,'classification','absorptions', subFolder);
 else 
     templateName = [];
-    subFolder = '';
+    subFolder = 'SVM-Fourier';
     dataPth = fullfile(ogRootPath,'data','classification',expName);
 end
 
@@ -74,10 +74,10 @@ for ec = 1:nrEccen
         max(expParams.contrastLevels),polarAngles,sprintf('%i',expParams.eyemovement'),expParams.eccentricities(ec),expParams.defocusLevels,expParams.spatFreq, lmsRatio(2),lmsRatio(3),lmsRatio(4));
     
     
-    if ~exist(dataSavePth,'dir'), mkdir(dataSavePth); end;
-    save(fullfile(dataSavePth, fName),'P_AVG');
-    save(fullfile(dataSavePth, fNameSE),'P_SE');
-    
+%     if ~exist(dataSavePth,'dir'), mkdir(dataSavePth); end;
+%     save(fullfile(dataSavePth, fName),'P_AVG');
+%     save(fullfile(dataSavePth, fNameSE),'P_SE');
+%     
     %% Bootstrap runs with replacement,
     nboot = 1000;
     bootData = bootstrp(nboot, @mean, P');
@@ -110,10 +110,9 @@ end
 
 varThresh = std(ctrthresh,[],2);
 fNameSEThresh = sprintf('varThresh_coneResponse_absorptionrate_%d_conedensity.mat', ec);
-baseFolder = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model';
-if ~exist(fullfile(baseFolder,'data',expName,'thresholds',subFolder, ['stimTemplate' templateName]), 'dir'); 
-    mkdir(fullfile(baseFolder,'data',expName,'thresholds',subFolder, ['stimTemplate' templateName])); end
-save(fullfile(baseFolder,'data',expName,'thresholds',subFolder, ['stimTemplate' templateName], fNameSEThresh),'varThresh', 'ctrthresh');
+if ~exist(fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly',subFolder), 'dir');
+    mkdir(fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly', 'SVM-Energy')); end
+save(fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly',subFolder, fNameSEThresh),'varThresh', 'ctrthresh');
 
 
 
