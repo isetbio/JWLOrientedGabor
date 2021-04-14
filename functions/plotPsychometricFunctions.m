@@ -14,7 +14,7 @@ function [] = plotPsychometricFunctions(expName, varargin)
 %
 % Example:
 % plotPsychometricFunctions('default', 'subFolderName', 'run1', 'saveFig', true, 'plotAvg', false)
-% plotPsychometricFunctions('default', 'subFolderName', 'average_svmEnergy', 'saveFig', true, 'plotAvg', true, 'stimTemplateFlag', true)
+% plotPsychometricFunctions('conedensity', 'subFolderName', 'average_svmEnergy', 'saveFig', true, 'plotAvg', true, 'stimTemplateFlag', true)
 %
 %% 0. Set general experiment parameters
 p = inputParser;
@@ -39,11 +39,11 @@ expParams    = loadExpParams(expName, false);
 
 % Where to find data and save figures
 if stimTemplateFlag
-    baseFolder = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model/';
-    dataPth     = fullfile(baseFolder,'data',expName,'classification','absorptions', 'stimTemplate', subFolderName);
-    figurePth     = fullfile(baseFolder,'figures','psychometricCurves', expName, 'absorptions','stimTemplate', subFolderName);
+    baseFolder = '/Volumes/server-1/Projects/PerformanceFields_RetinaV1Model/';
+    dataPth     = fullfile(baseFolder,'data',expName,'classification','absorptions', 'SVM-Energy',subFolderName);
+    figurePth     = fullfile(baseFolder,'figures','psychometricCurves', expName, 'absorptions', 'SVM-Energy', subFolderName);
 else 
-    dataPth     = fullfile(ogRootPath,'data','classification',expName, subFolderName);
+    dataPth     = fullfile(ogRootPath,'data',expName,'classification','absorptions', 'SVM-Fourier', subFolderName);
     figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
 end
 
@@ -207,22 +207,19 @@ if saveFig
 end
 
 %% 7. Plot density thresholds
-if strcmp('conedensity',expName) || strcmp('eccbasedcoverage',expName)
-    baseFolder = '/Volumes/server/Projects/PerformanceFields_RetinaV1Model';
+if strcmp('conedensity',expName)
     if stimTemplateFlag
-        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds','meanPoissonPadded/stimTemplate');
+        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly','SVM-Energy');
     else
-        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds');
+        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly','SVM-Fourier');
     end
     load(fullfile(thresholdDir, sprintf('varThresh_coneResponse_absorptionrate_13_conedensity')), 'varThresh');
     plotConeDensityVSThreshold(expName, fit, xThresh, 'varThresh', varThresh','saveFig', saveFig, 'figurePth', figurePth);
     
-elseif strcmp(expName,'defocus')
-    
+elseif strcmp(expName,'defocus')  
     plotDefocusVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
     
 elseif strcmp(expName,'conetypesmixed')
-  
     plotConeTypesVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
     
 end
