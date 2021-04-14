@@ -27,7 +27,7 @@ if isempty(expName) || ~exist('expName', 'var')
 end
 
 % Get general condition parameters
-expParams    = loadExpParams(expName, false);
+expParams    = loadExpParams(expName);
 xThresh      = []; % x units for plotting thresholds 
 
 % Define plotting parameters
