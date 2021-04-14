@@ -223,3 +223,8 @@ elseif strcmp(expName,'conetypesmixed')
     plotConeTypesVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
     
 end
+
+%% Move density thresholds file to thresholds folder on server
+source = fullfile(ogRootPath,'data',expName,'coneabsorptionsOnly_predictedMeanAndError_stimeccen_linear.mat');
+destination = fullfile(thresholdsDir,'coneabsorptionsOnly_predictedMeanAndError_stimeccen_linear.mat');
+eval(sprintf('!mv %s %s', source, destination));
