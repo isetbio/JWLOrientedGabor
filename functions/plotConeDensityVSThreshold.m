@@ -13,8 +13,9 @@ function [] = plotConeDensityVSThreshold(expName, fit, xThresh, varargin)
 %                       default is []
 % [inputType]     : string defining input data type: 'absorptions' or
 %                       'current', default is 'absorptions'
-% [fitTypeName]   : string defining fit type: for linear use
-%                       'linear', for 2nd degree polynomial use
+% [fitTypeName]   : string defining fit type: for linear use 'linear',
+%                       for robust linear fit (detecting outliers) use
+%                       'linear-robust', for 2nd degree polynomial use
 %                       'poly2'. Default is 'linear';
 % [yScale]        : string defining thresholds (y-axis) scale, 'log' or 
 %                       'linear'. Note that x-axis is already in log units.
@@ -35,7 +36,7 @@ p.addRequired('fit', @isstruct);
 p.addRequired('xThresh', @isvector);
 p.addParameter('varThresh',[],  @isvector);
 p.addParameter('inputType','absorptions',  @ischar);
-p.addParameter('fitTypeName', 'linear', @ischar);
+p.addParameter('fitTypeName', 'linear', @(x) ismember(x,{'linear','linear-robust','poly2'}));
 p.addParameter('yScale', 'log', @ischar);
 p.addParameter('saveFig', false, @islogical);
 p.addParameter('figurePth', fullfile(ogRootPath, 'figs'), @isdir);
