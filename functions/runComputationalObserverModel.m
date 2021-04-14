@@ -70,9 +70,9 @@ function runComputationalObserverModel(expName, varargin)
 % Example 2: Quantify the effect of defocus in human optics
 %   runComputationalObserverModel('defocus')
 % Example 3: Quantify the effect of cone density, with fixed rng seed
-%   runComputationalObserverModel('conedensity', 'saveFolder', 'rng1', 'seed', 1)
+%   runComputationalObserverModel('conedensity', 'saveFolder', 'run1', 'seed', 1)
 % Example 4: Quantify the effect of cone types, with reset rng seed
-%   runComputationalObserverModel('conetypes', 'saveFolder', 'rng1', 'seed', 'shuffle')
+%   runComputationalObserverModel('conetypes', 'saveFolder', 'run1', 'seed', 'shuffle')
 %
 %
 % EK/JW/ NYU ISETBIO Team, Copyright 2018
@@ -102,7 +102,7 @@ if ~exist('saveFolder', 'dir'); mkdir(saveFolder); end
 if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); end
 
 % Specify experiment parameters
-expParams = loadExpParams(expName, false);   % (false argument is for not saving params in separate matfile)
+expParams = loadExpParams(expName);   % (false argument is for not saving params in separate matfile)
 
 % Define deg2m converter
 expParams.deg2m   = 0.3 * 0.001;             % (default in isetbio)
@@ -121,10 +121,6 @@ else
     expParams.currentFlag = p.Results.currentFlag;
     selectTimePoints = 1:28; % only use stim on time points
 end
-
-% Check if ideal observer is requested
-%(is in a new script, check: s_idealGeislerDPrime.m)
-% expParams.idealObserver = p.Results.idealObserver;
 
 if expParams.verbose
     fH1 = figure(99); clf; hold all;
