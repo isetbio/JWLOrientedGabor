@@ -1,12 +1,16 @@
-function percentCorrect = getIdealObserverAccuracy(data, expName, subFolder, baseFolder, cone2RGCRatio)
+function percentCorrect = getIdealObserverAccuracy(baseFolder, expName, subFolder, cone2RGCRatio)
 % Function to train and test linear SVM classifier on cone data with cross-validation:
 %       P = getClassifierAccuracy(data)
 %
-% INPUTS: 
-%   data        : 5 dimensional array (with trials x rows x cols x time
-%                                       samples x stimuli) 
+% INPUTS:
+%   baseFolder     : where does project live?
+%   expName        : experiment name, usually 'idealobserver'
+%   subFolder      : what subfolder do data live, usually 'onlyL' or
+%                   'idealtemplate'
+%   cone2RGCratio  : integer defining what ratio data to classify
+%
 % OUTPUTS:
-%   P           : classifier accuracy of computational observer model in
+%   percentCorrect : classifier accuracy of computational observer model in
 %                   percent correct for given absorption dataset
 
 %% 1. Transform and reshape absorption data:
@@ -22,17 +26,19 @@ expParams = loadExpParams(expName, false);
 
 %% Analytical solution
 for c = expParams.contrastLevels
+    
+    % Load cone absorption data
 %     fnameTemplate = sprintf('OGconeOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-1.00.00.0.mat',c);
 %     template = load(fullfile(baseFolder, 'data', expName, subFolder, fnameTemplate));
-%     template = template.absorptions;   
+%     template = template.absorptions;
+%     template = data{c==expParams.contrastLevels};
 
-%     fnameTemplate = sprintf('rgcResponse_Cones2RGC%d_absorptionrate',cone2RGCRatio);
 
-    % Load data
-%     template = load(fullfile(baseFolder, 'data', expName, 'rgc', fnameTemplate));
-%     template = template.rgcResponse;
-    
-    template = data{c==expParams.contrastLevels};
+    % Load RGC data
+    fnameTemplate = sprintf('rgcResponse_Cones2RGC%d_contrast%1.4f_eccen4.50_absorptions.mat',cone2RGCRatio,c);
+    template = load(fullfile(baseFolder, 'data', expName, 'rgc', 'meanPoissonPadded',subFolder, ...
+        sprintf('ratio%d',cone2RGCRatio), fnameTemplate));
+    template = template.rgcResponse;
     
     % Get the trials and samples (should be the data for all data sets though
     nStimuli = size(template,5);
@@ -82,10 +88,10 @@ for c = expParams.contrastLevels
     end
 end
 
-saveFolderClassification = fullfile(baseFolder, 'data', 'classification', 'rgc', expName, subFolder);
+saveFolderClassification = fullfile(baseFolder, 'data', expName, 'classification', 'rgc', 'meanPoissonPadded', 'Ideal',subFolder);
 if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); end;
 
-fnameClassify = sprintf('ideal_Classify_coneOutputs_contrast%1.4f_pa0_eye00_eccen4.50_defocus0.00_noise-none_sf4.00_lms-1.00.00.0_RGC%d', max(expParams.contrastLevels), cone2RGCRatio);
+fnameClassify = sprintf('classifyIdeal_rgcResponse_Cones2RGC%d_%s_1_absorptions_%s.mat', cone2RGCRatio, subFolder);
 accuracy = percentCorrect.*100;
 parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy);
 
