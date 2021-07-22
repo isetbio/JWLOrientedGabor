@@ -119,6 +119,16 @@ switch lower(expName)
         
         % L-only
         expParams.cparams.spatialDensity = [ 0 1 0 0];
+    
+    case 'defaultnophaseshiftlonly500'
+        expParams.eyemovement         = [0 0]';           % No eye movements
+        expParams.sparams.phases      = pi/2;             % use one phase for CCW and CW Gabor stimuli
+        expParams.contrastLevels      = [0:0.0001:0.001, 0.002:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevelsPC    = [0:0.0001:0.001, 0.002:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
+        expParams.nTrials             = 500;
+
+        % L-only
+        expParams.cparams.spatialDensity = [ 0 1 0 0];
         
     case 'conedensitytemplate'
         expParams.eyemovement         = [0 0]';           % No eye movements
