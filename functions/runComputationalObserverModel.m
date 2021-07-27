@@ -175,7 +175,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
             %% ------------------- EYE MOVEMENTS -------------------
             for emIdx = 1:size(expParams.eyemovement,2) % loop over eye movement conditions
                 
-                if any(eccen==[10:13]); theseContrasts = [theseContrasts, 0.2:0.1:1]; end
+%                 if any(eccen==[10:13]); theseContrasts = [theseContrasts, 0.2:0.1:1]; end
                 accuracy = NaN(size(theseContrasts));
                 
                 for c = theseContrasts % loop over contrasts
@@ -198,13 +198,15 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         sparams.phases          = expParams.sparams.phases;
                         [OG,scenes,tseries]     = ogStimuli(sparams);
                         
-%                          parsave(fullfile(saveFolder,'stimulus', sprintf('stimulus_contrast%1.4f_pa%d_eccen%1.2f_defocus%1.2f_sf%1.2f.mat',c,expParams.polarAngle, eccen, defocus, sf)), ...
-%                              'scenes', scenes, ...
-%                              'OG', OG, ...
-%                              'tseries', tseries, ...
-%                              'sparams', sparams, ...
-%                              'expParams', expParams);
-                    
+                        % Save stimulus and scene
+                        if expParams.saveScenes
+                            parsave(fullfile(saveFolder,'stimulus', sprintf('stimulus_contrast%1.4f_pa%d_eccen%1.2f_defocus%1.2f_sf%1.2f.mat',c,expParams.polarAngle, eccen, defocus, sf)), ...
+                                 'scenes', scenes, ...
+                                 'OG', OG, ...
+                                 'tseries', tseries, ...
+                                 'sparams', sparams, ...
+                                 'expParams', expParams);
+                        end
                         %% ------------------- COMPUTE ABSORPTIONS  -------------------
                         if expParams.verbose;  fprintf('(%s): Compute absorptions.\n', mfilename); end
                         
@@ -233,17 +235,31 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         end
                         
                         % Save cone absorption data
-                        if expParams.verbose; fprintf('(%s): Saving cone absorption data.\n', mfilename); end
-                        parsave(fullfile(saveFolder, fname), ...
-                            'absorptions', absorptions, ...
-                            'sparams', sparams, ...
-                            'cparams', cparams, ...
-                            'expParams', expParams, ...
-                            'emPaths', emPaths, ...
-                            'cMosaic', cMosaic);
+                        if expParams.saveConeData
+                            if expParams.verbose; fprintf('(%s): Saving cone absorption data.\n', mfilename); end
+                            parsave(fullfile(saveFolder, fname), ...
+                                'absorptions', absorptions, ...
+                                'sparams', sparams, ...
+                                'cparams', cparams, ...
+                                'expParams', expParams, ...
+                                'emPaths', emPaths, ...
+                                'cMosaic', cMosaic);
+                        end
+                        
+                        if expParams.saveMeanConeData
+                            if expParams.verbose; fprintf('(%s): Saving averaged cone absorption across time.\n', mfilename); end
+                            absorptionsMn = mean(absorptions(:,:,:,selectTimePoints,:), 4, 'omitnan');
+                                parsave(fullfile(saveFolder, ['Mn_' fname]), ...
+                                    'absorptions', absorptionsMn, ...
+                                    'sparams', sparams, ...
+                                    'cparams', cparams, ...
+                                    'expParams', expParams, ...
+                                    'cMosaic', cMosaic);
+                        end
                         
                         % If cone current was requested, also save this array
                         if expParams.currentFlag
+                            if expParams.saveConeData
                             fprintf('(%s): Saving cone current data..\n', mfilename);
                             parsave(fullfile(saveFolder, ['current_' fname]), ...
                                 'current', current, ...
@@ -254,55 +270,69 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                                 'expParams', expParams, ...
                                 'emPaths', emPaths, ...
                                 'cMosaic', cMosaic);
+                            end
+                            
+                            if expParams.saveMeanConeData
+                                if expParams.verbose; fprintf('(%s): Saving averaged cone current across time.\n', mfilename); end
+                                currentMn = weightedAverageStimTime(current,interpFilters);
+                                parsave(fullfile(saveFolder, ['currentMn_' fname]), ...
+                                    'current', currentMn, ...
+                                    'sparams', sparams, ...
+                                    'cparams', cparams, ...
+                                    'expParams', expParams, ...
+                                    'cMosaic', cMosaic);
+                            end
                         end
                         
                         %% ------------------- Classify absorptions  -------------------
-                         fnameClassify = sprintf(...
-                            'Classify_coneOutputs_contrast%1.4f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
-                            c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
-                        
-                        % Classify absorptions
-                        accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions(:,:,:,selectTimePoints,:));
-                         
-                        if expParams.verbose
-                            fprintf('(%s): Classify cone absorption data..\n', mfilename);
-                            fprintf('(%s): File will be saved as %s\n', mfilename, fnameClassify);
-                        end
-                        
-                        % Classify current if requested
-                        if expParams.currentFlag
-                            accuracyCurrent(c==theseContrasts) = getClassifierAccuracy(current(:,:,:,selectTimePoints,:)); %#ok<AGROW>
-                            fnameClassifyCurrent = ['current_' fnameClassify]; 
-                        end
-                        
-                        if expParams.verbose; fprintf('(%s): Classifier accuracy for stim contrast %1.4f is %3.2f..\n', mfilename, c, accuracy(c==theseContrasts)); end
-                        
+                        if expParams.runClassifier
+                            fnameClassify = sprintf(...
+                                'Classify_coneOutputs_contrast%1.4f_pa%d_eye%s_eccen%1.2f_defocus%1.2f_noise-%s_sf%1.2f_lms-%1.1f%1.1f%1.1f',...
+                                c, expParams.polarAngle,sprintf('%i',expParams.eyemovement(:,emIdx)), eccen, defocus, cMosaic.noiseFlag, sf, lmsRatio(2),lmsRatio(3),lmsRatio(4));
+
+                            % Classify absorptions
+                            accuracy(c==theseContrasts) = getClassifierAccuracy(absorptions(:,:,:,selectTimePoints,:));
+
+                            if expParams.verbose
+                                fprintf('(%s): Classify cone absorption data..\n', mfilename);
+                                fprintf('(%s): File will be saved as %s\n', mfilename, fnameClassify);
+                            end
+
+                            % Classify current if requested
+                            if expParams.currentFlag
+                                accuracyCurrent(c==theseContrasts) = getClassifierAccuracy(current(:,:,:,selectTimePoints,:)); %#ok<AGROW>
+                                fnameClassifyCurrent = ['current_' fnameClassify]; 
+                            end
+
+                            if expParams.verbose; fprintf('(%s): Classifier accuracy for stim contrast %1.4f is %3.2f..\n', mfilename, c, accuracy(c==theseContrasts)); end
+                        end % run classifier?
                     end % sf
                 end % contrast
                 
-                % Save
-                parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy, 'expParams', expParams);
-                
-                if expParams.currentFlag
-                    parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassifyCurrent)),'accuracy',accuracyCurrent, 'expParams', expParams);
-                end
-                
-                % Visualize if verbose
-                if expParams.verbose 
-                    set(0, 'CurrentFigure', fH1); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow;
-                    title('Classifier accuracy cone absorptions'); 
-                    xlabel('Stimulus contrast (fraction)'); 
-                    ylabel('Accuracy (fraction)'); 
+                if expParams.runClassifier
+                    % Save
+                    parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassify)),'accuracy',accuracy, 'expParams', expParams);
 
                     if expParams.currentFlag
-                        set(0, 'CurrentFigure', fH2); 
-                        plot(theseContrasts, accuracyCurrent,'o-', 'LineWidth',2); drawnow; 
-                        title('Classifier accuracy cone current'); 
+                        parsave(fullfile(saveFolderClassification, sprintf('%s.mat', fnameClassifyCurrent)),'accuracy',accuracyCurrent, 'expParams', expParams);
+                    end
+
+                    % Visualize if verbose
+                    if expParams.verbose 
+                        set(0, 'CurrentFigure', fH1); plot(theseContrasts, accuracy,'o-', 'LineWidth',2); drawnow;
+                        title('Classifier accuracy cone absorptions'); 
                         xlabel('Stimulus contrast (fraction)'); 
-                        ylabel('Accuracy (fraction)');
-                    end % current flag plotting
-                end % verbose
-                
+                        ylabel('Accuracy (fraction)'); 
+
+                        if expParams.currentFlag
+                            set(0, 'CurrentFigure', fH2); 
+                            plot(theseContrasts, accuracyCurrent,'o-', 'LineWidth',2); drawnow; 
+                            title('Classifier accuracy cone current'); 
+                            xlabel('Stimulus contrast (fraction)'); 
+                            ylabel('Accuracy (fraction)');
+                        end % current flag plotting
+                    end % verbose
+                end
             end % eyemovements
         end % defocus
     end % cone types

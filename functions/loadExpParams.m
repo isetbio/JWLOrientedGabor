@@ -41,6 +41,11 @@ expParams                  = struct;
 expParams.name             = expName;
 expParams.nTrials          = 100;                                       % Number of trials per stimulus condition
 expParams.verbose          = true;                                      % Print out images for debugging, or not
+expParams.saveScenes       = true;                                      % Save scene and stimuli data as struct?
+expParams.saveConeData     = true;                                      % Save entire cone array?
+expParams.saveMeanConeData = false;                                     % Save cone data averaged across time?
+expParams.runClassifier    = true;                                      % Run and save SVM classifier on cone data?
+
 expParams.contrastLevels   = [0:0.005:0.04, 0.05:0.01:0.1];             % Stimulus contrast levels (Michelson)
 expParams.contrastLevelsPC = [0:0.005:0.04, 0.05:0.01:.1, 0.2:0.1:1];   % Stimulus contrast levels when computing photo current (Michelson)
 expParams.cparams.spatialDensity = [0 0.6 0.3 0.1];                     % Blank, L, M, S cone probabilities; Using default
@@ -126,6 +131,10 @@ switch lower(expName)
         expParams.contrastLevels      = [0, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
         expParams.contrastLevelsPC    = [0, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
         expParams.nTrials             = 500;
+        expParams.saveScenes          = false;            % Don't save scene and stimuli data as struct
+        expParams.saveConeData        = false;            % Don't save entire cone array
+        expParams.saveMeanConeData    = true;             % Only save cone data averaged across time
+        expParams.runClassifier       = false;            % Don't run SVM classifier on cone data
 
         % L-only
         expParams.cparams.spatialDensity = [ 0 1 0 0];
