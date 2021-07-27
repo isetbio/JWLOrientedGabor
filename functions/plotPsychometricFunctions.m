@@ -14,7 +14,8 @@ function [] = plotPsychometricFunctions(expName, varargin)
 %
 % Example:
 % plotPsychometricFunctions('default', 'subFolderName', 'run1', 'saveFig', true, 'plotAvg', false)
-% plotPsychometricFunctions('conedensity', 'subFolderName', 'average_svmEnergy', 'saveFig', true, 'plotAvg', true, 'stimTemplateFlag', true)
+% plotPsychometricFunctions('conedensity', 'subFolderName', 'average_svmEnergy', 'saveFig', true, 'stimTemplateFlag', true)
+% plotPsychometricFunctions('conedensity', 'subFolderName', 'average', 'saveFig', true, 'stimTemplateFlag', false)
 %
 %% 0. Set general experiment parameters
 p = inputParser;
@@ -23,6 +24,7 @@ p.addRequired('expName', @ischar);
 p.addParameter('subFolderName', 'average', @ischar);
 p.addParameter('saveFig', false, @islogical);
 p.addParameter('plotAvg', true, @islogical);
+p.addParameter('fitTypeName','linear',@(x) ismember(x,{'linear','linear-robust','poly2', 'lowess-mesh'}));
 p.addParameter('stimTemplateFlag', false, @islogical);
 p.parse(expName, varargin{:});
 
@@ -31,6 +33,7 @@ expName       = p.Results.expName;
 subFolderName = p.Results.subFolderName;
 saveFig       = p.Results.saveFig;
 plotAvg       = p.Results.plotAvg;
+fitTypeName   = p.Results.fitTypeName;
 stimTemplateFlag = p.Results.stimTemplateFlag;
 
 % Load specific experiment parameters
@@ -39,13 +42,15 @@ expParams    = loadExpParams(expName, false);
 
 % Where to find data and save figures
 if stimTemplateFlag
-    baseFolder = '/Volumes/server-1/Projects/PerformanceFields_RetinaV1Model/';
-    dataPth     = fullfile(baseFolder,'data',expName,'classification','absorptions', 'SVM-Energy',subFolderName);
-    figurePth     = fullfile(baseFolder,'figures','psychometricCurves', expName, 'absorptions', 'SVM-Energy', subFolderName);
-else 
-    dataPth     = fullfile(ogRootPath,'data',expName,'classification','absorptions', 'SVM-Fourier', subFolderName);
-    figurePth   = fullfile(ogRootPath,'figs', expName, subFolderName);
+    extraSubFolder = 'SVM-Energy';
+else
+    extraSubFolder = 'SVM-Fourier';
 end
+
+baseFolder = '/Volumes/server-1/Projects/PerformanceFields_RetinaV1Model/';
+dataPth     = fullfile(baseFolder,'data',expName,'classification','absorptions', extraSubFolder,subFolderName);
+figurePth     = fullfile(baseFolder,'figures','psychometricCurves', expName, 'absorptions', extraSubFolder, subFolderName);
+
 
 % Number of total trials in computational observer model (50 clockwise, 50 counterclockwise)
 nTotal      = expParams.nTrials;
@@ -208,13 +213,9 @@ end
 
 %% 7. Plot density thresholds
 if strcmp('conedensity',expName)
-    if stimTemplateFlag
-        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly','SVM-Energy');
-    else
-        thresholdDir = fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly','SVM-Fourier');
-    end
-    load(fullfile(thresholdDir, sprintf('varThresh_coneResponse_absorptionrate_13_conedensity')), 'varThresh');
-    plotConeDensityVSThreshold(expName, fit, xThresh, 'varThresh', varThresh','saveFig', saveFig, 'figurePth', figurePth);
+    thresholdDir = fullfile(baseFolder,'data',expName,'thresholds','absorptionsOnly',extraSubFolder);
+    load(fullfile(thresholdDir, sprintf('varThresh_coneResponse_absorptionrate_13_conedensity.mat')), 'varThresh');
+    plotConeDensityVSThreshold(expName, fit, xThresh, 'varThresh', varThresh','saveFig', saveFig, 'figurePth', figurePth, 'fitTypeName',fitTypeName);
     
 elseif strcmp(expName,'defocus')  
     plotDefocusVSThreshold(expName, fit, xThresh, 'saveFig', saveFig, 'figurePth', figurePth);
@@ -226,5 +227,5 @@ end
 
 %% Move density thresholds file to thresholds folder on server
 source = fullfile(ogRootPath,'data',expName,'coneabsorptionsOnly_predictedMeanAndError_stimeccen_linear.mat');
-destination = fullfile(thresholdsDir,'coneabsorptionsOnly_predictedMeanAndError_stimeccen_linear.mat');
+destination = fullfile(thresholdDir,sprintf('coneabsorptionsOnly_predictedMeanAndError_stimeccen_linear%s.mat',extraSubFolder));
 eval(sprintf('!mv %s %s', source, destination));

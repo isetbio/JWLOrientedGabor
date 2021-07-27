@@ -211,9 +211,9 @@ switch lower(expName)
 
         % Compute defocus levels
         for r = cone2RGCRatios   
-            ratio = 2/r; % mm
+            ratio = 2./(r.^2); % mm
             xThresh(r) = ratio; % convert to diopters
-            labels{r} = sprintf('mRGC:Cone = %2.1f : 1.0',xThresh(r));
+            labels{r} = sprintf('mRGC:Cone = %1.2f : 1.0',xThresh(r));
         end
 
         case 'current'

@@ -1,4 +1,4 @@
-function [] = plotConeDensityVSThreshold(expName, fit, xThresh, varargin)
+function [] = plotConeDensityVSThreshold(expName, fitStruct, xThresh, varargin)
 % Function to plot cone density levels versus stimulus contrast thresholds.
 %
 % INPUTS:
@@ -32,20 +32,20 @@ function [] = plotConeDensityVSThreshold(expName, fit, xThresh, varargin)
 p = inputParser;
 p.KeepUnmatched = true;
 p.addRequired('expName', @ischar);
-p.addRequired('fit', @isstruct);
+p.addRequired('fitStruct', @isstruct);
 p.addRequired('xThresh', @isvector);
 p.addParameter('varThresh',[],  @isvector);
 p.addParameter('inputType','absorptions',  @ischar);
-p.addParameter('fitTypeName', 'linear', @(x) ismember(x,{'linear','linear-robust','poly2'}));
+p.addParameter('fitTypeName', 'linear', @(x) ismember(x,{'linear','linear-robust','poly2', 'lowess-mesh'}));
 p.addParameter('yScale', 'log', @ischar);
 p.addParameter('saveFig', false, @islogical);
 p.addParameter('figurePth', fullfile(ogRootPath, 'figs'), @isdir);
 p.addParameter('RGCflag',false, @islogical);
-p.parse(expName, fit, xThresh, varargin{:});
+p.parse(expName, fitStruct, xThresh, varargin{:});
 
 % Rename variables
 expName       = p.Results.expName;
-fit           = p.Results.fit;
+fitStruct     = p.Results.fitStruct;
 xThresh       = p.Results.xThresh;
 varThresh     = p.Results.varThresh;
 inputType     = p.Results.inputType;
@@ -58,7 +58,7 @@ RGCflag       = p.Results.RGCflag;
 
 %% 1. Fit a log-linear function to thresholds vs density
 
-yThresh = cell2mat(fit.ctrthresh);
+yThresh = cell2mat(fitStruct.ctrthresh);
 
 if strcmp(yScale,'log') % linear in log-log space
     yData = log10(yThresh);
@@ -67,9 +67,9 @@ else
 end
 
 % check if we should ignore poor fits
-if isfield(fit, 'poorFits') && any(fit.poorFits)
-    yDataToFit = yData(~fit.poorFits);
-    xThreshToFit = xThresh(~fit.poorFits);
+if isfield(fitStruct, 'poorFits') && any(fitStruct.poorFits)
+    yDataToFit = yData(~fitStruct.poorFits);
+    xThreshToFit = xThresh(~fitStruct.poorFits);
 else
     yDataToFit = yData;
     xThreshToFit = xThresh;
@@ -89,16 +89,25 @@ end
 % fit linear or second polynomial to log density (x) vs log contrast threshold (y)
 if strcmp(fitTypeName, 'linear')
     [fitResult, err]  = polyfit(log10(xThreshToFit),yDataToFit,1);
-    [y, delta] = polyval(fitResult,log10(xThreshToFit), err);
+    [yFit, delta] = polyval(fitResult,log10(xThreshToFit), err);
     R2 = 1 - (err.normr/norm(yDataToFit - mean(yDataToFit)))^2;
 elseif strcmp(fitTypeName,'linear-robust')
     [b stats] = robustfit(log10(xThreshToFit),yDataToFit);
-    y = b(2).*log10(xThreshToFit) + b(1);
-    R2 = corr(yDataToFit',y')^2;
+    yFit = b(2).*log10(xThreshToFit) + b(1);
+    R2 = corr(yDataToFit',yFit')^2;
 elseif strcmp(fitTypeName, 'poly2')
     [fitResult, err]  = polyfit(log10(xThreshToFit),yDataToFit,2);
-    [y, delta] = polyval(fitResult,log10(xThreshToFit), err);
+    [yFit, delta] = polyval(fitResult,log10(xThreshToFit), err);
     R2 = 1 - (err.normr/norm(yDataToFit - mean(yDataToFit)))^2;
+elseif strcmp(fitTypeName, 'lowess-mesh')
+    % Make 2D grid
+    [X,Y] = meshgrid(1:2,log10(xThreshToFit));
+    Z = repmat(yDataToFit',1,2);
+    idx = isfinite(Z);     % Find NaNs
+    [meshFit, gof] = fit([X(idx) Y(idx)], Z(idx), 'lowess','span',0.4);
+    % Extract single lines for separate ratio's
+    yFit = meshFit(X(:,1),Y(:,1));
+    R2 = gof.rsquare;
 end
 
 
@@ -110,13 +119,11 @@ for ii = 1:length(xticks); xticklbls{ii} = sprintf('10^%d', xticks(ii)); end % g
 
 % Plot it!
 figure(2); clf; set(gcf, 'Color', 'w', 'Position', [ 394   156   836   649])
-if strcmp(fitTypeName, 'linear') || strcmp(fitTypeName, 'linear-robust')
-    plot(xThreshToFit, 10.^y, 'r-', 'LineWidth', 3); hold all;
-    if ~isempty(varThresh)
-        errorbar(xThresh, yThresh, varThresh, 'Color', 'k', 'LineStyle','none', 'LineWidth', 2);
-    end
-   scatter(xThresh, yThresh, 80, 'MarkerFaceColor', 'w', 'MarkerEdgeColor','k', 'LineWidth',2);
+plot(xThreshToFit, 10.^yFit, 'r-', 'LineWidth', 3); hold all;
+if ~isempty(varThresh)
+    errorbar(xThresh, yThresh, varThresh, 'Color', 'k', 'LineStyle','none', 'LineWidth', 2);
 end
+scatter(xThresh, yThresh, 80, 'MarkerFaceColor', 'w', 'MarkerEdgeColor','k', 'LineWidth',2);
 
 % Make plot pretty
 box off;
@@ -142,6 +149,7 @@ if saveFig
 end
 
 if ~RGCflag
+    
     %% 3. Quantify effect of cone density
 
     % contrast thresholds reported in behavior, corresponding to horizontal versus upper vertical meridian
@@ -153,48 +161,46 @@ if ~RGCflag
         coneDensityDeg2(jj) = coneDensityMM2/((1/.3)^2);
     end
 
+    errorRatioConeDensity = 2*abs(coneDensityDeg2-mean(coneDensityDeg2));
 
-    if strcmp(fitTypeName, 'linear') || strcmp(fitTypeName, 'linear-robust')
-        if strcmp(fitTypeName, 'linear')
-            % Get intercept and slope of log-linear fit
-            b_intcpt = fitResult(2);
-            a_coeff  = fitResult(1);
-        else
-            b_intcpt = b(1);
-            a_coeff  = b(2);
-        end
-        % Reconstruct log-linear function
-        cThreshold = @(x) 10.^(a_coeff* log10(x) + b_intcpt);
-    %     predictedDensity = @(y) 10.^((y-b_intcpt)./a_coeff);
-        modelPredictionForPF = cThreshold(coneDensityDeg2);
+    if strcmp(fitTypeName, 'linear')       
+        cThreshold = @(x) 10.^(polyval(fitResult,log10(x), err));
+    elseif strcmp(fitTypeName,'linear-robust')   
+        cThreshold = @(x) 10.^(b(2).*log10(x) + b(1));
+    elseif strcmp(fitTypeName, 'poly2')
+        cThreshold = @(x) 10.^(polyval(fitResult,log10(x), err));  
+    elseif strcmp(fitTypeName, 'lowess-mesh')
+        cThreshold = @(x) 10.^meshFit(ones(size(x)),log10(x));
+    end
+    
+    % What thresholds are predicted for 4.5 deg stim at cardinal
+    % meridians?
+    modelPredictionForPF = cThreshold(coneDensityDeg2);
 
-        errorRatioConeDensity = 2*abs(coneDensityDeg2-mean(coneDensityDeg2));
+    % What thresholds are predicted if we would double difference from 
+    % the mean in cone density?
 
-        % Nasal retina
-        predictedError = [];
-        predictedError(1,1) = cThreshold(coneDensityDeg2(1)-errorRatioConeDensity(1));
-        predictedError(1,2) = cThreshold(coneDensityDeg2(1)+errorRatioConeDensity(1));
+    predictedError = [];
+    % Nasal retina
+    predictedError(1,1) = cThreshold(coneDensityDeg2(1)-errorRatioConeDensity(1));
+    predictedError(1,2) = cThreshold(coneDensityDeg2(1)+errorRatioConeDensity(1));
 
-        % Superior retina
-        predictedError(2,1) = cThreshold(coneDensityDeg2(2)-errorRatioConeDensity(2));
-        predictedError(2,2) = cThreshold(coneDensityDeg2(2)+errorRatioConeDensity(2));
+    % Superior retina
+    predictedError(2,1) = cThreshold(coneDensityDeg2(2)-errorRatioConeDensity(2));
+    predictedError(2,2) = cThreshold(coneDensityDeg2(2)+errorRatioConeDensity(2));
 
-        % Temporal retina
-        predictedError(3,1) = cThreshold(coneDensityDeg2(3)-errorRatioConeDensity(3));
-        predictedError(3,2) = cThreshold(coneDensityDeg2(3)+errorRatioConeDensity(3));
+    % Temporal retina
+    predictedError(3,1) = cThreshold(coneDensityDeg2(3)-errorRatioConeDensity(3));
+    predictedError(3,2) = cThreshold(coneDensityDeg2(3)+errorRatioConeDensity(3));
 
-        % Inferior retina
-        predictedError(4,1) = cThreshold(coneDensityDeg2(4)-errorRatioConeDensity(4));
-        predictedError(4,2) = cThreshold(coneDensityDeg2(4)+errorRatioConeDensity(4)); %#ok<NASGU>
+    % Inferior retina
+    predictedError(4,1) = cThreshold(coneDensityDeg2(4)-errorRatioConeDensity(4));
+    predictedError(4,2) = cThreshold(coneDensityDeg2(4)+errorRatioConeDensity(4));
 
-        if saveFig
-            saveFolder = fullfile(ogRootPath, 'data', inputType, 'conedensity');
-            if ~exist(saveFolder,'dir'); mkdir(saveFolder); end
-            save(fullfile(saveFolder,sprintf('cone%sOnly_predictedMeanAndError_stimeccen_%s',inputType, fitTypeName)),'modelPredictionForPF','predictedError', 'coneDensityDeg2', 'ang')
-        end
-        
-        elseif strcmp(fitTypeName, 'poly2')
-            modelPredictionForPF = polyval(fitResult,reportedBehavior);
+    if saveFig
+        saveFolder = fullfile(ogRootPath, 'data', inputType, 'conedensity');
+        if ~exist(saveFolder,'dir'); mkdir(saveFolder); end
+        save(fullfile(saveFolder,sprintf('cone%sOnly_predictedMeanAndError_stimeccen_%s',inputType, fitTypeName)),'modelPredictionForPF','predictedError', 'coneDensityDeg2', 'ang')
     end
 
     totalVariance.densityPredictedByModelHVA = 100.*diff([mean(modelPredictionForPF([1 3])),mean(modelPredictionForPF([2 4]))]) ./ mean(modelPredictionForPF);
