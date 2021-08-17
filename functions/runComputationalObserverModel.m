@@ -88,8 +88,12 @@ p.parse(expName, varargin{:});
 
 
 if ~isempty(p.Results.saveFolder)
-    saveFolder = fullfile(ogRootPath, 'data', expName, p.Results.saveFolder);
+    pth = '/Volumes/server/Projects/PerformanceFieldsIsetBio';
+    saveFolder = fullfile(pth, 'data', 'coneabsorptions', expName, p.Results.saveFolder);
     saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, p.Results.saveFolder);
+    if p.Results.currentFlag
+        saveFolderCurrent = fullfile(pth, 'data', 'conecurrent', expName, p.Results.saveFolder);
+    end
 else
     % Create folder to save absorption data if no saveFolder was defined
     currDate = datestr(datetime,'yyyymmdd_HHMMSS');
@@ -99,6 +103,7 @@ end
 
 % Create folders if they don't exist
 if ~exist('saveFolder', 'dir'); mkdir(saveFolder); end
+if p.Results.currentFlag && ~exist('saveFolderCurrent', 'dir'); mkdir(saveFolderCurrent); end
 if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); end
 
 % Specify experiment parameters
@@ -248,7 +253,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         
                         if expParams.saveMeanConeData
                             if expParams.verbose; fprintf('(%s): Saving averaged cone absorption across time.\n', mfilename); end
-                            absorptionsMn = mean(absorptions(:,:,:,selectTimePoints,:), 4, 'omitnan');
+                            absorptionsMn = mean(absorptions(:,:,:,1:28,:), 4, 'omitnan');
                                 parsave(fullfile(saveFolder, ['Mn_' fname]), ...
                                     'absorptions', absorptionsMn, ...
                                     'sparams', sparams, ...
@@ -261,7 +266,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                         if expParams.currentFlag
                             if expParams.saveConeData
                             fprintf('(%s): Saving cone current data..\n', mfilename);
-                            parsave(fullfile(saveFolder, ['current_' fname]), ...
+                            parsave(fullfile(saveFolderCurrent, ['current_' fname]), ...
                                 'current', current, ...
                                 'interpFilters', interpFilters, ...
                                 'meanCur', meanCur, ...
@@ -274,8 +279,8 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
                             
                             if expParams.saveMeanConeData
                                 if expParams.verbose; fprintf('(%s): Saving averaged cone current across time.\n', mfilename); end
-                                currentMn = weightedAverageStimTime(current,interpFilters);
-                                parsave(fullfile(saveFolder, ['currentMn_' fname]), ...
+                                currentMn = weightedAverageStimTime(current,interpFilters, meanCur);
+                                parsave(fullfile(saveFolderCurrent, ['currentMn_' fname]), ...
                                     'current', currentMn, ...
                                     'sparams', sparams, ...
                                     'cparams', cparams, ...
