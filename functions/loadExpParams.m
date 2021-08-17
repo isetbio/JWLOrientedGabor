@@ -139,6 +139,21 @@ switch lower(expName)
         % L-only
         expParams.cparams.spatialDensity = [ 0 1 0 0];
         
+     case 'conedensitynophaseshiftlonly500'
+        expParams.eyemovement         = [0 0]';           % No eye movements
+        expParams.sparams.phases      = pi/2;             % use one phase for CCW and CW Gabor stimuli
+        expParams.contrastLevels      = [0, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevelsPC    = [0, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
+        expParams.nTrials             = 500;
+        expParams.saveScenes          = false;            % Don't save scene and stimuli data as struct
+        expParams.saveConeData        = false;            % Don't save entire cone array
+        expParams.saveMeanConeData    = true;             % Only save cone data averaged across time
+        expParams.runClassifier       = false;            % Don't run SVM classifier on cone data
+        expParams.eccentricities      = [1:4 4.5 5:10, 15:5:40];  % Eccentricity (deg);
+        
+        % L-only
+        expParams.cparams.spatialDensity = [ 0 1 0 0];
+        
     case 'conedensitytemplate'
         expParams.eyemovement         = [0 0]';           % No eye movements
         expParams.eccentricities  	  = [0 0.5 1 2 4.5 5 10:5:40];              % Eccentricity (deg);
