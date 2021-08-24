@@ -87,11 +87,12 @@ p.addParameter('currentFlag', false, @islogical);
 p.parse(expName, varargin{:});
 
 if ~isempty(p.Results.saveFolder)
-    pth = '/Volumes/server/Projects/PerformanceFieldsIsetBio';
-    saveFolder = fullfile(pth, 'data', 'coneabsorptions', expName, p.Results.saveFolder);
+%     pth = '/Volumes/server/Projects/PerformanceFieldsIsetBio';
+    pth = ogRootPath;
+    saveFolder = fullfile(ogRootPath, 'data', 'coneabsorptions', expName, p.Results.saveFolder);
     saveFolderClassification = fullfile(ogRootPath, 'data', 'classification', expName, p.Results.saveFolder);
     if p.Results.currentFlag
-        saveFolderCurrent = fullfile(pth, 'data', 'conecurrent', expName, p.Results.saveFolder);
+        saveFolderCurrent = fullfile(ogRootPath, 'data', 'conecurrent', expName, p.Results.saveFolder);
     end
 else
     % Create folder to save absorption data if no saveFolder was defined
