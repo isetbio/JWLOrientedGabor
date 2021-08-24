@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH -a 1-17
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time 24:00:00 # time (D-HH:MM)
@@ -18,7 +17,7 @@ cd /scratch/ek99/JWLOrientedGabor/
 # If the files you are running are not in the same folder as this script,
 # you can insert "addpath(genpath('/PATH/TO/FILES/'));" before the command
 # you want to run.
-matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); runComputationalObserverModel('conedensitynophaseshiftlonly500', 'saveFolder', 'run2', 'seed', 1); exit()"
+matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); runComputationalObserverModel('conedensitynophaseshiftlonly500', 'saveFolder', 'run2', 'seed', 1, 'hpcArrayID', $SLURM_ARRAY_TASK_ID); exit()"
 
 exit
 

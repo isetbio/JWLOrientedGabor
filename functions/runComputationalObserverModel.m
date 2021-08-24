@@ -84,6 +84,7 @@ p.addRequired('expName', @ischar);
 p.addParameter('saveFolder', [], @ischar);
 p.addParameter('seed', 1, @(x) (isstring(x) | isscalar(x)));
 p.addParameter('currentFlag', false, @islogical);
+p.addParameter('hpcArrayID', [], @isscalar);
 p.parse(expName, varargin{:});
 
 if ~isempty(p.Results.saveFolder)
@@ -109,8 +110,8 @@ if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); e
 % Specify experiment parameters
 expParams = loadExpParams(expName);   % (false argument is for not saving params in separate matfile)
 
-hpcArrayID = str2double(getenv('SLUM_ARRAY_TASK_ID'));
-if ~isnan(hpcArrayID)
+% hpcArrayID = '%SLUM_ARRAY_TASK_ID'
+if ~isempty(hpcArrayID)
     expParams = hpcArrayID2eccen(hpcArrayID, expParams);
 end
 
