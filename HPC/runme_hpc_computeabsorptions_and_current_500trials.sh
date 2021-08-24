@@ -11,7 +11,7 @@
 #SBATCH -o slurm.%N.%j.out
 #SBATCH -e slurm.%N.%j.err
 
-module load matlab/2016b
+module load matlab/2020b
 
 cd /scratch/ek99/JWLOrientedGabor/
 
