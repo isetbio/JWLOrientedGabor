@@ -142,8 +142,8 @@ switch lower(expName)
      case 'conedensitynophaseshiftlonly500'
         expParams.eyemovement         = [0 0]';           % No eye movements
         expParams.sparams.phases      = pi/2;             % use one phase for CCW and CW Gabor stimuli
-        expParams.contrastLevels      = [0, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
-        expParams.contrastLevelsPC    = [0, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevels      = [0, 0.0005, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
+        expParams.contrastLevelsPC    = [0, 0.0005, 0.001:0.001:0.01, 0.015, 0.02:0.01:0.1, 0.15, 0.2:0.1:1]; % Stimulus contrast levels (Michelson)
         expParams.nTrials             = 500;
         expParams.saveScenes          = false;            % Don't save scene and stimuli data as struct
         expParams.saveConeData        = false;            % Don't save entire cone array
