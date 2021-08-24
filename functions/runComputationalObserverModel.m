@@ -86,7 +86,6 @@ p.addParameter('seed', 1, @(x) (isstring(x) | isscalar(x)));
 p.addParameter('currentFlag', false, @islogical);
 p.parse(expName, varargin{:});
 
-
 if ~isempty(p.Results.saveFolder)
     pth = '/Volumes/server/Projects/PerformanceFieldsIsetBio';
     saveFolder = fullfile(pth, 'data', 'coneabsorptions', expName, p.Results.saveFolder);
@@ -108,6 +107,11 @@ if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); e
 
 % Specify experiment parameters
 expParams = loadExpParams(expName);   % (false argument is for not saving params in separate matfile)
+
+hpcArrayID = str2double(getenv('SLUM_ARRAY_TASK_ID'));
+if ~isnan(hpcArrayID)
+    expParams = hpcArrayID2eccen(hpcArrayID, expParams);
+end
 
 % Define deg2m converter
 expParams.deg2m   = 0.3 * 0.001;             % (default in isetbio)
@@ -163,7 +167,7 @@ for eccen = expParams.eccentricities  % loop over eccentricity (aka cone density
         cMosaic.integrationTime = 0.002; % ms
         
         % Change cone spacing based on eccentricity
-        if strcmp(expName,'conedensity')
+        if ~isempty(regexp(expName,'conedensity','match'))
             propCovered = getBanks1991ConeCoverage(eccen); % proportion
             
             cMosaic.pigment.pdWidth  = cMosaic.pigment.width*propCovered; % meters
