@@ -17,7 +17,7 @@ cd /scratch/ek99/JWLOrientedGabor/
 # If the files you are running are not in the same folder as this script,
 # you can insert "addpath(genpath('/PATH/TO/FILES/'));" before the command
 # you want to run.
-matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); runComputationalObserverModel('conedensitynophaseshiftlonly500', 'saveFolder', 'run2', 'seed', 1, 'hpcArrayID', $SLURM_ARRAY_TASK_ID); exit()"
+matlab -nodisplay -r "addpath(genpath('/scratch/ek99/JWLOrientedGabor')); addpath(genpath('/scratch/ek99/isetbio')); runComputationalObserverModel('conedensitynophaseshiftlonly500', 'saveFolder', 'run2', 'seed', 1, 'currentFlag', true, hpcArrayID', $SLURM_ARRAY_TASK_ID); exit()"
 
 exit
 
