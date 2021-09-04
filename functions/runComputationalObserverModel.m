@@ -110,7 +110,6 @@ if ~exist('saveFolderClassification', 'dir'); mkdir(saveFolderClassification); e
 % Specify experiment parameters
 expParams = loadExpParams(expName);   % (false argument is for not saving params in separate matfile)
 
-% hpcArrayID = '%SLUM_ARRAY_TASK_ID'
 if ~isempty(p.Results.hpcArrayID)
     expParams = hpcArrayID2eccen(p.Results.hpcArrayID, expParams);
 end
